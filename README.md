@@ -7,26 +7,15 @@ Stawi carries a savings group across its full journey: from the merry-go-round
 running that business with QuickBooks-grade accounting and Kenyan tax compliance.
 Mobile-first and M-Pesa-native.
 
-> Status: **v0.1 — foundation.** Pillar 1 (Table Banking) core logic + M-Pesa
-> Daraja STK Push are implemented and tested (45 unit tests). See [`PRD.md`](./PRD.md)
-> for the full spec and roadmap.
-
-## M-Pesa (Daraja sandbox)
-
-- Pure helpers (payload, password, phone normalisation, callback parsing) live in
-  `@stawi/core` (`mpesa.ts`) and are fully unit-tested.
-- HTTP client: `apps/web/lib/mpesa.ts` (OAuth + STK Push).
-- Routes: `POST /api/mpesa/stk` (treasurer initiates a collection) and
-  `POST /api/mpesa/callback` (Safaricom confirms — public, always 200s).
-- Set `MPESA_*` in `.env` (sandbox first). Test payer: `254708374149`.
-- Persisting PENDING→CONFIRMED contributions is wired as `TODO`s pending
-  `DATABASE_URL` (schema already in `@stawi/db`).
+> Status: **v0.1 — foundation.** All three pillars are scaffolded; the domain
+> logic behind them is implemented and tested (**58 unit tests passing**).
+> See [`PRD.md`](./PRD.md) for the full spec and roadmap.
 
 ## The three pillars
 
 1. **Table Banking → Registered Group** — rotating contributions, treasurer
    payments that fan out live to every member's dashboard, a real-time
-   capital-ratio calculator, M-Pesa, downloadable receipts, and a formalization
+   capital-ratio calculator, M-Pesa STK Push, receipts, and a formalization
    wizard (SHG/SACCO under Kenyan law).
 2. **Capital-to-Business Matching** — enter capital + industry, generate ventures
    that fit, re-roll, and save 3 ideas to compare.
@@ -42,8 +31,9 @@ apps/
   web/        Next.js 15 (App Router) — member + admin web app
   mobile/     Expo / React Native — member app (own design system, no UI kits)
 packages/
-  core/       Domain logic (capital ratio, rotation, tax, matching) — 31 unit tests
+  core/       Domain logic (capital, rotation, tax, matching, mpesa, accounting) — 58 tests
   db/         Prisma schema + client (PostgreSQL)
+.claude/agents/  AI-native agents (research, operation, support, sales, finance, legal)
 ```
 
 ## Stack
@@ -56,7 +46,7 @@ M-Pesa Daraja 3.0 · DigitalOcean App Platform (fra1) · Turborepo.
 ```bash
 npm install
 cp .env.example .env          # fill in Clerk + DB + M-Pesa (sandbox) keys
-npm run test                  # run the core unit tests (31 passing)
+npm run test                  # run the core unit tests (58 passing)
 npm run dev                   # web on http://localhost:3000
 ```
 
@@ -66,11 +56,23 @@ Mobile:
 npm run start --workspace @stawi/mobile   # Expo
 ```
 
-## Design language
+## M-Pesa (Daraja sandbox)
 
-"Warm savanna fintech" — deep forest-green ink, amber-gold signal, clay accent on
-a bone background. Fraunces (display) × Hanken Grotesk (body) × IBM Plex Mono
-(money figures). See `design/stawi-prototype.html` for the interactive reference.
+- Pure helpers (payload, password, phone normalisation, callback parsing) live in
+  `@stawi/core` (`mpesa.ts`) and are unit-tested.
+- HTTP client: `apps/web/lib/mpesa.ts` (OAuth + STK Push).
+- Routes: `POST /api/mpesa/stk` (treasurer initiates) and `POST /api/mpesa/callback`
+  (Safaricom confirms — public, always 200s). Test payer: `254708374149`.
+- Persisting PENDING→CONFIRMED contributions is wired as `TODO`s pending
+  `DATABASE_URL` (schema already in `@stawi/db`).
+
+## Preview vs. run
+
+- **Preview / demo (renders anywhere):** open `design/stawi-prototype.html` — a
+  fully self-contained interactive prototype of all three pillars.
+- **Run the real app:** `npm run dev`. The `apps/web` source imports the local
+  `@stawi/core` workspace package, which only resolves inside the monorepo build
+  (not in a standalone artifact viewer).
 
 ## Deploy
 
