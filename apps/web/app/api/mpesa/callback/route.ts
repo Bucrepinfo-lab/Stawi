@@ -1,21 +1,20 @@
 import { NextResponse } from 'next/server';
-import { parseStkCallback } from '@stawi/core';
+import { parseStkCallback, notifyPaymentConfirmed, formatMoney } from '@stawi/core';
+import { sendSms } from '@/lib/notify';
+import { dbEnabled } from '@/lib/data';
 
 export const runtime = 'nodejs';
 
 /**
  * POST /api/mpesa/callback
  * Daraja calls this after the customer responds to the STK prompt.
- * Public route (Safaricom is the caller) — see middleware allowlist.
- *
- * Must ALWAYS return 200 with {ResultCode:0} or Daraja keeps retrying.
+ * Public route. Must ALWAYS return 200 {ResultCode:0} or Daraja keeps retrying.
  */
 export async function POST(req: Request) {
   let raw: unknown;
   try {
     raw = await req.json();
   } catch {
-    // Acknowledge anyway so Safaricom doesn't retry a malformed delivery.
     return NextResponse.json({ ResultCode: 0, ResultDesc: 'Ignored' });
   }
 
@@ -23,18 +22,27 @@ export async function POST(req: Request) {
     const result = parseStkCallback(raw as Parameters<typeof parseStkCallback>[0]);
 
     if (result.ok) {
-      // TODO: find the PENDING Contribution by result.checkoutRequestId,
-      // set status=CONFIRMED, store result.mpesaReceipt, recompute capital
-      // shares (computeCapitalShares) and push the live update to members.
-      console.info('[mpesa] confirmed', result.checkoutRequestId, result.mpesaReceipt);
+      // Mark the pending contribution confirmed (when a DB is configured).
+      if (dbEnabled()) {
+        const { prisma, confirmContribution } = await import('@stawi/db');
+        await confirmContribution(prisma, result.checkoutRequestId, result.mpesaReceipt ?? '');
+      }
+
+      // Acknowledge to the payer by SMS (best-effort, no-op without AT creds).
+      const note = notifyPaymentConfirmed('You', (result.amount ?? 0) * 100, result.mpesaReceipt);
+      if (result.phone) {
+        await sendSms(
+          result.phone,
+          `Stawi: payment of KES ${formatMoney((result.amount ?? 0) * 100)} received. Ref ${result.mpesaReceipt ?? '-'}. Asante!`,
+        );
+      }
+      console.info('[mpesa] confirmed', result.checkoutRequestId, note.title);
     } else {
-      // TODO: mark the Contribution FAILED with result.resultDesc.
       console.warn('[mpesa] failed', result.checkoutRequestId, result.resultDesc);
     }
   } catch (err) {
     console.error('[mpesa] callback parse error', err);
   }
 
-  // Always acknowledge.
   return NextResponse.json({ ResultCode: 0, ResultDesc: 'Accepted' });
 }

@@ -1,6 +1,6 @@
-# Stawi 🇰🇪
+# Stawi 🌍
 
-**Save together. Grow together. Run the business.**
+**Save together. Grow together. Run the business.** — a global, multi-tenant SaaS.
 
 Stawi carries a savings group across its full journey: from the merry-go-round
 (table banking) → a registered self-help group / SACCO → a matched business →
@@ -23,6 +23,10 @@ Mobile-first and M-Pesa-native.
    dead-stock analysis, supplier alerts, Kenya tax auto-calc (VAT, PAYE, levies),
    and a constituency → county → national → continental → global → super-admin
    sales hierarchy.
+
+Plus: a **formalization wizard** (`/formalize`, SHG → SACCO), **downloadable
+receipts** (`/receipt/[ref]`, print-to-PDF), and **notifications** (in-app bell +
+Africa's Talking SMS on payment confirmation).
 
 ## Monorepo layout
 

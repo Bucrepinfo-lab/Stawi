@@ -1,12 +1,9 @@
-import { formatMoney } from '@stawi/core';
+import { formatMoney, notifyPaymentConfirmed, notifySubscriptionDue, notificationsForStock, classifyStock } from '@stawi/core';
+import { NotificationBell } from '@/components/NotificationBell';
 
 const card: React.CSSProperties = {
-  background: 'var(--paper)',
-  border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)',
-  padding: 22,
-  boxShadow: 'var(--shadow)',
-  marginTop: 18,
+  background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 'var(--radius)',
+  padding: 22, boxShadow: 'var(--shadow)', marginTop: 18,
 };
 
 const KPIS = [
@@ -31,27 +28,33 @@ const GROUPS = [
   { name: 'Boda Investors', tier: 'Langata', members: 38, subs: 30, capital: 41_200_000, status: 'Past due' },
 ];
 
-const STATUS_COLOR: Record<string, string> = {
-  Active: 'var(--good)',
-  Trial: 'var(--sky)',
-  'Past due': 'var(--danger)',
-};
+const STATUS_COLOR: Record<string, string> = { Active: 'var(--good)', Trial: 'var(--sky)', 'Past due': 'var(--danger)' };
 
 export default function AdminPage() {
+  // Demo notification feed assembled from the core builders.
+  const stock = classifyStock([
+    { id: 's3', name: 'Sugar 1kg', quantity: 3, reorderLevel: 12, soldInWindow: 42, supplierName: 'Mumias' },
+  ]);
+  const notifications = [
+    notifyPaymentConfirmed('Joseph Kamau', 3_800_000, 'SGR7XYZ123'),
+    ...notificationsForStock(stock),
+    notifySubscriptionDue('Boda Investors', 1000),
+  ];
+
   return (
     <main style={{ maxWidth: 960, margin: '0 auto', padding: '28px 24px 80px' }}>
-      <p style={{ fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700 }}>
-        Pillar 3 · Super-Admin
-      </p>
-      <h1 className="display" style={{ fontWeight: 600, fontSize: 34, marginTop: 6 }}>
-        Command center
-      </h1>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        <div>
+          <p style={{ fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700 }}>Pillar 3 · Super-Admin</p>
+          <h1 className="display" style={{ fontWeight: 600, fontSize: 34, marginTop: 6 }}>Command center</h1>
+        </div>
+        <NotificationBell notifications={notifications} />
+      </div>
       <p style={{ color: 'var(--ink-2)', marginTop: 6, maxWidth: 620 }}>
-        Every group, business and subscription across the sales hierarchy — constituency
+        Every group, business and subscription across the sales hierarchy &mdash; constituency
         to global. Each tier supervises the one below and rolls reports upward.
       </p>
 
-      {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: 12, marginTop: 22 }}>
         {KPIS.map((kpi) => (
           <div key={kpi.l} style={{ background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 14, padding: 16, boxShadow: 'var(--shadow)' }}>
@@ -62,7 +65,6 @@ export default function AdminPage() {
         ))}
       </div>
 
-      {/* Hierarchy */}
       <div style={card}>
         <h2 className="display" style={{ fontWeight: 600, fontSize: 20 }}>Sales &amp; supervision hierarchy</h2>
         <div style={{ marginTop: 12 }}>
@@ -82,7 +84,6 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Group table */}
       <div style={card}>
         <h2 className="display" style={{ fontWeight: 600, fontSize: 20 }}>Onboarded groups &amp; businesses</h2>
         <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, fontSize: 13.5 }}>

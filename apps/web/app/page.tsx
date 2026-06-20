@@ -13,27 +13,29 @@ export default function Home() {
           </span>
           Stawi
         </div>
-        <nav style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+        <nav style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
           <Link href="/dashboard" style={navLink}>Table banking</Link>
           <Link href="/match" style={navLink}>Find a business</Link>
           <Link href="/books" style={navLink}>Books</Link>
+          <Link href="/formalize" style={navLink}>Formalize</Link>
+          <Link href="/community" style={navLink}>Community</Link>
           <Link href="/admin" style={navLink}>Admin</Link>
-          <Link href="/dashboard" style={{ fontWeight: 700, color: 'var(--forest-deep)', background: 'var(--gold)', padding: '10px 18px', borderRadius: 12, textDecoration: 'none' }}>Open dashboard</Link>
+          <Link href="/subscribe" style={{ fontWeight: 700, color: 'var(--forest-deep)', background: 'var(--gold)', padding: '10px 18px', borderRadius: 12, textDecoration: 'none' }}>Pricing</Link>
         </nav>
       </header>
 
-      <section style={{ padding: '60px 0 40px', maxWidth: 760 }}>
+      <section style={{ padding: '60px 0 40px', maxWidth: 780 }}>
         <p style={{ fontSize: 12, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700, marginBottom: 16 }}>
-          Save / Grow / Run the business
+          Save / Grow / Run the business · worldwide
         </p>
         <h1 className="display" style={{ fontWeight: 600, fontSize: 'clamp(36px,6vw,64px)', lineHeight: 1.03 }}>
           Save together.{' '}
           <em style={{ fontStyle: 'italic', color: 'var(--forest)' }}>Grow</em> together.
         </h1>
         <p style={{ marginTop: 18, fontSize: 18, color: 'var(--ink-2)' }}>
-          From the merry-go-round to a registered self-help group to a real business with
-          real books: table banking, business matching, and QuickBooks-grade accounting in
-          one platform. Mobile-first and M-Pesa-native.
+          A global, multi-tenant platform for cooperative saving and enterprise: table
+          banking, business matching, and QuickBooks-grade accounting — localized to
+          each country&rsquo;s currency, tax, and registration rules.
         </p>
         <div style={{ display: 'flex', gap: 12, marginTop: 28, flexWrap: 'wrap' }}>
           {PILLARS.map((label) => (
@@ -44,8 +46,10 @@ export default function Home() {
         </div>
       </section>
 
-      <footer style={{ marginTop: 60, paddingTop: 24, borderTop: '1px solid var(--line)', color: 'var(--faint)', fontSize: 13 }}>
-        Stawi v0.1 - Kenya - built with Next.js, Clerk, M-Pesa Daraja
+      <footer style={{ marginTop: 60, paddingTop: 24, borderTop: '1px solid var(--line)', color: 'var(--faint)', fontSize: 13, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <span>Stawi v0.1 — global multi-tenant SaaS</span>
+        <Link href="/terms" style={{ color: 'var(--faint)' }}>Terms</Link>
+        <Link href="/subscribe" style={{ color: 'var(--faint)' }}>Pricing</Link>
       </footer>
     </main>
   );

@@ -26,11 +26,11 @@ export function DashboardClient({ groups }: { groups: GroupAccount[] }) {
       </h1>
       <p style={{ color: 'var(--ink-2)', marginTop: 6, maxWidth: 560 }}>
         When the treasurer records a contribution, every member&rsquo;s share recomputes
-        instantly. Switch groups any time from the selector above.
+        instantly. Switch groups any time from the selector above.{' '}
+        <a href="/formalize" style={{ color: 'var(--forest)', fontWeight: 600 }}>Formalize this group →</a>
       </p>
 
-      {/* Remount on group change so seeded state resets to the chosen group. */}
-      <TableBanking key={active.id} groupId={active.id} seed={active.members} />
+      <TableBanking key={active.id} groupId={active.id} groupName={active.name} seed={active.members} />
     </div>
   );
 }
