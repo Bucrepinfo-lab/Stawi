@@ -12,12 +12,15 @@ Target: **DigitalOcean App Platform**, region **Frankfurt (fra1)**, Node.js runt
 
 1. **Database** — create a Managed PostgreSQL cluster (fra1). Copy its
    connection string into `DATABASE_URL` (append `?sslmode=require`).
-2. **Run migrations** — from a machine with `DATABASE_URL` set:
+2. **Run migrations + seed** — from a machine with `DATABASE_URL` set:
    ```bash
    npm install
    npm run -w @stawi/db generate
    npm run -w @stawi/db migrate         # prisma migrate deploy
+   npm run -w @stawi/db seed            # optional: load the demo groups/business
    ```
+   > With no `DATABASE_URL`, the app runs on bundled seed data. Set `DATABASE_URL`
+   > to switch reads/writes to Postgres automatically (via `lib/data.ts`).
 3. **Clerk** — in the Clerk dashboard, copy keys into your env. Register the
    webhook endpoint `POST /api/webhooks/clerk` and copy the signing secret to
    `CLERK_WEBHOOK_SECRET`.

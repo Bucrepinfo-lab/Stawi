@@ -8,7 +8,9 @@ import type { GroupAccount } from '@/lib/groups';
 export function DashboardClient({ groups }: { groups: GroupAccount[] }) {
   const [activeId, setActiveId] = useState(groups[0]?.id ?? '');
   const active = groups.find((g) => g.id === activeId) ?? groups[0];
-  if (!active) return null;
+  if (!active) {
+    return <p style={{ marginTop: 40, color: 'var(--dim)' }}>You are not a member of any group yet.</p>;
+  }
 
   return (
     <div>
@@ -28,7 +30,7 @@ export function DashboardClient({ groups }: { groups: GroupAccount[] }) {
       </p>
 
       {/* Remount on group change so seeded state resets to the chosen group. */}
-      <TableBanking key={active.id} seed={active.members} />
+      <TableBanking key={active.id} groupId={active.id} seed={active.members} />
     </div>
   );
 }

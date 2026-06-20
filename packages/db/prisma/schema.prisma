@@ -182,6 +182,8 @@ model StockItem {
   name        String
   quantity    Int      @default(0)
   reorderLevel Int     @default(5)
+  /** Units sold in the rolling analysis window (e.g. last 7 days). */
+  soldInWindow Int     @default(0)
   supplierName String?
   supplierPhone String?
   createdAt   DateTime @default(now())

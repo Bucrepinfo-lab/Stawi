@@ -1,0 +1,164 @@
+/**
+ * Stawi repository — typed queries that map Prisma rows to serializable DTOs.
+ *
+ * Each member's capital is the sum of their CONFIRMED contributions. Requires a
+ * generated Prisma client (`prisma generate`) and a live DATABASE_URL.
+ */
+
+import type { PrismaClient, GroupType, MemberRole } from '@prisma/client';
+import type {
+  GroupAccountDTO,
+  GroupKind,
+  BusinessBooksDTO,
+  MemberDTO,
+} from './dto.js';
+
+function mapKind(t: GroupType): GroupKind {
+  switch (t) {
+    case 'SACCO':
+      return 'SACCO';
+    case 'BUSINESS':
+      return 'Business';
+    default:
+      return 'Chama';
+  }
+}
+
+const titleRole = (r: MemberRole) =>
+  r.charAt(0) + r.slice(1).toLowerCase(); // TREASURER -> Treasurer
+
+/** All groups the given Clerk user belongs to, with live capital per member. */
+export async function getMemberGroups(
+  prisma: PrismaClient,
+  clerkUserId: string,
+): Promise<GroupAccountDTO[]> {
+  const memberships = await prisma.membership.findMany({
+    where: { clerkUserId },
+    include: {
+      group: {
+        include: {
+          members: {
+            include: {
+              contributions: { where: { status: 'CONFIRMED' } },
+            },
+            orderBy: { rotationOrder: 'asc' },
+          },
+        },
+      },
+    },
+  });
+
+  return memberships.map((m) => {
+    const g = m.group;
+    const members: MemberDTO[] = g.members.map((mem) => {
+      const total = mem.contributions.reduce((s, c) => s + c.amountCents, 0);
+      const paid = mem.contributions.length > 0;
+      return {
+        memberId: mem.id,
+        name: mem.fullName,
+        totalCents: total,
+        role: titleRole(mem.role),
+        paid,
+      };
+    });
+    return {
+      id: g.id,
+      name: g.name,
+      myRole: titleRole(m.role),
+      flag: g.flagEmoji,
+      type: mapKind(g.type),
+      members,
+    };
+  });
+}
+
+/** Record a contribution. Treasurer/manual entries are CONFIRMED immediately;
+ *  M-Pesa STK is created PENDING (the callback confirms it). Returns the new id. */
+export async function recordContribution(
+  prisma: PrismaClient,
+  input: {
+    groupId: string;
+    membershipId: string;
+    amountCents: number;
+    channel?: 'MPESA_STK' | 'MPESA_C2B' | 'BANK' | 'CASH';
+    confirmed?: boolean;
+    recordedByClerkUserId?: string;
+    checkoutRequestId?: string;
+  },
+): Promise<{ id: string }> {
+  if (input.amountCents <= 0) throw new Error('Amount must be positive');
+  const row = await prisma.contribution.create({
+    data: {
+      groupId: input.groupId,
+      membershipId: input.membershipId,
+      amountCents: input.amountCents,
+      channel: input.channel ?? 'CASH',
+      status: input.confirmed ? 'CONFIRMED' : 'PENDING',
+      recordedByClerkUserId: input.recordedByClerkUserId,
+      checkoutRequestId: input.checkoutRequestId,
+    },
+    select: { id: true },
+  });
+  return row;
+}
+
+/** Confirm a previously-PENDING contribution (called by the M-Pesa callback). */
+export async function confirmContribution(
+  prisma: PrismaClient,
+  checkoutRequestId: string,
+  mpesaRef: string,
+): Promise<void> {
+  await prisma.contribution.updateMany({
+    where: { checkoutRequestId, status: 'PENDING' },
+    data: { status: 'CONFIRMED', mpesaRef },
+  });
+}
+
+/** The business books for a group, or null if it has no business yet. */
+export async function getGroupBusiness(
+  prisma: PrismaClient,
+  groupId: string,
+): Promise<BusinessBooksDTO | null> {
+  const biz = await prisma.business.findUnique({
+    where: { groupId },
+    include: { stockItems: true, entries: { orderBy: { occurredAt: 'desc' } } },
+  });
+  if (!biz) return null;
+  return {
+    businessId: biz.id,
+    name: biz.name,
+    vatRegistered: biz.vatRegistered,
+    tourismSector: biz.tourismSector,
+    entries: biz.entries.map((e) => ({
+      type: e.type,
+      description: e.description,
+      amountCents: e.amountCents,
+      occurredAt: e.occurredAt.toISOString(),
+    })),
+    stock: biz.stockItems.map((s) => ({
+      id: s.id,
+      name: s.name,
+      quantity: s.quantity,
+      reorderLevel: s.reorderLevel,
+      soldInWindow: s.soldInWindow,
+      supplierName: s.supplierName ?? undefined,
+      supplierPhone: s.supplierPhone ?? undefined,
+    })),
+  };
+}
+
+/** Append a ledger entry to a business. */
+export async function addLedgerEntry(
+  prisma: PrismaClient,
+  input: {
+    businessId: string;
+    type: 'SALE' | 'PURCHASE' | 'EXPENSE';
+    description: string;
+    amountCents: number;
+  },
+): Promise<{ id: string }> {
+  return prisma.ledgerEntry.create({
+    data: input,
+    select: { id: true },
+  });
+}

@@ -10,7 +10,7 @@ services:
       branch: main
       deploy_on_push: true
     source_dir: /
-    build_command: npm install && npm run build --workspace @stawi/web
+    build_command: npm install && npm run generate --workspace @stawi/db && npm run build --workspace @stawi/web
     run_command: npm run start --workspace @stawi/web
     http_port: 3000
     instance_count: 1

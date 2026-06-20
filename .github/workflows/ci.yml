@@ -16,6 +16,8 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm install
+      - name: Generate Prisma client
+        run: npm run generate --workspace @stawi/db
       - name: Typecheck
         run: npm run typecheck
       - name: Lint

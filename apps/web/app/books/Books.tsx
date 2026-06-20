@@ -13,8 +13,10 @@ import {
   type Period,
   type EntryType,
 } from '@stawi/core';
+import { addLedgerEntryAction } from '@/app/actions';
 
 export interface BooksProps {
+  businessId?: string;
   businessName: string;
   vatRegistered: boolean;
   tourismSector: boolean;
@@ -34,7 +36,7 @@ const card: React.CSSProperties = {
 const PERIODS: Period[] = ['day', 'week', 'month', 'year'];
 const MOVE_COLOR = { fast: 'var(--good)', slow: 'var(--danger)', dead: 'var(--dim)' } as const;
 
-export function Books({ businessName, vatRegistered, tourismSector, initialEntries, stock }: BooksProps) {
+export function Books({ businessId, businessName, vatRegistered, tourismSector, initialEntries, stock }: BooksProps) {
   const [entries, setEntries] = useState<LedgerEntry[]>(initialEntries);
   const [period, setPeriod] = useState<Period>('day');
   const [type, setType] = useState<EntryType>('SALE');
@@ -65,6 +67,8 @@ export function Books({ businessName, vatRegistered, tourismSector, initialEntri
       { id: Math.random().toString(36).slice(2), type, description: desc || type, amountCents: cents, occurredAt: new Date() },
       ...prev,
     ]);
+    // Persist when a DB is configured (no-op on seed data).
+    void addLedgerEntryAction({ businessId, type, description: desc || type, amountCents: cents }).catch(() => {});
     setAmount('');
     setDesc('');
   }

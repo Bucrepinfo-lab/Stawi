@@ -3,33 +3,36 @@
 import { useMemo, useState } from 'react';
 import { GroupSwitcher } from '@/components/GroupSwitcher';
 import { Books } from './Books';
-import { MY_GROUPS } from '@/lib/groups';
-import { GROUP_BUSINESS } from '@/lib/books';
+import type { GroupAccount } from '@/lib/groups';
+import type { WebBooks } from '@/lib/data';
 import type { LedgerEntry } from '@stawi/core';
 
-export function BooksClient() {
-  const groups = MY_GROUPS;
+interface Props {
+  groups: GroupAccount[];
+  booksByGroup: Record<string, WebBooks | null>;
+}
+
+export function BooksClient({ groups, booksByGroup }: Props) {
   const [activeId, setActiveId] = useState(
-    // Default to the first group that actually has a business.
-    groups.find((g) => GROUP_BUSINESS[g.id])?.id ?? groups[0]?.id ?? '',
+    groups.find((g) => booksByGroup[g.id])?.id ?? groups[0]?.id ?? '',
   );
   const active = groups.find((g) => g.id === activeId) ?? groups[0];
-  const business = active ? GROUP_BUSINESS[active.id] : null;
+  const business = active ? booksByGroup[active.id] : null;
 
-  // Build real Date objects from the day offsets (client-side).
   const entries: LedgerEntry[] = useMemo(() => {
     if (!business) return [];
-    const now = Date.now();
     return business.entries.map((e, i) => ({
       id: `${activeId}-${i}`,
       type: e.type,
       description: e.description,
       amountCents: e.amountCents,
-      occurredAt: new Date(now - e.dayOffset * 86_400_000),
+      occurredAt: new Date(e.occurredAt),
     }));
   }, [business, activeId]);
 
-  if (!active) return null;
+  if (!active) {
+    return <p style={{ marginTop: 40, color: 'var(--dim)' }}>You are not a member of any group yet.</p>;
+  }
 
   return (
     <div>
@@ -53,6 +56,7 @@ export function BooksClient() {
           </p>
           <Books
             key={active.id}
+            businessId={business.businessId}
             businessName={business.name}
             vatRegistered={business.vatRegistered}
             tourismSector={business.tourismSector}

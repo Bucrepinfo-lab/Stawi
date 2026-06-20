@@ -9,15 +9,21 @@
     "generate": "prisma generate",
     "migrate": "prisma migrate deploy",
     "migrate:dev": "prisma migrate dev",
+    "seed": "tsx prisma/seed.ts",
     "studio": "prisma studio",
     "typecheck": "tsc --noEmit",
     "lint": "echo \"(lint: db)\""
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
-    "@prisma/client": "^5.18.0"
+    "@prisma/client": "^5.18.0",
+    "@stawi/core": "*"
   },
   "devDependencies": {
     "prisma": "^5.18.0",
+    "tsx": "^4.16.0",
     "typescript": "^5.5.4"
   }
 }

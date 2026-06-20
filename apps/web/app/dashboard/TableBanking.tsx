@@ -7,6 +7,7 @@ import {
   formatMoney,
   type MemberContribution,
 } from '@stawi/core';
+import { recordContributionAction } from '@/app/actions';
 
 interface SeedMember extends MemberContribution {
   role: string;
@@ -17,7 +18,7 @@ const PALETTE = ['#1f4d3a', '#c5613c', '#e0a32e', '#3c7d8c', '#7a5230', '#5a7d52
 const initials = (n: string) =>
   n.split(' ').map((w) => w[0]).slice(0, 2).join('');
 
-export function TableBanking({ seed }: { seed: SeedMember[] }) {
+export function TableBanking({ seed, groupId }: { seed: SeedMember[]; groupId?: string }) {
   const [members, setMembers] = useState<SeedMember[]>(seed);
   const [flash, setFlash] = useState<string | null>(null);
   const [selected, setSelected] = useState(seed[0]?.memberId ?? '');
@@ -40,6 +41,8 @@ export function TableBanking({ seed }: { seed: SeedMember[] }) {
     const who = members.find((m) => m.memberId === selected)?.name ?? '';
     setFlash(`${who} +KES ${formatMoney(cents)} · ratios updated`);
     setTimeout(() => setFlash(null), 2400);
+    // Persist when a DB is configured (no-op on seed data).
+    void recordContributionAction({ groupId, membershipId: selected, amountCents: cents }).catch(() => {});
   }
 
   async function requestViaMpesa() {
