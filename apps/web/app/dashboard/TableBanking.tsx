@@ -22,8 +22,41 @@ export function TableBanking({ seed }: { seed: SeedMember[] }) {
   const [flash, setFlash] = useState<string | null>(null);
   const [selected, setSelected] = useState(seed[0]?.memberId ?? '');
   const [amount, setAmount] = useState('5000');
+  const [phone, setPhone] = useState('0708374149'); // Daraja sandbox test MSISDN
+  const [stkBusy, setStkBusy] = useState(false);
 
   const snapshot = useMemo(() => computeCapitalShares(members), [members]);
+
+  async function requestViaMpesa() {
+    const cents = Math.round((parseFloat(amount) || 0) * 100);
+    if (cents <= 0) return;
+    setStkBusy(true);
+    setFlash('Sending STK Push…');
+    try {
+      const res = await fetch('/api/mpesa/stk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amountCents: cents,
+          payerPhone: phone,
+          accountReference: 'Umoja',
+          description: 'Contribution',
+          membershipId: selected,
+        }),
+      });
+      const data = await res.json();
+      setFlash(
+        data.ok
+          ? `STK sent — check ${phone} for the M-Pesa prompt`
+          : `M-Pesa: ${data.error ?? 'request failed'}`,
+      );
+    } catch {
+      setFlash('M-Pesa request failed (is Daraja configured?)');
+    } finally {
+      setStkBusy(false);
+      setTimeout(() => setFlash(null), 4000);
+    }
+  }
 
   function record() {
     const cents = Math.round((parseFloat(amount) || 0) * 100);
@@ -111,6 +144,41 @@ export function TableBanking({ seed }: { seed: SeedMember[] }) {
           style={{ padding: '12px 20px', borderRadius: 10, border: 'none', background: 'var(--gold)', color: 'var(--forest-deep)', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}
         >
           ＋ Record contribution
+        </button>
+      </div>
+
+      {/* M-Pesa STK Push — collect from a member's phone */}
+      <div
+        style={{
+          marginTop: 12,
+          background: 'var(--paper)',
+          border: '1px solid var(--line)',
+          borderRadius: 'var(--radius-sm)',
+          padding: 16,
+          display: 'flex',
+          gap: 12,
+          flexWrap: 'wrap',
+          alignItems: 'end',
+        }}
+      >
+        <label style={{ flex: '1 1 180px' }}>
+          <span style={{ display: 'block', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--dim)', marginBottom: 6 }}>
+            Collect via M-Pesa · payer phone
+          </span>
+          <input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            inputMode="tel"
+            className="mono"
+            style={{ width: '100%', padding: '11px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--bone)', fontSize: 14 }}
+          />
+        </label>
+        <button
+          onClick={requestViaMpesa}
+          disabled={stkBusy}
+          style={{ padding: '12px 20px', borderRadius: 10, border: '1px solid var(--forest-deep)', background: stkBusy ? 'var(--bone-2)' : 'var(--forest-deep)', color: stkBusy ? 'var(--dim)' : 'var(--bone)', fontWeight: 700, fontSize: 14, cursor: stkBusy ? 'default' : 'pointer', fontFamily: 'inherit' }}
+        >
+          {stkBusy ? 'Sending…' : '↗ Request STK Push'}
         </button>
       </div>
 

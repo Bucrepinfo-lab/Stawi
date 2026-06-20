@@ -6,6 +6,7 @@ const isPublic = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/health',
+  '/api/mpesa/callback', // Safaricom posts here, no Clerk session
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

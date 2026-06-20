@@ -7,8 +7,20 @@ Stawi carries a savings group across its full journey: from the merry-go-round
 running that business with QuickBooks-grade accounting and Kenyan tax compliance.
 Mobile-first and M-Pesa-native.
 
-> Status: **v0.1 — foundation.** Pillar 1 (Table Banking) core logic is
-> implemented and tested. See [`PRD.md`](./PRD.md) for the full spec and roadmap.
+> Status: **v0.1 — foundation.** Pillar 1 (Table Banking) core logic + M-Pesa
+> Daraja STK Push are implemented and tested (45 unit tests). See [`PRD.md`](./PRD.md)
+> for the full spec and roadmap.
+
+## M-Pesa (Daraja sandbox)
+
+- Pure helpers (payload, password, phone normalisation, callback parsing) live in
+  `@stawi/core` (`mpesa.ts`) and are fully unit-tested.
+- HTTP client: `apps/web/lib/mpesa.ts` (OAuth + STK Push).
+- Routes: `POST /api/mpesa/stk` (treasurer initiates a collection) and
+  `POST /api/mpesa/callback` (Safaricom confirms — public, always 200s).
+- Set `MPESA_*` in `.env` (sandbox first). Test payer: `254708374149`.
+- Persisting PENDING→CONFIRMED contributions is wired as `TODO`s pending
+  `DATABASE_URL` (schema already in `@stawi/db`).
 
 ## The three pillars
 
