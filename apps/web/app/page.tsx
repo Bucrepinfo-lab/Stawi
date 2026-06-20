@@ -44,9 +44,12 @@ export default function Home() {
           </span>
           Stawi
         </div>
-        <nav style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <Link href="/sign-in" style={{ fontWeight: 600, color: 'var(--ink-2)' }}>
-            Sign in
+        <nav style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <Link href="/dashboard" style={{ fontWeight: 600, color: 'var(--ink-2)' }}>
+            Table banking
+          </Link>
+          <Link href="/match" style={{ fontWeight: 600, color: 'var(--ink-2)' }}>
+            Find a business
           </Link>
           <Link
             href="/dashboard"
