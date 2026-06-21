@@ -8,8 +8,7 @@
  */
 
 import type { PrismaClient, GroupType, MemberRole } from '@prisma/client';
-import { assertSameTenant } from '@stawi/core';
-import type { TenantContext, TenantRole } from '@stawi/core';
+import { assertSameTenant, type TenantContext, type TenantRole } from './index.js';
 import type {
   GroupAccountDTO,
   GroupKind,

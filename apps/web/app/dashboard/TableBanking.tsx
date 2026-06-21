@@ -81,7 +81,7 @@ export function TableBanking({
       const res = await fetch('/api/mpesa/stk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amountCents: cents, payerPhone: phone, accountReference: 'Umoja', description: 'Contribution', membershipId: selected }),
+        body: JSON.stringify({ amountCents: cents, payerPhone: phone, accountReference: 'Umoja', description: 'Contribution', membershipId: selected, groupId }),
       });
       const data = await res.json();
       setFlash(data.ok ? `STK sent — check ${phone} for the M-Pesa prompt` : `M-Pesa: ${data.error ?? 'request failed'}`);
