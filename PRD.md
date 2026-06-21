@@ -4,9 +4,9 @@
 > **Locked decisions (2026-06-20):** Name = **Stawi** · Theme = **Trustworthy fintech base + warm pan-African accents** · Business-matching ventures = **AI-generated on the fly** (fits the reset/re-roll button) · M-Pesa = **Daraja sandbox first** (live Paybill before launch) · First build = **Pillar 1, Table Banking**.
 
 **Owner:** Jacob (bucrepinfo@gmail.com)
-**Status:** Draft v0.1 — Spec phase (no code yet, pending approval)
-**Last updated:** 2026-06-20
-**Primary market:** Kenya (launch) → Pan-African → Global
+**Status:** **v1.0 — BUILT & deployment-ready** (98 core tests passing; all integrations drafted live-on-key; awaiting external account keys to go live)
+**Last updated:** 2026-06-22
+**Primary market:** Global, multi-tenant (Kenya-first; 12 countries seeded)
 **Stack of record:** Next.js (web) · React Native/Expo (mobile) · Clerk (auth) · DigitalOcean (deploy)
 
 > This document is the single source of truth. It is revised in place (do not fork new versions).
@@ -199,3 +199,106 @@ Following your 5-step method, run in **plan mode**, updating this PRD continuous
 ---
 
 *Sources for regulatory/payment research are listed in the chat message accompanying this PRD.*
+
+---
+
+## 11. Implementation Status — v1.0 (2026-06-22)
+
+Stawi is **built and deployment-ready** as a global, multi-tenant SaaS. Everything
+below is implemented and parse-clean; **98 core unit tests pass**. The repo is a
+Turborepo monorepo (~120 files).
+
+### Monorepo
+```
+apps/web      Next.js 15 (App Router, server actions) — all UI + API routes
+apps/mobile   Expo / React Native scaffold (own design system, shared tokens)
+packages/core Domain logic — 13 modules, 98 Vitest tests
+packages/db   Prisma schema (13 models / 10 enums) + tenant-scoped repository + seed + RLS
+```
+
+### `@stawi/core` modules (all tested)
+`capital` (capital-ratio), `rotation` (merry-go-round), `tax` (Kenya PAYE/VAT/levies),
+`match` (business-venture generator), `mpesa` (Daraja STK helpers), `accounting`
+(P&L, reconciliation, stock movement, suggestions), `formalization` (SHG/SACCO steps),
+`receipt`, `notifications`, `compliance` (12-country registry), `moderation`
+(abuse/hate/incitement gate), `plans` (Free/Starter/Growth/Enterprise), `tenancy`
+(slug resolver, isolation guards), `payments` (provider routing).
+
+### Web routes
+- Pages: `/` `/dashboard` `/match` `/books` `/formalize` `/community` `/admin`
+  `/subscribe` `/terms` `/receipt/[ref]` `/sign-in` `/sign-up`
+- API: `/api/health`, `/api/mpesa/stk`, `/api/mpesa/callback`,
+  `/api/billing/checkout`, `/api/billing/webhook` (Stripe), `/api/webhooks/clerk`
+
+### Integrations — all drafted, **live-on-key**
+| Integration | State |
+|---|---|
+| **Clerk** auth + `/sign-in` `/sign-up` + middleware | wired |
+| **Clerk webhook** (org→Tenant, membership→TenantMember, svix verify) | live on `CLERK_WEBHOOK_SECRET` |
+| **M-Pesa Daraja** STK push + callback (pending→confirmed persistence) | live on Daraja keys |
+| **Stripe** Checkout (subscription, 30-day trial) + webhook (HMAC verify) | live on `STRIPE_SECRET_KEY` |
+| **Paystack / Flutterwave** | routed by country, stubs until keyed |
+| **Africa's Talking** SMS acknowledgements | live on AT keys |
+| **Postgres (Prisma)** tenant-scoped queries + `rls.sql` | live on `DATABASE_URL` |
+
+### Multi-tenant model
+Clerk Organization → **Tenant** (billing/isolation boundary, `clerkOrgId`), owning
+Groups. Isolation enforced at the query layer (`getTenantContext`, `assertSameTenant`,
+`tenantScope`) + slug resolver (`umoja.stawi.app` or `/t/umoja`) via middleware +
+`prisma/rls.sql`. See `TENANCY.md`.
+
+### Trust, safety & legal
+- Content-safety gate (`moderation`) on server actions + `ModeratedTextarea`; blocks
+  abuse/incitement/hate, flags profanity, defeats leetspeak. `ModerationLog` audit table.
+- Subscription **Terms & Conditions** template — `legal/SUBSCRIPTION-TERMS.md` (+ `/terms`
+  summary + acceptance gate). ⚠️ needs per-market legal review.
+- `COMPLIANCE.md` — 12-country regulatory registry (⚠️ rates indicative, verify locally).
+
+### AI-native agents
+`.claude/agents/`: research, operation, support, sales, finance, legal + README
+(Capture→Curate→Store→Execute→Experience recursive context loop).
+
+---
+
+## 12. Continue From Here (next-session backlog)
+
+**External-account wiring (go-live) — see `PRE-DEPLOY-CHECKLIST.md` + `DEPLOYMENT-RUNBOOK.md`:**
+1. Provision DigitalOcean Managed Postgres → `DATABASE_URL`; run generate + migrate +
+   seed; `psql -f packages/db/prisma/rls.sql`.
+2. Clerk keys + register `/api/webhooks/clerk`.
+3. M-Pesa Daraja sandbox keys.
+4. Stripe key + register `/api/billing/webhook`.
+5. `doctl apps create --spec .do/app.yaml`; set SECRET env values; GitHub Actions secrets.
+6. Domain + wildcard `*.stawi.app` for tenant subdomains.
+
+**Code TODOs that activate with a live DB/keys (intentional seams):**
+- Stripe webhook → flip `Subscription.status = ACTIVE` for the tenant (currently logs).
+- `SET app.tenant_id` per DB transaction to activate RLS policies.
+- Replicate the RLS Contribution policy across all tenant-owned child tables.
+- Concrete Paystack / Flutterwave integrations (routing already in place).
+
+**Product backlog (not yet built):**
+- Real-time push (websockets) for live dashboards; member messaging/calling beyond
+  the moderated composer; mobile screens for the newer features; i18n/localization of
+  UI strings + per-market Privacy Policy; cron for reconciliation + subscription billing;
+  receipts to PDF via DO Spaces; reconcile Clerk-Org-as-Group vs Tenant (current:
+  Org→Tenant, Group.clerkOrgId retained).
+
+---
+
+## 13. Skills & Tools Used
+
+- **`frontend-design`** (Anthropic skill) — drove the "warm savanna fintech" design
+  system (Fraunces × Hanken Grotesk × IBM Plex Mono), the 7-pillars-of-UX bar, and all
+  web UI; also the self-contained HTML previews (`design/stawi-prototype.html`,
+  `design/stawi-app-preview.html`).
+- **WebSearch** — Kenya SHG/SACCO law, KRA 2026 tax/levy rates, M-Pesa Daraja 3.0,
+  competitor scan (Chamasoft/SmartChama/MyChama). Cited in the spec.
+- **Sandbox (bash) + esbuild + Vitest** — every file authored via `/tmp` heredoc →
+  copy-to-mount → esbuild parse-check + line-count verify (the mounted folder
+  intermittently truncates large editor writes — see operation-agent note); core logic
+  driven by 98 Vitest tests.
+- **Memory files** (`/spaces/.../memory/`) — cross-session continuity.
+- Not used but available and relevant for next phases: `pptx`/`docx` (investor deck,
+  formal docs), `xlsx` (financial models), `pdf` (receipt generation), Figma skills
+  (design handoff). Per the user's 5-step method, `frontend-design` = step 2 (Claude Design).
