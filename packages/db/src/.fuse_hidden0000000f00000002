@@ -8,7 +8,7 @@
  */
 
 import type { PrismaClient, GroupType, MemberRole } from '@prisma/client';
-import { assertSameTenant, toSlug } from '@stawi/core';
+import { assertSameTenant } from '@stawi/core';
 import type { TenantContext, TenantRole } from '@stawi/core';
 import type {
   GroupAccountDTO,
@@ -224,68 +224,4 @@ export async function getTenantContextBySlug(
     select: { role: true },
   });
   return tm ? { tenantId: t.id, role: tm.role } : null;
-}
-
-// ───────────────────────── Clerk sync (webhook) ─────────────────────────
-
-function mapClerkRole(role?: string): 'OWNER' | 'ADMIN' | 'MANAGER' | 'MEMBER' {
-  if (!role) return 'MEMBER';
-  const r = role.toLowerCase();
-  if (r.includes('admin')) return 'ADMIN';
-  if (r.includes('owner')) return 'OWNER';
-  return 'MEMBER';
-}
-
-/** Upsert a Tenant from a Clerk organization; creator becomes OWNER. */
-export async function upsertTenantFromClerkOrg(
-  prisma: PrismaClient,
-  input: { clerkOrgId: string; name: string; createdByUserId?: string },
-): Promise<{ id: string }> {
-  const slug = `${toSlug(input.name)}-${input.clerkOrgId.slice(-6)}`;
-  const tenant = await prisma.tenant.upsert({
-    where: { clerkOrgId: input.clerkOrgId },
-    update: { name: input.name },
-    create: { clerkOrgId: input.clerkOrgId, name: input.name, slug },
-    select: { id: true },
-  });
-  if (input.createdByUserId) {
-    await prisma.tenantMember.upsert({
-      where: { tenantId_clerkUserId: { tenantId: tenant.id, clerkUserId: input.createdByUserId } },
-      update: { role: 'OWNER' },
-      create: { tenantId: tenant.id, clerkUserId: input.createdByUserId, role: 'OWNER' },
-    });
-  }
-  return tenant;
-}
-
-export async function removeTenantByClerkOrg(prisma: PrismaClient, clerkOrgId: string): Promise<void> {
-  await prisma.tenant.deleteMany({ where: { clerkOrgId } });
-}
-
-/** Upsert a tenant membership from a Clerk organizationMembership event. */
-export async function upsertTenantMemberFromClerk(
-  prisma: PrismaClient,
-  input: { clerkOrgId: string; clerkUserId: string; role?: string },
-): Promise<void> {
-  const t = await prisma.tenant.findUnique({ where: { clerkOrgId: input.clerkOrgId }, select: { id: true } });
-  if (!t) return;
-  await prisma.tenantMember.upsert({
-    where: { tenantId_clerkUserId: { tenantId: t.id, clerkUserId: input.clerkUserId } },
-    update: { role: mapClerkRole(input.role) },
-    create: { tenantId: t.id, clerkUserId: input.clerkUserId, role: mapClerkRole(input.role) },
-  });
-}
-
-export async function removeTenantMemberFromClerk(
-  prisma: PrismaClient,
-  input: { clerkOrgId: string; clerkUserId: string },
-): Promise<void> {
-  const t = await prisma.tenant.findUnique({ where: { clerkOrgId: input.clerkOrgId }, select: { id: true } });
-  if (!t) return;
-  await prisma.tenantMember.deleteMany({ where: { tenantId: t.id, clerkUserId: input.clerkUserId } });
-}
-
-/** Remove a deleted Clerk user from tenant memberships (user.deleted). */
-export async function removeUserData(prisma: PrismaClient, clerkUserId: string): Promise<void> {
-  await prisma.tenantMember.deleteMany({ where: { clerkUserId } });
 }
