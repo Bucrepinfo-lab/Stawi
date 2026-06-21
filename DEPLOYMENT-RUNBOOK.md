@@ -44,3 +44,13 @@ Target: **DigitalOcean App Platform**, region **Frankfurt (fra1)**, Node.js runt
 ## Health
 - Liveness: `GET /api/health`
 - Watch: DO App metrics (CPU/mem), Postgres connections, Clerk + M-Pesa error rates.
+
+## Stripe (global card subscriptions)
+- Set `STRIPE_SECRET_KEY`. Checkout activates automatically (subscription mode,
+  30-day trial = first month free), charged in USD, localized display elsewhere.
+- Register a webhook at `https://<app>/api/billing/webhook` for
+  `checkout.session.completed`; copy the signing secret to `STRIPE_WEBHOOK_SECRET`.
+- `/api/billing/checkout` returns a hosted Checkout URL; the /subscribe page
+  redirects to it when a paid plan is chosen and the Terms are accepted.
+- Paystack/Flutterwave/M-Pesa recurring are routed by country (see core/payments.ts)
+  and remain stubs until their keys are added.

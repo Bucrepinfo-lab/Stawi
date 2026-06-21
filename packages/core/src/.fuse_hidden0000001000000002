@@ -67,7 +67,6 @@ export interface CheckoutResult {
   reference: string;
   amountCents: number;
   currency: string;
-  url?: string;
 }
 
 /**

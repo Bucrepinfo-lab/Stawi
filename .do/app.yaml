@@ -47,3 +47,11 @@ services:
       - key: DO_SPACES_SECRET
         scope: RUN_TIME
         type: SECRET
+      - key: STRIPE_SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: STRIPE_WEBHOOK_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: NEXT_PUBLIC_ROOT_DOMAIN
+        scope: RUN_AND_BUILD_TIME

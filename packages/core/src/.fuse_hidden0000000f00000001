@@ -62,12 +62,10 @@ export type CheckoutStatus = 'initiated' | 'pending' | 'succeeded' | 'failed';
 export interface CheckoutResult {
   provider: PaymentProvider;
   status: CheckoutStatus;
-  /** Redirect URL for hosted checkout (e.g. Stripe Checkout). */
   /** Provider-side id (CheckoutRequestID, PaymentIntent id, tx ref…). */
   reference: string;
   amountCents: number;
   currency: string;
-  url?: string;
 }
 
 /**

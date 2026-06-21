@@ -7,6 +7,7 @@ export function SubscribeGate() {
   const [country, setCountry] = useState('KE');
   const [selected, setSelected] = useState<PlanTier>('STARTER');
   const [accepted, setAccepted] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
 
   const COUNTRIES = [
@@ -19,16 +20,38 @@ export function SubscribeGate() {
     const p = getPlan(tier);
     if (p.monthlyUsdCents == null) return 'Custom';
     if (p.monthlyUsdCents === 0) return 'Free';
-    // Approx local display: treat USD cents as the amount, formatted in local currency symbol.
     return `${formatCurrencyFor(p.monthlyUsdCents, country)}/mo`;
   }
 
-  function activate() {
+  async function activate() {
     if (!accepted) return;
     const p = getPlan(selected);
-    setDone(p.monthlyUsdCents && p.monthlyUsdCents > 0
-      ? `${p.name} plan started — first month free. You won't be charged until next month.`
-      : `${p.name} plan activated.`);
+    if (p.monthlyUsdCents == null) { setDone('Enterprise is invoiced — our team will be in touch.'); return; }
+    if (p.monthlyUsdCents === 0) { setDone('Free plan activated.'); return; }
+
+    setBusy(true);
+    setDone(null);
+    try {
+      const res = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tier: selected, country }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url; // hosted Stripe Checkout
+        return;
+      }
+      setDone(
+        data.note
+          ? `${p.name} selected. ${data.note} (Once a payment provider is connected, you'll be sent to secure checkout — first month free.)`
+          : `${p.name} plan started — first month free.`,
+      );
+    } catch {
+      setDone('Could not reach checkout. Please try again.');
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -45,11 +68,7 @@ export function SubscribeGate() {
           const p = getPlan(tier);
           const on = selected === tier;
           return (
-            <button
-              key={tier}
-              onClick={() => setSelected(tier)}
-              style={{ textAlign: 'left', background: 'var(--paper)', border: `2px solid ${on ? 'var(--forest)' : 'var(--line)'}`, borderRadius: 'var(--radius)', padding: 18, cursor: 'pointer', fontFamily: 'inherit', boxShadow: on ? 'var(--shadow)' : 'none' }}
-            >
+            <button key={tier} onClick={() => setSelected(tier)} style={{ textAlign: 'left', background: 'var(--paper)', border: `2px solid ${on ? 'var(--forest)' : 'var(--line)'}`, borderRadius: 'var(--radius)', padding: 18, cursor: 'pointer', fontFamily: 'inherit', boxShadow: on ? 'var(--shadow)' : 'none' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--ink)' }}>{p.name}</span>
                 {on && <span style={{ color: 'var(--forest)', fontWeight: 700 }}>✓</span>}
@@ -73,12 +92,8 @@ export function SubscribeGate() {
         </span>
       </label>
 
-      <button
-        onClick={activate}
-        disabled={!accepted}
-        style={{ marginTop: 18, padding: '14px 26px', borderRadius: 12, border: 'none', background: accepted ? 'var(--gold)' : 'var(--bone-2)', color: accepted ? 'var(--forest-deep)' : 'var(--dim)', fontWeight: 700, fontSize: 15, cursor: accepted ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}
-      >
-        {getPlan(selected).monthlyUsdCents ? 'Start free month' : 'Activate plan'}
+      <button onClick={activate} disabled={!accepted || busy} style={{ marginTop: 18, padding: '14px 26px', borderRadius: 12, border: 'none', background: accepted && !busy ? 'var(--gold)' : 'var(--bone-2)', color: accepted && !busy ? 'var(--forest-deep)' : 'var(--dim)', fontWeight: 700, fontSize: 15, cursor: accepted && !busy ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
+        {busy ? 'Opening secure checkout…' : getPlan(selected).monthlyUsdCents ? 'Start free month' : 'Activate plan'}
       </button>
 
       {done && (

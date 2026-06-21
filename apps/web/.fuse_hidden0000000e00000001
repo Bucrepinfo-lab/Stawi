@@ -10,7 +10,6 @@ const isPublic = createRouteMatcher([
   '/subscribe',
   '/api/health',
   '/api/mpesa/callback',
-  '/api/billing/webhook',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
