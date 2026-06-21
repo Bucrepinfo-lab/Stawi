@@ -197,3 +197,30 @@ export async function addLedgerEntry(
     select: { id: true },
   });
 }
+
+/** Resolve a tenant id from its slug (null if not found). */
+export async function getTenantBySlug(
+  prisma: PrismaClient,
+  slug: string,
+): Promise<{ id: string } | null> {
+  return prisma.tenant.findUnique({ where: { slug }, select: { id: true } });
+}
+
+/**
+ * Tenant context for a user constrained to a specific tenant slug — verifies the
+ * user is a member of that tenant. Returns null if the slug is unknown or the
+ * user is not a member (prevents addressing a tenant you don't belong to).
+ */
+export async function getTenantContextBySlug(
+  prisma: PrismaClient,
+  clerkUserId: string,
+  slug: string,
+): Promise<{ tenantId: string; role: string } | null> {
+  const t = await prisma.tenant.findUnique({ where: { slug }, select: { id: true } });
+  if (!t) return null;
+  const tm = await prisma.tenantMember.findFirst({
+    where: { clerkUserId, tenantId: t.id },
+    select: { role: true },
+  });
+  return tm ? { tenantId: t.id, role: tm.role } : null;
+}

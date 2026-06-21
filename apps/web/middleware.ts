@@ -1,23 +1,34 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+import { resolveTenantSlug } from '@stawi/core';
 
-// Public routes — everything else requires auth.
 const isPublic = createRouteMatcher([
   '/',
   '/sign-in(.*)',
   '/sign-up(.*)',
+  '/terms',
+  '/subscribe',
   '/api/health',
-  '/api/mpesa/callback', // Safaricom posts here, no Clerk session
+  '/api/mpesa/callback',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (!isPublic(req)) {
     await auth.protect();
   }
+  // Resolve the active tenant from subdomain or /t/{slug} and pass it downstream.
+  const slug = resolveTenantSlug({
+    host: req.headers.get('host'),
+    pathname: req.nextUrl.pathname,
+    rootDomain: process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? 'stawi.app',
+  });
+  const headers = new Headers(req.headers);
+  if (slug) headers.set('x-stawi-tenant-slug', slug);
+  return NextResponse.next({ request: { headers } });
 });
 
 export const config = {
   matcher: [
-    // Skip Next internals and static files unless in search params.
     '/((?!_next|[^?]*\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     '/(api|trpc)(.*)',
   ],
