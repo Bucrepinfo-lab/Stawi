@@ -6,7 +6,7 @@
 **Owner:** Jacob (bucrepinfo@gmail.com)
 **Status:** **v1.0 — BUILT & deployment-ready** (98 core tests passing; all integrations drafted live-on-key; awaiting external account keys to go live)
 **Last updated:** 2026-06-22
-**Primary market:** Global, multi-tenant (Kenya-first; 12 countries seeded)
+**Primary market:** Kenya (launch) → Pan-African → Global
 **Stack of record:** Next.js (web) · React Native/Expo (mobile) · Clerk (auth) · DigitalOcean (deploy)
 
 > This document is the single source of truth. It is revised in place (do not fork new versions).
@@ -73,7 +73,7 @@ Millions of Kenyans (and Africans broadly) save through **chamas** — informal 
 
 ---
 
-## 4. Scope — The Four Pillars
+## 4. Scope — The Three Pillars
 
 ### Pillar 1 — Table Banking → Registered Group  *(FIRST BUILD)*
 The foundation. Chosen to build first because it creates the group, the members, the money, and the capital data every other pillar depends on.
@@ -104,42 +104,11 @@ The foundation. Chosen to build first because it creates the group, the members,
 - **Subscriptions:** 10 currency-units/month (in the country's currency), **first month free**, customisable **country flag**.
 - **Multi-tier admin side panel:** super admin sees all individuals/groups/businesses onboard, their subscriptions, and their assigned sales team across constituency → county → national → continental → global. Tabulated analytics: groups/businesses, members subscribed per group, revenue, operations. Each tier supervises the tier below, assigns roles, and pushes weekly/monthly/financial reports upward.
 
-### Pillar 4 — Stawi SACCO+ (Savings & Credit Services) *(added 2026-07-06)*
-
-**The unique MVP — the Graduation Engine.** Deep research into why microfinance groups fail to graduate into SACCOs, then banks, then listed institutions surfaced eight consolidated failure gaps. Each is productised as a Stawi feature (implemented in `core/graduation.ts` → `FAILURE_GAPS`):
-
-| # | Failure gap (research-backed) | Stawi solution |
-|---|---|---|
-| 1 | **Governance failure & insider fraud** (e.g. KUSCCO: Sh13.8B lost, insolvency of Sh12.5B) | Dual-approval on disbursements, immutable audit trail, RBAC, treasurer actions visible to all members live |
-| 2 | **Liquidity breaches & runs** (SASRA 15% liquid-assets floor ignored) | Live liquidity meter + alerts + automatic lending brake near the floor |
-| 3 | **Thin core capital** — cannot absorb losses or meet licence thresholds | Per-member share-capital tracking + capital-adequacy gauge vs next stage |
-| 4 | **Poor books / unauditable records** — audited accounts impossible | Digital double-entry from day one (Pillars 1+3); audit-ready exports anytime |
-| 5 | **Opaque lending & high NPLs** — committee/relationship loans | Deterministic, explainable eligibility scoring; multiplier limits; enforced guarantor coverage |
-| 6 | **Ballooning physical costs** (branches, paper, wages → rate hikes & hidden charges; digital accounts cost 80–95% less to serve) | Branchless by design: onboarding, deposits, loans, notifications, CRM all digital; humans only where regulators demand |
-| 7 | **Uninformed membership & low trust** | Member-visible capital ratios, plain-language statements, in-app education nudges |
-| 8 | **Regulatory non-compliance** (dual/absent supervision) | Country-aware compliance packs, aligned T&Cs, filing reminders, stage-gated checklists |
-
-**The graduation ladder** (assessed live per institution): informal chama → registered self-help group → SACCO (BOSA) → deposit-taking SACCO (FOSA) → microfinance bank → commercial bank → **listed** (the Equity Building Society → Equity Bank → NSE path). Each rung has machine-checkable prudential requirements (capital adequacy ≥10–14.5%, liquidity ≥15–20%, NPL ≤5%, audited years, profit years, member thresholds, governance stack) with a readiness % and a member-visible gap report.
-
-**Products (v1, all four confirmed):**
-1. **Savings** — interest on deposits **10% p.a.** (accrued monthly); share capital pays **13% p.a. dividends** (benchmarked to top DT-SACCOs: Mwalimu 13%/10%, Stima 20%/13%).
-2. **Loans** — reducing-balance only (the honest method): **Development 1.0%/mo, 3× deposits, 36 mo · Instant Emergency 1.5%/mo, auto-disbursed under cap, no guarantors · Business Boost 1.2%/mo, 24 mo** (feeds Pillars 2–3 ventures). Risk-based pricing: Tier A base rate, B +0.25, C +0.5.
-3. **Qualifiable determinants (credit scoring)** — deterministic 100-point score, every point explained: tenure (15), saving streak (25), on-time repayment (30), borrowing headroom (20), security/guarantor coverage (10); hard blocks on defaults, multiplier breach, under-coverage. Approval floor 45; no committee.
-4. **Remittances & transfers** — flat digital fee tiers (10 / 50 / 0.4% capped at 200 units) under mobile-money/bank rates.
-
-**Onboarding (toggleable entity types):** registered groups (**fast-tracked** — KYC reused from the Formalization wizard; first-hand enrolment target), businesses, individuals (lowest barrier: 200 units), institutions/unions/organizations. Each type has its own doc checklist, minimum opening deposit, and minimum share capital.
-
-**Digital-first operating model:** no branches/rentals/paper; system intelligence handles scoring, approvals, alerts, statements; CRM, awareness campaigns, and mobilization run in-app; human involvement only where a country's regulator requires it. This cost base is what funds the competitive rates.
-
-**T&Cs:** submissive to each country's cooperative/financial regulator (extends `legal/SUBSCRIPTION-TERMS.md` + Pillar 3 compliance packs).
-
-**Implementation:** `core/savings.ts`, `core/credit.ts`, `core/graduation.ts` (+37 tests) · Prisma: `SaccoAccount`, `SaccoTxn`, `Loan`, `LoanGuarantor`, `LoanRepayment` + 4 enums · Web: `/sacco` (Join / Save / Borrow / Graduate tabs).
-
 ---
 
 ## 5. Out of Scope (for v1)
 - Cross-border FX / multi-currency settlement (display localization only at first).
-- ~~Lending/credit scoring engine (phase 2).~~ **Delivered in Pillar 4 (2026-07-06).**
+- Lending/credit scoring engine (phase 2).
 - Native voice/video calling infra (start with click-to-call / VoIP handoff).
 - Full ERP inventory beyond stock alerts.
 
@@ -230,30 +199,3 @@ Following your 5-step method, run in **plan mode**, updating this PRD continuous
 ---
 
 *Sources for regulatory/payment research are listed in the chat message accompanying this PRD.*
-
----
-
-## 11. Implementation Status — v1.0 (2026-06-22)
-
-Stawi is **built and deployment-ready** as a global, multi-tenant SaaS. Everything
-below is implemented and parse-clean; **98 core unit tests pass**. The repo is a
-Turborepo monorepo (~120 files).
-
-### Monorepo
-```
-apps/web      Next.js 15 (App Router, server actions) — all UI + API routes
-apps/mobile   Expo / React Native scaffold (own design system, shared tokens)
-packages/core Domain logic — 13 modules, 98 Vitest tests
-packages/db   Prisma schema (13 models / 10 enums) + tenant-scoped repository + seed + RLS
-```
-
-### `@stawi/core` modules (all tested)
-`capital` (capital-ratio), `rotation` (merry-go-round), `tax` (Kenya PAYE/VAT/levies),
-`match` (business-venture generator), `mpesa` (Daraja STK helpers), `accounting`
-(P&L, reconciliation, stock movement, suggestions), `formalization` (SHG/SACCO steps),
-`receipt`, `notifications`, `compliance` (12-country registry), `moderation`
-(abuse/hate/incitement gate), `plans` (Free/Starter/Growth/Enterprise), `tenancy`
-(slug resolver, isolation guards), `payments` (provider routing).
-
-### Web routes
-- Pages: `/` `/dashboard` `/match` 

@@ -290,3 +290,126 @@ model ModerationLog {
 
   @@index([clerkUserId])
 }
+
+// ───────────────────────── SACCO+ Savings & Credit (Pillar 4) ─────────────
+
+enum SaccoEntityType {
+  REGISTERED_GROUP
+  BUSINESS
+  INDIVIDUAL
+  INSTITUTION
+}
+
+enum SaccoTxnType {
+  DEPOSIT
+  WITHDRAWAL
+  SHARE_PURCHASE
+  INTEREST
+  DIVIDEND
+  REMITTANCE_OUT
+  REMITTANCE_IN
+}
+
+enum LoanProductId {
+  DEVELOPMENT
+  EMERGENCY
+  BUSINESS_BOOST
+}
+
+enum LoanStatus {
+  PENDING_SCORE
+  APPROVED
+  DISBURSED
+  REPAYING
+  CLEARED
+  DEFAULTED
+  DECLINED
+}
+
+/// A Stawi SACCO+ account. Owner is any entity type; registered Stawi
+/// groups are fast-tracked (KYC reused from Pillar 1 formalization).
+model SaccoAccount {
+  id                String          @id @default(cuid())
+  tenantId          String
+  entityType        SaccoEntityType
+  ownerClerkId      String?         // individual owner
+  ownerGroupId      String?         // group/business owner
+  displayName       String
+  countryCode       String          @default("KE")
+  balanceCents      Int             @default(0)
+  shareCapitalCents Int             @default(0)
+  pledgedCents      Int             @default(0)
+  kycComplete       Boolean         @default(false)
+
+  txns  SaccoTxn[]
+  loans Loan[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([ownerClerkId])
+}
+
+model SaccoTxn {
+  id          String       @id @default(cuid())
+  account     SaccoAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  accountId   String
+  type        SaccoTxnType
+  amountCents Int
+  channel     PaymentChannel @default(MPESA_STK)
+  status      PaymentStatus  @default(PENDING)
+  reference   String?
+  /// Dual-approval fraud control: second officer confirms disbursements.
+  approvedByClerkId String?
+  createdAt   DateTime     @default(now())
+
+  @@index([accountId, createdAt])
+}
+
+model Loan {
+  id             String        @id @default(cuid())
+  account        SaccoAccount  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  accountId      String
+  product        LoanProductId
+  status         LoanStatus    @default(PENDING_SCORE)
+  principalCents Int
+  monthlyRatePct Float
+  termMonths     Int
+  /// Eligibility snapshot at approval time (score, tier, reasons JSON).
+  scoreJson      String?
+  disbursedAt    DateTime?
+  clearedAt      DateTime?
+
+  guarantors  LoanGuarantor[]
+  repayments  LoanRepayment[]
+
+  createdAt DateTime @default(now())
+
+  @@index([accountId, status])
+}
+
+model LoanGuarantor {
+  id              String @id @default(cuid())
+  loan            Loan   @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  loanId          String
+  guarantorClerkId String
+  coverageCents   Int
+  accepted        Boolean @default(false)
+  createdAt       DateTime @default(now())
+
+  @@index([loanId])
+}
+
+model LoanRepayment {
+  id          String   @id @default(cuid())
+  loan        Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  loanId      String
+  month       Int
+  amountCents Int
+  paidOnTime  Boolean  @default(true)
+  channel     PaymentChannel @default(MPESA_STK)
+  createdAt   DateTime @default(now())
+
+  @@index([loanId])
+}

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 const navLink: React.CSSProperties = { fontWeight: 600, color: 'var(--ink-2)' };
-const PILLARS = ['1 - Table Banking', '2 - Business Matching', '3 - Accounting & Admin'];
+const PILLARS = ['1 - Table Banking', '2 - Business Matching', '3 - Accounting & Admin', '4 - SACCO+ Savings & Credit'];
 
 export default function Home() {
   return (
@@ -18,6 +18,7 @@ export default function Home() {
           <Link href="/match" style={navLink}>Find a business</Link>
           <Link href="/books" style={navLink}>Books</Link>
           <Link href="/formalize" style={navLink}>Formalize</Link>
+          <Link href="/sacco" style={navLink}>SACCO+</Link>
           <Link href="/community" style={navLink}>Community</Link>
           <Link href="/admin" style={navLink}>Admin</Link>
           <Link href="/subscribe" style={{ fontWeight: 700, color: 'var(--forest-deep)', background: 'var(--gold)', padding: '10px 18px', borderRadius: 12, textDecoration: 'none' }}>Pricing</Link>
@@ -49,8 +50,4 @@ export default function Home() {
       <footer style={{ marginTop: 60, paddingTop: 24, borderTop: '1px solid var(--line)', color: 'var(--faint)', fontSize: 13, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <span>Stawi v0.1 — global multi-tenant SaaS</span>
         <Link href="/terms" style={{ color: 'var(--faint)' }}>Terms</Link>
-        <Link href="/subscribe" style={{ color: 'var(--faint)' }}>Pricing</Link>
-      </footer>
-    </main>
-  );
-}
+        <Link href="/subs
