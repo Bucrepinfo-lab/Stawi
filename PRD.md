@@ -256,4 +256,91 @@ packages/db   Prisma schema (13 models / 10 enums) + tenant-scoped repository + 
 (slug resolver, isolation guards), `payments` (provider routing).
 
 ### Web routes
-- Pages: `/` `/dashboard` `/match` 
+- Pages: `/` `/dashboard` `/match` `/books` `/formalize` `/sacco` `/community` `/admin`
+  `/subscribe` `/terms` `/receipt/[ref]` `/sign-in` `/sign-up`
+- API: `/api/health`, `/api/mpesa/stk`, `/api/mpesa/callback`,
+  `/api/billing/checkout`, `/api/billing/webhook` (Stripe), `/api/webhooks/clerk`
+
+### Integrations — all drafted, **live-on-key**
+| Integration | State |
+|---|---|
+| **Clerk** auth + `/sign-in` `/sign-up` + middleware | wired |
+| **Clerk webhook** (org→Tenant, membership→TenantMember, svix verify) | live on `CLERK_WEBHOOK_SECRET` |
+| **M-Pesa Daraja** STK push + callback (pending→confirmed persistence) | live on Daraja keys |
+| **Stripe** Checkout (subscription, 30-day trial) + webhook (HMAC verify) | live on `STRIPE_SECRET_KEY` |
+| **Paystack / Flutterwave** | routed by country, stubs until keyed |
+| **Africa's Talking** SMS acknowledgements | live on AT keys |
+| **Postgres (Prisma)** tenant-scoped queries + `rls.sql` | live on `DATABASE_URL` |
+
+### Multi-tenant model
+Clerk Organization → **Tenant** (billing/isolation boundary, `clerkOrgId`), owning
+Groups. Isolation enforced at the query layer (`getTenantContext`, `assertSameTenant`,
+`tenantScope`) + slug resolver (`umoja.stawi.app` or `/t/umoja`) via middleware +
+`prisma/rls.sql`. See `TENANCY.md`.
+
+### Trust, safety & legal
+- Content-safety gate (`moderation`) on server actions + `ModeratedTextarea`; blocks
+  abuse/incitement/hate, flags profanity, defeats leetspeak. `ModerationLog` audit table.
+- Subscription **Terms & Conditions** template — `legal/SUBSCRIPTION-TERMS.md` (+ `/terms`
+  summary + acceptance gate). ⚠️ needs per-market legal review.
+- `COMPLIANCE.md` — 12-country regulatory registry (⚠️ rates indicative, verify locally).
+
+### Pillar 4 — SACCO+ (added 2026-07-06)
+- `core/savings.ts` (entity onboarding, txn engine, 10% deposit interest, 13% dividends,
+  remittance fee tiers, 15% liquidity guard), `core/credit.ts` (3 loan products,
+  100-point explainable eligibility score, risk-tier pricing, reducing-balance
+  amortization), `core/graduation.ts` (8 failure gaps → solutions, 7-stage ladder
+  assessment) — +37 tests (135 total).
+- Prisma: `SaccoAccount`, `SaccoTxn` (dual-approval field), `Loan`, `LoanGuarantor`,
+  `LoanRepayment`, 4 enums.
+- Web: `/sacco` — Join (entity toggle, fast-track for registered groups) / Save /
+  Borrow (live score + schedule) / Graduate (ladder + gap report) tabs.
+
+### AI-native agents
+`.claude/agents/`: research, operation, support, sales, finance, legal + README
+(Capture→Curate→Store→Execute→Experience recursive context loop).
+
+---
+
+## 12. Continue From Here (next-session backlog)
+
+**External-account wiring (go-live) — see `PRE-DEPLOY-CHECKLIST.md` + `DEPLOYMENT-RUNBOOK.md`:**
+1. Provision DigitalOcean Managed Postgres → `DATABASE_URL`; run generate + migrate +
+   seed; `psql -f packages/db/prisma/rls.sql`.
+2. Clerk keys + register `/api/webhooks/clerk`.
+3. M-Pesa Daraja sandbox keys.
+4. Stripe key + register `/api/billing/webhook`.
+5. `doctl apps create --spec .do/app.yaml`; set SECRET env values; GitHub Actions secrets.
+6. Domain + wildcard `*.stawi.app` for tenant subdomains.
+
+**Code TODOs that activate with a live DB/keys (intentional seams):**
+- Stripe webhook → flip `Subscription.status = ACTIVE` for the tenant (currently logs).
+- `SET app.tenant_id` per DB transaction to activate RLS policies.
+- Replicate the RLS Contribution policy across all tenant-owned child tables.
+- Concrete Paystack / Flutterwave integrations (routing already in place).
+
+**Product backlog (not yet built):**
+- Real-time push (websockets) for live dashboards; member messaging/calling beyond
+  the moderated composer; mobile screens for the newer features; i18n/localization of
+  UI strings + per-market Privacy Policy; cron for reconciliation + subscription billing;
+  receipts to PDF via DO Spaces; reconcile Clerk-Org-as-Group vs Tenant (current:
+  Org→Tenant, Group.clerkOrgId retained).
+
+---
+
+## 13. Skills & Tools Used
+
+- **`frontend-design`** (Anthropic skill) — drove the "warm savanna fintech" design
+  system (Fraunces × Hanken Grotesk × IBM Plex Mono), the 7-pillars-of-UX bar, and all
+  web UI; also the self-contained HTML previews (`design/stawi-prototype.html`,
+  `design/stawi-app-preview.html`).
+- **WebSearch** — Kenya SHG/SACCO law, KRA 2026 tax/levy rates, M-Pesa Daraja 3.0,
+  competitor scan (Chamasoft/SmartChama/MyChama). Cited in the spec.
+- **Sandbox (bash) + esbuild + Vitest** — every file authored via `/tmp` heredoc →
+  copy-to-mount → esbuild parse-check + line-count verify (the mounted folder
+  intermittently truncates large editor writes — see operation-agent note); core logic
+  driven by 98 Vitest tests.
+- **Memory files** (`/spaces/.../memory/`) — cross-session continuity.
+- Not used but available and relevant for next phases: `pptx`/`docx` (investor deck,
+  formal docs), `xlsx` (financial models), `pdf` (receipt generation), Figma skills
+  (design handoff). Per the user's 5-step method, `frontend-design` = step 2 (Claude Design).

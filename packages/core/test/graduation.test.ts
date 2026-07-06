@@ -25,6 +25,25 @@ const base: GraduationInput = {
   registeredWithRegulator: true,
 };
 
+const bankGrade: GraduationInput = {
+  memberCount: 20_000,
+  coreCapitalCents: 150_000_000,
+  totalAssetsCents: 1_000_000_000,
+  liquidAssetsCents: 200_000_000,
+  totalDepositsCents: 800_000_000,
+  nonPerformingLoanCents: 20_000_000,
+  grossLoanCents: 600_000_000,
+  auditedFinancialYears: 6,
+  consecutiveProfitYears: 4,
+  governance: {
+    electedBoard: true,
+    dualApprovalEnabled: true,
+    auditTrailEnabled: true,
+    annualAuditDone: true,
+  },
+  registeredWithRegulator: true,
+};
+
 describe('failure gaps (the MVP thesis)', () => {
   it('consolidates all eight research-backed failure reasons', () => {
     expect(FAILURE_GAPS.map((g) => g.id)).toEqual([
@@ -89,24 +108,17 @@ describe('assessGraduation', () => {
   });
 
   it('a bank-grade institution reaches COMMERCIAL_BANK and eyes listing', () => {
-    const a = assessGraduation({
-      memberCount: 20_000,
-      coreCapitalCents: 150_000_000,
-      totalAssetsCents: 1_000_000_000,
-      liquidAssetsCents: 200_000_000,
-      totalDepositsCents: 800_000_000,
-      nonPerformingLoanCents: 20_000_000,
-      grossLoanCents: 600_000_000,
-      auditedFinancialYears: 6,
-      consecutiveProfitYears: 4,
-      governance: {
-        electedBoard: true,
-        dualApprovalEnabled: true,
-        auditTrailEnabled: true,
-        annualAuditDone: true,
-      },
-      registeredWithRegulator: true,
-    });
+    const a = assessGraduation(bankGrade);
     expect(a.currentStage).toBe('COMMERCIAL_BANK');
     expect(a.nextStage).toBe('LISTED');
-    // 3 of 4 listing checks met — only the 25
+    // 3 of 4 listing checks met — only the 25,000-member base is missing.
+    expect(a.readinessPct).toBe(75);
+  });
+
+  it('a fully listed-grade institution tops out the ladder', () => {
+    const a = assessGraduation({ ...bankGrade, memberCount: 30_000 });
+    expect(a.currentStage).toBe('LISTED');
+    expect(a.nextStage).toBeNull();
+    expect(a.readinessPct).toBe(100);
+  });
+});

@@ -35,8 +35,9 @@ export default function Home() {
         </h1>
         <p style={{ marginTop: 18, fontSize: 18, color: 'var(--ink-2)' }}>
           A global, multi-tenant platform for cooperative saving and enterprise: table
-          banking, business matching, and QuickBooks-grade accounting — localized to
-          each country&rsquo;s currency, tax, and registration rules.
+          banking, business matching, QuickBooks-grade accounting, and full SACCO
+          savings &amp; credit — localized to each country&rsquo;s currency, tax, and
+          registration rules.
         </p>
         <div style={{ display: 'flex', gap: 12, marginTop: 28, flexWrap: 'wrap' }}>
           {PILLARS.map((label) => (
@@ -50,4 +51,8 @@ export default function Home() {
       <footer style={{ marginTop: 60, paddingTop: 24, borderTop: '1px solid var(--line)', color: 'var(--faint)', fontSize: 13, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <span>Stawi v0.1 — global multi-tenant SaaS</span>
         <Link href="/terms" style={{ color: 'var(--faint)' }}>Terms</Link>
-        <Link href="/subs
+        <Link href="/subscribe" style={{ color: 'var(--faint)' }}>Pricing</Link>
+      </footer>
+    </main>
+  );
+}
