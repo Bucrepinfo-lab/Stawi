@@ -1,6 +1,6 @@
 import { SaccoStudio } from './SaccoStudio';
 import { LiveRefresh } from '@/components/LiveRefresh';
-import { getSaccoAccountsData } from '@/lib/data';
+import { getSaccoAccountsData, getViewerRole } from '@/lib/data';
 
 export const metadata = {
   title: 'Stawi SACCO+ — savings & credit services',
@@ -10,6 +10,7 @@ export const metadata = {
 
 export default async function SaccoPage() {
   const accounts = await getSaccoAccountsData();
+  const viewerRole = await getViewerRole();
   return (
     <main style={{ maxWidth: 980, margin: '0 auto', padding: '28px 24px 80px' }}>
       <p
@@ -33,7 +34,7 @@ export default async function SaccoPage() {
         others failed, so your group doesn&apos;t.
       </p>
       <LiveRefresh />
-      <SaccoStudio accounts={accounts} />
+      <SaccoStudio accounts={accounts} viewerRole={viewerRole} />
     </main>
   );
 }

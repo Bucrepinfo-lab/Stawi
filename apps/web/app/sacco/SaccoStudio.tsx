@@ -25,7 +25,7 @@ import {
   type LoanProductId,
   type GraduationInput,
 } from '@stawi/core';
-import type { WebSaccoAccount } from '@/lib/data';
+import type { WebSaccoAccount, ViewerRole } from '@/lib/data';
 import { openSaccoAccountAction, saccoTxnAction, applyLoanAction } from '../actions';
 
 type Tab = 'join' | 'save' | 'borrow' | 'grow';
@@ -61,7 +61,13 @@ const input: React.CSSProperties = {
   fontFamily: 'inherit',
 };
 
-export function SaccoStudio({ accounts = [] }: { accounts?: WebSaccoAccount[] }) {
+export function SaccoStudio({
+  accounts = [],
+  viewerRole = 'MEMBER',
+}: {
+  accounts?: WebSaccoAccount[];
+  viewerRole?: ViewerRole;
+}) {
   const [tab, setTab] = useState<Tab>('join');
   const account = accounts[0];
 
@@ -93,7 +99,7 @@ export function SaccoStudio({ accounts = [] }: { accounts?: WebSaccoAccount[] })
         {tab === 'join' && <JoinTab />}
         {tab === 'save' && <SaveTab account={account} />}
         {tab === 'borrow' && <BorrowTab account={account} />}
-        {tab === 'grow' && <GrowTab account={account} />}
+        {tab === 'grow' && <GrowTab account={account} viewerRole={viewerRole} />}
       </div>
     </div>
   );
@@ -469,7 +475,8 @@ const DEMO_PARTY: CreditTierInput = {
   hasDefaultHistory: false,
 };
 
-function GrowTab({ account }: { account?: WebSaccoAccount }) {
+function GrowTab({ account, viewerRole = 'MEMBER' }: { account?: WebSaccoAccount; viewerRole?: ViewerRole }) {
+  const isOfficial = viewerRole === 'OFFICIAL' || viewerRole === 'SUPER_ADMIN';
   const party = useMemo(
     () => assessCreditTier({ ...DEMO_PARTY, depositsCents: account?.balanceCents ?? DEMO_PARTY.depositsCents }),
     [account],
@@ -544,7 +551,12 @@ function GrowTab({ account }: { account?: WebSaccoAccount }) {
       </div>
 
       <div style={card}>
-        <h3 style={{ marginTop: 0 }}>Your institution's ladder</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
+          <h3 style={{ marginTop: 0 }}>Your institution's ladder</h3>
+          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: isOfficial ? 'var(--gold-deep, #b97e15)' : 'var(--faint, #8b8375)' }}>
+            {isOfficial ? (viewerRole === 'SUPER_ADMIN' ? 'Super-admin view' : 'Officials view') : 'Member view'}
+          </span>
+        </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
           {STAGE_ORDER.map((s, i) => (
             <span key={s} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -566,16 +578,28 @@ function GrowTab({ account }: { account?: WebSaccoAccount }) {
           ))}
         </div>
         <div style={{ display: 'flex', gap: 24, marginTop: 16, flexWrap: 'wrap' }}>
-          <Stat label="Capital adequacy" value={`${a.ratios.capitalAdequacyPct}%`} />
-          <Stat label="Liquidity (floor 15%)" value={`${a.ratios.liquidityPct}%`} highlight={liq.healthy} />
-          <Stat label="NPL ratio" value={`${a.ratios.nplPct}%`} />
+          {isOfficial && (
+            <>
+              <Stat label="Capital adequacy" value={`${a.ratios.capitalAdequacyPct}%`} />
+              <Stat label="Liquidity (floor 15%)" value={`${a.ratios.liquidityPct}%`} highlight={liq.healthy} />
+              <Stat label="NPL ratio" value={`${a.ratios.nplPct}%`} />
+            </>
+          )}
           <Stat label={`Readiness for ${a.nextStage ? STAGE_LABELS[a.nextStage] : 'the top'}`} value={`${a.readinessPct}%`} highlight />
         </div>
+        {!isOfficial && (
+          <p style={{ marginTop: 12, fontSize: 13, color: 'var(--ink-2)', maxWidth: 620 }}>
+            <strong>How members move this forward:</strong> keep your saving streak alive,
+            repay on time, and invite trusted savers — the next licence needs a bigger,
+            disciplined membership. Detailed prudential figures are managed by your
+            elected officials and audited by the system.
+          </p>
+        )}
       </div>
 
-      {a.nextStage && (
+      {a.nextStage && isOfficial && (
         <div style={card}>
-          <h3 style={{ marginTop: 0 }}>What&apos;s between you and {STAGE_LABELS[a.nextStage]}</h3>
+          <h3 style={{ marginTop: 0 }}>What&apos;s between you and {STAGE_LABELS[a.nextStage]} <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--gold-deep, #b97e15)' }}>· OFFICIALS ONLY</span></h3>
           <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none' }}>
             {a.checks.map((c) => (
               <li key={c.label} style={{ padding: '8px 0', borderBottom: '1px solid var(--line, #e6e0d4)', display: 'flex', gap: 10 }}>

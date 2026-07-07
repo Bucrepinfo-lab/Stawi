@@ -138,6 +138,16 @@ Defaults block progression; the top tier requires 6+ months of books — transpa
 is literally rewarded with cheaper money. Rendered as the first section of the
 /sacco Graduate tab (tier cards + "you are here" + gap checklist + readiness %).
 
+**Institution-ladder visibility (decided 2026-07-07):** role-graded, not hidden.
+Members SEE the ladder position + readiness % (it recruits and retains — gap #7
+"uninformed membership" is a failure cause, and the 500-member DT-SACCO check is
+delivered by members themselves) plus a "how members move this forward" nudge.
+Prudential internals (liquidity/capital-adequacy/NPL ratios + detailed gap
+checklist) are OFFICIALS+ only — a misread liquidity figure can trigger the very
+run it guards against. SUPER_ADMIN (env `SUPER_ADMIN_CLERK_IDS`) sees everything
+across tenants via /admin. Implemented: `getViewerRole()` in lib/data →
+`SaccoStudio viewerRole` prop gates the Graduate tab sections.
+
 **Opt-in positioning (locked 2026-07-07):** SACCO+ is NEVER a prerequisite.
 Many target groups will join Stawi for Pillars 1–3 alone — to solve financial-books
 conflicts and get transparent, publishable reports — while already saving/borrowing

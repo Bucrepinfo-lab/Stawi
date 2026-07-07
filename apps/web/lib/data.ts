@@ -119,3 +119,26 @@ export async function getSaccoAccountsData(): Promise<WebSaccoAccount[]> {
   const { getSaccoAccounts } = c.db;
   return getSaccoAccounts(c.db.prisma, c.tenantId, c.userId);
 }
+
+// ───────────────────────── Viewer role (visibility grading) ─────────────────
+
+export type ViewerRole = 'MEMBER' | 'OFFICIAL' | 'SUPER_ADMIN';
+
+/**
+ * Who is looking? Grades what the UI reveals (e.g. prudential ratios on the
+ * institution ladder are officials+ only). SUPER_ADMIN = clerk user ids in
+ * SUPER_ADMIN_CLERK_IDS (comma-separated). Tenant OWNER/ADMIN/MANAGER =
+ * OFFICIAL. Seed mode defaults to OFFICIAL so demos show the full view.
+ */
+export async function getViewerRole(): Promise<ViewerRole> {
+  if (!dbEnabled()) return 'OFFICIAL';
+  const { auth } = await import('@clerk/nextjs/server');
+  const { userId } = await auth();
+  if (!userId) return 'MEMBER';
+  const supers = (process.env.SUPER_ADMIN_CLERK_IDS ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+  if (supers.includes(userId)) return 'SUPER_ADMIN';
+  const db = await import('@stawi/db');
+  const ctx = await db.getTenantContext(db.prisma, userId);
+  if (!ctx) return 'MEMBER';
+  return ctx.role === 'OWNER' || ctx.role === 'ADMIN' || ctx.role === 'MANAGER' ? 'OFFICIAL' : 'MEMBER';
+}
