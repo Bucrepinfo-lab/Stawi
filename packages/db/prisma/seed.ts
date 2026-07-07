@@ -98,7 +98,24 @@ async function main() {
     },
   });
 
-  console.log('Seeded tenant', tenant.slug, 'with groups:', { umoja: umoja.id, vijana: vijana.id, mboga: mboga.id });
+  // Pillar 4 — Umoja opted in to SACCO+ (fast-tracked: registered group).
+  const sacco = await prisma.saccoAccount.create({
+    data: {
+      tenantId: tenant.id,
+      entityType: 'REGISTERED_GROUP',
+      ownerGroupId: umoja.id,
+      displayName: 'Umoja Chama — SACCO+',
+      countryCode: 'KE',
+      balanceCents: 12_800_000,
+      shareCapitalCents: 3_200_000,
+      kycComplete: true,
+      txns: { create: [
+        { type: 'DEPOSIT', amountCents: 12_800_000, channel: 'MPESA_STK', status: 'CONFIRMED', reference: 'SEED-OPENING' },
+      ] },
+    },
+  });
+
+  console.log('Seeded tenant', tenant.slug, 'with groups:', { umoja: umoja.id, vijana: vijana.id, mboga: mboga.id, sacco: sacco.id });
 }
 
 main().then(() => prisma.$disconnect()).catch(async (e) => { console.error(e); await prisma.$disconnect(); process.exit(1); });

@@ -1,0 +1,17 @@
+# Daily scheduler — hits /api/cron (interest accrual runs month-end, dunning daily).
+# Set repo secrets: CRON_URL (https://<app>/api/cron) and CRON_SECRET.
+name: Cron
+
+on:
+  schedule:
+    - cron: '0 3 * * *'   # 03:00 UTC daily
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit /api/cron
+        run: |
+          if [ -z "${{ secrets.CRON_URL }}" ]; then echo "CRON_URL not set — skipping"; exit 0; fi
+          curl -fsS -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" "${{ secrets.CRON_URL }}" | tee /dev/stderr

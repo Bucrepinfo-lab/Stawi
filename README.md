@@ -4,14 +4,15 @@
 
 Stawi carries a savings group across its full journey: from the merry-go-round
 (table banking) → a registered self-help group / SACCO → a matched business →
-running that business with QuickBooks-grade accounting and Kenyan tax compliance.
-Mobile-first and M-Pesa-native.
+running that business with QuickBooks-grade accounting and tax compliance →
+full savings & credit services with a graduation path to a licensed, listed
+institution. Mobile-first and M-Pesa-native.
 
-> Status: **v0.1 — foundation.** All three pillars are scaffolded; the domain
-> logic behind them is implemented and tested (**58 unit tests passing**).
+> Status: **v1.2 — four pillars built.** Domain logic implemented and tested
+> (~135 unit tests), realtime SSE push live, all activation seams closed.
 > See [`PRD.md`](./PRD.md) for the full spec and roadmap.
 
-## The three pillars
+## The four pillars
 
 1. **Table Banking → Registered Group** — rotating contributions, treasurer
    payments that fan out live to every member's dashboard, a real-time
@@ -23,6 +24,13 @@ Mobile-first and M-Pesa-native.
    dead-stock analysis, supplier alerts, Kenya tax auto-calc (VAT, PAYE, levies),
    and a constituency → county → national → continental → global → super-admin
    sales hierarchy.
+4. **SACCO+ Savings & Credit** *(optional — activate from the dashboard)* —
+   10% p.a. on deposits, 13% dividends, loans from 1%/month reducing balance
+   with explainable 100-point eligibility scoring, low-fee remittances, and the
+   **Graduation Engine**: eight research-backed reasons microfinance groups fail
+   to become SACCOs → banks → listed institutions, each productised as a
+   guard-rail, with a live 7-stage ladder. Groups already banking elsewhere can
+   use Pillars 1–3 alone — SACCO+ waits, one tap away, with no lock-in.
 
 Plus: a **formalization wizard** (`/formalize`, SHG → SACCO), **downloadable
 receipts** (`/receipt/[ref]`, print-to-PDF), and **notifications** (in-app bell +

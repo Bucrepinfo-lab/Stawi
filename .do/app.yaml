@@ -53,5 +53,24 @@ services:
       - key: STRIPE_WEBHOOK_SECRET
         scope: RUN_TIME
         type: SECRET
+      - key: PAYSTACK_SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: FLW_SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: CRON_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: AT_USERNAME
+        scope: RUN_TIME
+        type: SECRET
+      - key: AT_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: MPESA_ENV
+        value: sandbox
+      - key: MPESA_SHORTCODE
+        value: "174379" 
       - key: NEXT_PUBLIC_ROOT_DOMAIN
         scope: RUN_AND_BUILD_TIME

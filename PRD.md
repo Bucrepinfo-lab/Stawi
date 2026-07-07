@@ -127,6 +127,16 @@ The foundation. Chosen to build first because it creates the group, the members,
 3. **Qualifiable determinants (credit scoring)** — deterministic 100-point score, every point explained: tenure (15), saving streak (25), on-time repayment (30), borrowing headroom (20), security/guarantor coverage (10); hard blocks on defaults, multiplier breach, under-coverage. Approval floor 45; no committee.
 4. **Remittances & transfers** — flat digital fee tiers (10 / 50 / 0.4% capped at 200 units) under mobile-money/bank rates.
 
+**Opt-in positioning (locked 2026-07-07):** SACCO+ is NEVER a prerequisite.
+Many target groups will join Stawi for Pillars 1–3 alone — to solve financial-books
+conflicts and get transparent, publishable reports — while already saving/borrowing
+with another institution. Pillars 1–3 work fully standalone; SACCO+ surfaces as an
+**optional activation card on the dashboard and a compact banner on /books**
+("Banking elsewhere? No problem…"), one tap, no lock-in. Their Pillar 1–3 history
+(contributions, tenure, books) silently builds their fast-track KYC and loan-limit
+standing, so the day they switch, onboarding is instant and their rate is already
+earned. Acquisition thesis: win the books first, win the wallet later.
+
 **Onboarding (toggleable entity types):** registered groups (**fast-tracked** — KYC reused from the Formalization wizard; first-hand enrolment target), businesses, individuals (lowest barrier: 200 units), institutions/unions/organizations. Each type has its own doc checklist, minimum opening deposit, and minimum share capital.
 
 **Digital-first operating model:** no branches/rentals/paper; system intelligence handles scoring, approvals, alerts, statements; CRM, awareness campaigns, and mobilization run in-app; human involvement only where a country's regulator requires it. This cost base is what funds the competitive rates.
@@ -320,6 +330,14 @@ Groups. Isolation enforced at the query layer (`getTenantContext`, `assertSameTe
 - ✅ Concrete Paystack (`lib/paystack.ts`) + Flutterwave (`lib/flutterwave.ts`) init/verify, live-on-key.
 - ✅ Pillar 4 wired end-to-end: repo (getSaccoAccounts/openSaccoAccount/postSaccoTxn dual-approval/applyForLoan/accrueMonthlyInterest), server actions (open/txn/loan), data provider seed fallback.
 - ✅ `/api/cron` (CRON_SECRET-guarded): month-end interest accrual (idempotent) + subscription dunning.
+
+**Pre-deployment audit (2026-07-07) — PASSED, findings fixed:**
+- FLW env-name mismatch fixed (lib reads `FLW_SECRET_KEY`, legacy alias kept).
+- `.do/app.yaml`: added PAYSTACK/FLW/CRON/AT secrets + MPESA_ENV/SHORTCODE.
+- `.github/workflows/cron.yml`: daily scheduler → /api/cron (needs CRON_URL/CRON_SECRET repo secrets).
+- README rewritten to four pillars + opt-in note; PRE-DEPLOY-CHECKLIST steps 12–13 added.
+- seed.ts seeds a SACCO+ account (Umoja opted in) for DB-mode parity.
+- SACCO+ opt-in entry points: `SaccoActivationCard` on /dashboard (full) + /books (compact).
 
 **Product backlog (not yet built):**
 - ✅ Real-time push (2026-07-07): SSE bus (`lib/events.ts` + `/api/events` +

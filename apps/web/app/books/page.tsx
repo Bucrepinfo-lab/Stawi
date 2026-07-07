@@ -1,4 +1,5 @@
 import { BooksClient } from './BooksClient';
+import { SaccoActivationCard } from '@/components/SaccoActivationCard';
 import { getMyGroups, getBusinessMap } from '@/lib/data';
 
 export default async function BooksPage() {
@@ -7,6 +8,7 @@ export default async function BooksPage() {
   return (
     <main style={{ maxWidth: 960, margin: '0 auto', padding: '28px 24px 80px' }}>
       <BooksClient groups={groups} booksByGroup={booksByGroup} />
+      <SaccoActivationCard compact />
     </main>
   );
 }

@@ -44,6 +44,11 @@ Follow `DEPLOYMENT-RUNBOOK.md`. In short:
     values in the DO dashboard. Set GitHub Actions secrets
     `DIGITALOCEAN_ACCESS_TOKEN` + `DO_APP_ID` for auto-deploy.
 11. **Verify**: `https://<app>/api/health` → `{"status":"ok"}`.
+12. **Cron**: set `CRON_SECRET` env + GitHub repo secrets `CRON_URL`
+    (`https://<app>/api/cron`) and `CRON_SECRET` — `.github/workflows/cron.yml`
+    pings daily (interest accrual runs month-end, dunning daily).
+13. **Paystack / Flutterwave** (optional, per market): `PAYSTACK_SECRET_KEY`,
+    `FLW_SECRET_KEY` — concrete init/verify clients go live on key.
 
 ## Post-deploy hardening (recommended)
 - Activate RLS enforcement by `SET app.tenant_id` at the start of each

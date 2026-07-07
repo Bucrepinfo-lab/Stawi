@@ -2,13 +2,15 @@
  * Flutterwave HTTP client (server-only) — live-on-key.
  *
  * Pan-African card + mobile-money collections (routed by
- * @stawi/core payments.recommendProvider). Without FLUTTERWAVE_SECRET_KEY the
+ * @stawi/core payments.recommendProvider). Without FLW_SECRET_KEY the
  * helpers return `configured: false` so callers can fall back gracefully.
  */
 
 const BASE = 'https://api.flutterwave.com/v3';
 
-export const flutterwaveEnabled = () => !!process.env.FLUTTERWAVE_SECRET_KEY;
+const KEY = () => process.env.FLW_SECRET_KEY ?? process.env.FLUTTERWAVE_SECRET_KEY;
+
+export const flutterwaveEnabled = () => !!KEY();
 
 /**
  * Create a hosted payment link. Amount in MAJOR units (FLW convention).
@@ -27,7 +29,7 @@ export async function flutterwaveInitialize(input: {
   const res = await fetch(`${BASE}/payments`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
+      Authorization: `Bearer ${KEY()}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -62,7 +64,7 @@ export async function flutterwaveVerify(txRef: string): Promise<{
   if (!flutterwaveEnabled()) return { configured: false };
   const res = await fetch(
     `${BASE}/transactions/verify_by_reference?tx_ref=${encodeURIComponent(txRef)}`,
-    { headers: { Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}` }, cache: 'no-store' },
+    { headers: { Authorization: `Bearer ${KEY()}` }, cache: 'no-store' },
   );
   const json = (await res.json()) as {
     status: string;

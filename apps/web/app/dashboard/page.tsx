@@ -1,5 +1,6 @@
 import { DashboardClient } from './DashboardClient';
 import { LiveRefresh } from '@/components/LiveRefresh';
+import { SaccoActivationCard } from '@/components/SaccoActivationCard';
 import { getMyGroups } from '@/lib/data';
 
 // Loads the signed-in member's groups from the data provider (DB if configured,
@@ -10,6 +11,7 @@ export default async function DashboardPage() {
     <main style={{ maxWidth: 920, margin: '0 auto', padding: '28px 24px 80px' }}>
       <LiveRefresh />
       <DashboardClient groups={groups} />
+      <SaccoActivationCard />
     </main>
   );
 }
