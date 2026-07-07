@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "Stawi",
+    "slug": "stawi",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "stawi",
+    "splash": {
+      "backgroundColor": "#1f4d3a"
+    },
+    "ios": { "supportsTablet": true, "bundleIdentifier": "ke.stawi.app" },
+    "android": {
+      "package": "ke.stawi.app",
+      "adaptiveIcon": { "backgroundColor": "#1f4d3a" }
+    },
+    "updates": { "fallbackToCacheTimeout": 0 },
+    "runtimeVersion": { "policy": "sdkVersion" }
+  }
+}
