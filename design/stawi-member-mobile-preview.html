@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stawi — Member Mobile (preview)</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bone:#f6f1e7;--bone-2:#efe8d9;--paper:#fffdf8;--ink:#16261f;--ink-2:#2c4339;--forest:#1f4d3a;--forest-deep:#16382a;--gold:#e0a32e;--gold-deep:#b97e15;--dim:#6b7c73;--faint:#9aa79f;--line:#dcd3c2;--good:#2f7d52;--shadow:0 1px 2px rgba(22,38,31,.06),0 8px 24px -12px rgba(22,38,31,.22)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Hanken Grotesk',sans-serif;background:var(--bone);color:var(--ink);line-height:1.45;-webkit-font-smoothing:antialiased;background-image:radial-gradient(1200px 600px at 80% -10%,rgba(224,163,46,.10),transparent 60%);min-height:100vh;display:grid;place-items:center;padding:26px 14px}
+.mono{font-family:'IBM Plex Mono',monospace;font-feature-settings:"tnum"}
+.stage{text-align:center}
+.stage h1{font-family:'Fraunces';font-weight:600;font-size:22px;color:var(--forest-deep);margin-bottom:4px}
+.stage p{font-size:13px;color:var(--dim);margin-bottom:18px}
+.phone{width:min(390px,94vw);height:760px;background:var(--paper);border:10px solid var(--forest-deep);border-radius:42px;box-shadow:0 30px 80px -30px rgba(22,38,31,.5);overflow:hidden;position:relative;text-align:left;display:flex;flex-direction:column}
+.notch{height:26px;display:grid;place-items:center}
+.notch i{width:110px;height:8px;border-radius:999px;background:var(--bone-2);display:block}
+.appbar{display:flex;align-items:center;justify-content:space-between;padding:8px 18px 6px}
+.logo{display:flex;align-items:center;gap:8px;font-family:'Fraunces';font-weight:600;font-size:17px;color:var(--forest-deep)}
+.logo .mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(145deg,var(--forest),var(--forest-deep));display:grid;place-items:center}
+.logo .mark span{width:10px;height:10px;border-radius:50%;border:2px solid var(--gold);border-top-color:transparent;display:block}
+.bell{position:relative;font-size:17px;cursor:pointer;background:none;border:none}
+.bell b{position:absolute;top:-4px;right:-6px;background:var(--gold);color:var(--forest-deep);font-size:9px;font-weight:800;border-radius:999px;padding:1px 5px}
+.scr{flex:1;overflow-y:auto;padding:6px 16px 14px;display:none}
+.scr.on{display:block}
+.notif{background:var(--forest-deep);color:#fff;border-radius:14px;padding:12px 14px;font-size:12.5px;margin-bottom:12px;display:flex;gap:10px;align-items:flex-start;transform:translateY(-90px);opacity:0;transition:all .5s cubic-bezier(.2,.8,.2,1)}
+.notif.show{transform:none;opacity:1}
+.notif b{color:var(--gold)}
+.hero{background:linear-gradient(150deg,var(--forest),var(--forest-deep));border-radius:18px;padding:16px;color:#fff;margin-bottom:12px}
+.hero .k{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#9fe1cb;font-weight:800}
+.hero .v{font-size:27px;font-weight:800;margin:2px 0 8px}
+.hero .sub{font-size:11.5px;color:#cfe9de}
+.bar{height:7px;background:rgba(255,255,255,.18);border-radius:999px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--gold);transition:width .7s ease}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:13px 14px;box-shadow:var(--shadow);margin-bottom:10px}
+.card h4{font-size:13px;margin-bottom:8px}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:6px 0;border-bottom:1px solid var(--bone-2)}
+.row:last-child{border-bottom:none}
+.row small{color:var(--faint);display:block;font-size:10.5px}
+.pos{color:var(--good);font-weight:800}
+.btn{width:100%;padding:12px;border-radius:12px;border:none;background:var(--gold);color:var(--forest-deep);font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;margin-top:6px}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--forest-deep)}
+.btn:active{transform:scale(.98)}
+.tabs{display:flex;border-top:1px solid var(--line);background:var(--paper)}
+.tab{flex:1;padding:10px 4px 14px;text-align:center;font-size:10.5px;font-weight:700;color:var(--faint);background:none;border:none;cursor:pointer;font-family:inherit}
+.tab .ic{font-size:18px;display:block;margin-bottom:2px}
+.tab.on{color:var(--forest-deep)}
+.stat{margin-bottom:8px}
+.stat .k{font-size:10px;color:var(--faint);font-weight:800;text-transform:uppercase;letter-spacing:.07em}
+.stat .v{font-size:19px;font-weight:800;color:var(--forest-deep)}
+.receipt{border:1.5px dashed var(--gold-deep);border-radius:14px;padding:14px;background:rgba(224,163,46,.05)}
+.receipt .rrow{display:flex;justify-content:space-between;font-size:12px;padding:4px 0}
+.receipt .rrow b{font-weight:700}
+.receipt .tot{border-top:1.5px dashed var(--gold-deep);margin-top:6px;padding-top:8px;font-weight:800}
+.msg{display:flex;gap:8px;margin-bottom:10px}
+.msg .av{width:28px;height:28px;border-radius:50%;background:var(--forest);color:#fff;display:grid;place-items:center;font-size:10.5px;font-weight:800;flex-shrink:0}
+.msg .bub{background:var(--bone-2);border-radius:4px 14px 14px 14px;padding:8px 12px;font-size:12.5px;max-width:78%}
+.msg.me{flex-direction:row-reverse}
+.msg.me .bub{background:var(--forest-deep);color:#fff;border-radius:14px 4px 14px 14px}
+.msg.me .av{background:var(--gold-deep)}
+.stk{position:absolute;inset:0;background:rgba(22,38,31,.55);display:none;place-items:center;z-index:20;padding:26px}
+.stk.on{display:grid}
+.stkbox{background:#fff;border-radius:16px;padding:20px;width:100%;max-width:290px;text-align:center}
+.stkbox h5{font-size:14px;margin-bottom:6px}
+.stkbox p{font-size:12px;color:var(--ink-2);margin-bottom:12px}
+.pin{display:flex;gap:8px;justify-content:center;margin-bottom:14px}
+.pin i{width:12px;height:12px;border-radius:50%;border:2px solid var(--forest);display:block}
+.pin i.f{background:var(--forest)}
+.toast{position:absolute;left:50%;bottom:88px;transform:translateX(-50%) translateY(60px);background:var(--forest-deep);color:#fff;padding:10px 16px;border-radius:11px;font-size:12px;font-weight:700;opacity:0;transition:all .35s;z-index:30;white-space:nowrap}
+.toast.on{opacity:1;transform:translateX(-50%)}
+</style>
+</head>
+<body>
+<div class="stage">
+  <h1>Amina's phone — the member view</h1>
+  <p>Try the tabs, the bell, “Pay my round”, and “Download receipt”.</p>
+  <div class="phone">
+    <div class="notch"><i></i></div>
+    <div class="appbar">
+      <div class="logo"><span class="mark"><span></span></span>Stawi</div>
+      <button class="bell" id="bell">🔔<b id="bellN">1</b></button>
+    </div>
+
+    <!-- HOME -->
+    <div class="scr on" id="s-home">
+      <div class="notif" id="notif">💸 <span><b>Payment confirmed.</b> Treasurer recorded your KES 2,000 contribution to Umoja Chama. Receipt ready — your capital share is now <b>34.4%</b>.</span></div>
+      <div class="hero">
+        <div class="k">My capital in Umoja Chama</div>
+        <div class="v mono" id="myCap">KES 44,000</div>
+        <div class="sub">Share of group pot: <b class="mono" id="mySh">34.4%</b> · pot KES 128,000</div>
+        <div class="bar"><i id="myBar" style="width:34.4%"></i></div>
+      </div>
+      <div class="card">
+        <h4>This week's merry-go-round</h4>
+        <div class="row"><span>Round recipient<small>Cycle 8 of 12</small></span><b>Grace Njeri</b></div>
+        <div class="row"><span>My round due<small>Friday · KES 2,000</small></span><span class="pos">2 days left</span></div>
+        <button class="btn" id="payBtn">Pay my round — M-Pesa</button>
+        <button class="btn ghost" id="rcptBtn">Download receipt (last payment)</button>
+      </div>
+      <div class="card">
+        <h4>Group pulse — live</h4>
+        <div class="row"><span>Joseph paid<small>2 min ago · M-Pesa</small></span><span class="pos mono">+KES 2,000</span></div>
+        <div class="row"><span>SACCO+ interest posted<small>this morning</small></span><span class="pos mono">+KES 1,067</span></div>
+        <div class="row"><span>Venture shortlist vote<small>Poultry vs. cereals — closes Sun</small></span><b>Vote</b></div>
+      </div>
+    </div>
+
+    <!-- SAVE -->
+    <div class="scr" id="s-save">
+      <div class="stat"><div class="k">SACCO+ deposits</div><div class="v mono">KES 44,000</div></div>
+      <div class="card"><h4>Earning</h4>
+        <div class="row"><span>Interest on deposits</span><b>10% p.a.</b></div>
+        <div class="row"><span>My interest this month</span><span class="pos mono">+KES 367</span></div>
+        <div class="row"><span>Share capital dividends</span><b>13% p.a.</b></div>
+      </div>
+      <div class="card"><h4>Move money</h4>
+        <button class="btn" id="depBtn">Deposit via M-Pesa</button>
+        <button class="btn ghost" id="wdBtn">Withdraw (KES 29,000 free)</button>
+      </div>
+    </div>
+
+    <!-- BORROW -->
+    <div class="scr" id="s-borrow">
+      <div class="stat"><div class="k">My loan limit (3× deposits)</div><div class="v mono">KES 132,000</div></div>
+      <div class="card"><h4>My score — updated live</h4>
+        <div class="row"><span>Eligibility score</span><b class="mono">86/100 · Tier A</b></div>
+        <div class="row"><span>My rate</span><b>1.0%/month reducing</b></div>
+        <div class="row"><span>Saving streak</span><b>11 months ✓</b></div>
+        <button class="btn" id="loanBtn">Request instant emergency loan</button>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="scr" id="s-chat">
+      <div class="card" style="background:transparent;border:none;box-shadow:none;padding:4px 0">
+        <div class="msg"><span class="av">TW</span><div class="bub">Treasurer: payments for cycle 8 close Friday. 9 of 12 in! 🎉</div></div>
+        <div class="msg me"><span class="av">AW</span><div class="bub">Paid mine ✅ receipt came through instantly.</div></div>
+        <div class="msg"><span class="av">GN</span><div class="bub">Asante! Also vote on the poultry venture before Sunday.</div></div>
+      </div>
+      <div class="card"><h4>Message the group</h4>
+        <button class="btn ghost" id="chatBtn">Type a message…</button>
+      </div>
+    </div>
+
+    <!-- RECEIPT -->
+    <div class="scr" id="s-receipt">
+      <div class="card">
+        <h4>Official receipt</h4>
+        <div class="receipt">
+          <div class="rrow"><span>Group</span><b>Umoja Chama 🇰🇪</b></div>
+          <div class="rrow"><span>Member</span><b>Amina Wanjiru</b></div>
+          <div class="rrow"><span>Reference</span><b class="mono">STW-8F3K2M</b></div>
+          <div class="rrow"><span>Channel</span><b>M-Pesa STK</b></div>
+          <div class="rrow"><span>Date</span><b id="rDate"></b></div>
+          <div class="rrow tot"><span>Amount</span><b class="mono">KES 2,000</b></div>
+          <div class="rrow"><span>Running capital</span><b class="mono">KES 44,000 (34.4%)</b></div>
+        </div>
+        <button class="btn" id="pdfBtn">Save as PDF</button>
+        <button class="btn ghost" id="backBtn">Back to home</button>
+      </div>
+    </div>
+
+    <!-- STK sheet -->
+    <div class="stk" id="stk"><div class="stkbox">
+      <h5>M-Pesa</h5><p>Pay <b>KES 2,000</b> to STAWI-UMOJA?<br>Enter PIN to confirm.</p>
+      <div class="pin" id="pin"><i></i><i></i><i></i><i></i></div>
+    </div></div>
+
+    <div class="toast" id="toast"></div>
+
+    <nav class="tabs">
+      <button class="tab on" data-s="home"><span class="ic">🏠</span>Home</button>
+      <button class="tab" data-s="save"><span class="ic">🪙</span>Save</button>
+      <button class="tab" data-s="borrow"><span class="ic">🤝</span>Borrow</button>
+      <button class="tab" data-s="chat"><span class="ic">💬</span>Chat</button>
+    </nav>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+function show(s){document.querySelectorAll('.scr').forEach(x=>x.classList.toggle('on',x.id==='s-'+s));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.s===s));}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>show(t.dataset.s));
+function ping(m){const t=$('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2400);}
+
+setTimeout(()=>$('notif').classList.add('show'),600);
+$('bell').onclick=()=>{ $('notif').classList.add('show'); $('bellN').textContent='0'; show('home'); ping('1 notification — payment confirmed'); };
+
+$('rDate').textContent=new Date().toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});
+$('rcptBtn').onclick=()=>show('receipt');
+$('backBtn').onclick=()=>show('home');
+$('pdfBtn').onclick=()=>ping('Receipt STW-8F3K2M saved as PDF ✓');
+
+function stkFlow(after){
+  $('stk').classList.add('on');
+  const dots=$('pin').children;
+  [...dots].forEach(d=>d.classList.remove('f'));
+  let i=0; const iv=setInterval(()=>{ dots[i].classList.add('f'); i++;
+    if(i===4){ clearInterval(iv); setTimeout(()=>{ $('stk').classList.remove('on'); after(); },450); } },330);
+}
+$('payBtn').onclick=()=>stkFlow(()=>{ ping('KES 2,000 paid ✓ receipt issued · pot updated for all 12 members');
+  $('myCap').textContent='KES 46,000'; $('mySh').textContent='35.4%'; $('myBar').style.width='35.4%'; });
+$('depBtn').onclick=()=>stkFlow(()=>ping('Deposit received ✓ earning 10% p.a. from today'));
+$('wdBtn').onclick=()=>ping('Withdrawal queued — dual approval requested from treasurer');
+$('loanBtn').onclick=()=>ping('Scored 86/100 · Tier A — KES 20,000 disbursing to M-Pesa…');
+$('chatBtn').onclick=()=>ping('Composer opens here — moderated & audit-logged');
+</script>
+</body>
+</html>

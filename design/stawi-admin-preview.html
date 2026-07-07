@@ -49,6 +49,16 @@ tr:last-child td{border-bottom:none}
 h3{font-size:15px;margin-bottom:10px}
 .assign{margin-top:14px;padding:12px;border:1px dashed var(--gold-deep);border-radius:12px;background:rgba(224,163,46,.06);font-size:12.5px;color:var(--ink-2)}
 .foot{margin-top:30px;color:var(--faint);font-size:12px}
+.overlay{position:fixed;inset:0;background:rgba(22,38,31,.45);display:none;place-items:center;z-index:50;padding:20px}
+.overlay.on{display:grid}
+.modal{background:var(--paper);border-radius:18px;max-width:520px;width:100%;padding:22px;box-shadow:0 20px 60px -20px rgba(22,38,31,.5);max-height:82vh;overflow-y:auto}
+.modal h4{font-family:'Fraunces';font-size:19px;margin-bottom:4px}
+.modal .sub{font-size:12.5px;color:var(--dim);margin-bottom:14px}
+.modal table{font-size:12.5px}
+.modal .close{margin-top:16px;padding:10px 18px;border-radius:10px;border:none;background:var(--forest-deep);color:#fff;font-weight:800;cursor:pointer;font-family:inherit}
+.modal select,.modal input{margin-bottom:10px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(80px);background:var(--forest-deep);color:#fff;padding:12px 20px;border-radius:12px;font-size:13.5px;font-weight:700;opacity:0;transition:all .35s ease;z-index:60;box-shadow:var(--shadow)}
+.toast.on{opacity:1;transform:translateX(-50%)}
 </style>
 </head>
 <body>
@@ -93,6 +103,9 @@ h3{font-size:15px;margin-bottom:10px}
       <div id="downline"></div>
     </div>
   </div>
+
+  <div class="overlay" id="ovl"><div class="modal" id="modal"></div></div>
+  <div class="toast" id="toast"></div>
 
   <p class="foot">Self-contained preview · hierarchy mirrors @stawi/core tenancy + SalesAgent model (constituency → county → national → continental → global → super admin)</p>
 </div>
@@ -171,6 +184,46 @@ function render(){
   $('downline').innerHTML = DOWN[t.id].map(d=>`<div class="rep"><span>${d[0]}<small style="display:block;color:var(--faint)">${d[1]}</small></span><button class="btn">Assign role</button></div>`).join('');
 }
 render();
+
+/* ── working buttons: report previews + role assignment ── */
+const ovl=$('ovl'), modal=$('modal'), toast=$('toast');
+function openM(html){ modal.innerHTML=html+'<button class="close" id="mClose">Close</button>'; ovl.classList.add('on'); $('mClose').onclick=closeM; }
+function closeM(){ ovl.classList.remove('on'); }
+ovl.addEventListener('click',e=>{ if(e.target===ovl) closeM(); });
+function ping(msg){ toast.textContent=msg; toast.classList.add('on'); setTimeout(()=>toast.classList.remove('on'),2600); }
+
+function scoped(){ const maxLvl=cur===5?4:cur; return ORGS.filter(o=>o.lvl<=maxLvl); }
+
+function reportHTML(kind){
+  const t=TIERS[cur], rows=scoped();
+  const mem=rows.reduce((s,o)=>s+o.m,0), mrr=rows.reduce((s,o)=>s+o.mrr,0);
+  const body=rows.slice(0,5).map(o=>`<tr><td>${o.n}</td><td class="mono">${o.m}</td><td>${o.st==='a'?'Active':o.st==='t'?'Trial':'Past due'}</td><td class="mono">${usd(o.mrr)}</td></tr>`).join('');
+  return `<h4>${kind}</h4><p class="sub">${t.label} — ${t.scope} → submitted to ${t.up}</p>
+    <table><thead><tr><th>Group</th><th>Members</th><th>Status</th><th>MRR</th></tr></thead><tbody>${body}</tbody></table>
+    <p class="sub" style="margin-top:12px">Totals: ${rows.length} groups · ${mem.toLocaleString()} subscribed members · ${usd(mrr)} MRR · SACCO+ uptake ${Math.round(rows.filter(o=>o.sac).length/rows.length*100)}%. Auto-compiled by Stawi; one tap submits it up the ladder with a full audit-trail entry.</p>`;
+}
+
+function assignHTML(name, hint){
+  const below = cur===5?'Global manager':cur===4?'Continental manager':cur===3?'National manager':cur===2?'County manager':cur===1?'Constituency rep':'Group official';
+  const roles = cur===0 ? ['CHAIRMAN','SECRETARY','TREASURER','SIGNATORY'] : [below];
+  return `<h4>Assign role</h4><p class="sub">${name} — ${hint}</p>
+    <label>Role (your tier can assign one level down only)</label>
+    <select id="roleSel">${roles.map(r=>`<option>${r}</option>`).join('')}</select>
+    <label>Assignee</label><input id="roleWho" value="${name.split(' — ')[0]}">
+    <button class="close" style="background:var(--gold);color:var(--forest-deep)" id="roleGo">Confirm assignment</button> `;
+}
+
+document.addEventListener('click', e=>{
+  const b=e.target.closest('.btn'); if(!b) return;
+  const rep=b.closest('.rep'), label=rep.querySelector('span').textContent;
+  if(b.textContent==='Preview'){
+    openM(reportHTML(label.includes('Weekly')?'Weekly operations report':label.includes('Monthly')?'Monthly financial report':'Quarterly operations & growth review'));
+  } else {
+    const small=rep.querySelector('small');
+    openM(assignHTML(label.replace(small?small.textContent:'',''), small?small.textContent:''));
+    setTimeout(()=>{ const g=$('roleGo'); if(g) g.onclick=()=>{ const r=$('roleSel').value, w=$('roleWho').value; closeM(); ping(`${r} assigned to ${w} — logged to audit trail`); }; },0);
+  }
+});
 </script>
 </body>
 </html>
