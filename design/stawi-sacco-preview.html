@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stawi SACCO+ — Savings & Credit (Pillar 4)</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bone:#f6f1e7;--bone-2:#efe8d9;--paper:#fffdf8;--ink:#16261f;--ink-2:#2c4339;--forest:#1f4d3a;--forest-deep:#16382a;--gold:#e0a32e;--gold-deep:#b97e15;--clay:#c5613c;--sky:#3c7d8c;--dim:#6b7c73;--faint:#9aa79f;--line:#dcd3c2;--good:#2f7d52;--warn:#cc8a1e;--danger:#c4452f;--radius:18px;--radius-sm:12px;--shadow:0 1px 2px rgba(22,38,31,.06),0 8px 24px -12px rgba(22,38,31,.22)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Hanken Grotesk',sans-serif;background:var(--bone);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;background-image:radial-gradient(1200px 600px at 80% -10%,rgba(224,163,46,.10),transparent 60%),radial-gradient(900px 500px at -10% 20%,rgba(31,77,58,.08),transparent 55%);min-height:100vh}
+.mono{font-family:'IBM Plex Mono',monospace;font-feature-settings:"tnum"}
+.display{font-family:'Fraunces';letter-spacing:-.02em}
+.wrap{max-width:1020px;margin:0 auto;padding:26px 22px 90px}
+header.top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-bottom:18px}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Fraunces';font-weight:600;font-size:22px;color:var(--forest-deep)}
+.logo .mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(145deg,var(--forest),var(--forest-deep));display:grid;place-items:center}
+.logo .mark span{width:13px;height:13px;border-radius:50%;border:2.5px solid var(--gold);border-top-color:transparent;display:block}
+.kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-deep);font-weight:700}
+h1{font-family:'Fraunces';font-weight:600;font-size:clamp(28px,4.5vw,40px);margin-top:6px;color:var(--ink)}
+.lede{color:var(--ink-2);margin-top:8px;max-width:640px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:26px 0 20px}
+.tab{padding:10px 20px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);font-weight:700;font-family:inherit;font-size:14px;cursor:pointer;transition:all .18s}
+.tab:hover{border-color:var(--forest)}
+.tab.on{background:var(--forest-deep);color:#fff;border-color:var(--forest-deep)}
+.panel{display:none;animation:rise .35s ease}
+.panel.on{display:block}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+h3{font-size:16px;margin-bottom:10px}
+label{display:block;font-size:12.5px;font-weight:700;color:var(--ink-2);margin:12px 0 5px}
+input,select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);font-size:15px;font-family:inherit;background:#fff}
+input:focus,select:focus{outline:2px solid var(--gold);outline-offset:1px}
+.stat .k{font-size:11px;color:var(--faint);font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.stat .v{font-size:19px;font-weight:800}
+.stat .v.hi{color:var(--forest)}
+.row{display:flex;gap:26px;flex-wrap:wrap;margin-top:12px}
+.chip{padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:transparent;font-weight:600;font-family:inherit;font-size:13.5px;cursor:pointer}
+.chip.on{border:2px solid var(--forest-deep);background:var(--bone-2)}
+.pill{display:inline-block;padding:6px 14px;border-radius:999px;font-weight:800;font-size:13px;color:#fff}
+.pill.ok{background:var(--good)}.pill.no{background:var(--danger)}
+ul.docs{padding-left:20px;color:var(--ink-2);font-size:14px}
+ul.docs li{margin-bottom:4px}
+.cta{margin-top:16px;padding:12px 24px;border-radius:12px;border:none;background:var(--gold);color:var(--forest-deep);font-weight:800;font-size:15px;cursor:pointer;font-family:inherit}
+.cta:hover{background:var(--gold-deep);color:#fff}
+.fine{font-size:12px;color:var(--faint);margin-top:10px}
+.fast{margin-top:12px;color:var(--forest);font-weight:700;font-size:14px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:right;padding:6px;color:var(--dim);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+td{text-align:right;padding:7px 6px;border-top:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+.reasons{font-size:13px;color:var(--ink-2);padding-left:18px}
+.reasons li{margin-bottom:4px}
+.prodbtn{flex:1 1 230px;text-align:left;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--paper);cursor:pointer;font-family:inherit}
+.prodbtn.on{border:2px solid var(--forest-deep);background:var(--bone-2)}
+.prodbtn strong{font-size:14.5px}
+.prodbtn p{font-size:12.5px;color:var(--ink-2);margin-top:5px}
+.prodbtn .rate{font-size:12.5px;font-weight:800;margin-top:6px;color:var(--forest)}
+.ladder{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.rung{padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:700;border:1px solid var(--line);color:var(--ink-2)}
+.rung.past{background:var(--bone-2)}
+.rung.now{background:var(--forest-deep);color:#fff;border-color:var(--forest-deep)}
+.arrow{color:var(--faint)}
+.checks{list-style:none}
+.checks li{padding:9px 0;border-bottom:1px solid var(--line);display:flex;gap:10px;font-size:14px}
+.checks li:last-child{border-bottom:none}
+.tick{font-weight:800}.tick.y{color:var(--good)}.tick.n{color:var(--danger)}
+.gap{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--paper)}
+.gap strong{font-size:14px}
+.gap .why{font-size:12.5px;color:var(--ink-2);margin:6px 0}
+.gap .sol{font-size:12.5px}
+.gap .sol b{color:var(--forest)}
+.meter{height:9px;background:var(--bone-2);border-radius:999px;overflow:hidden;margin-top:6px}
+.meter i{display:block;height:100%;background:linear-gradient(90deg,var(--forest),var(--good));border-radius:999px;transition:width .5s ease}
+footer{margin-top:48px;color:var(--faint);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo"><span class="mark"><span></span></span>Stawi</div>
+    <span class="kicker">Pillar 4 · SACCO+ preview</span>
+  </header>
+
+  <p class="kicker">Savings &amp; Credit Services</p>
+  <h1>Save, borrow, and graduate — all digital</h1>
+  <p class="lede">No branches, no paperwork, no hidden charges. Deposits earn 10% a year, loans start at 1% a month on reducing balance, and the system — not a committee — scores every application in seconds. Built on the reasons others failed, so your group doesn't.</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab on" data-t="join">Join</button>
+    <button class="tab" data-t="save">Save</button>
+    <button class="tab" data-t="borrow">Borrow</button>
+    <button class="tab" data-t="grow">Graduate</button>
+  </div>
+
+  <!-- JOIN -->
+  <section class="panel on" id="p-join">
+    <div class="card">
+      <h3>Who is joining?</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="entities"></div>
+      <p class="fast" id="fastNote" hidden>⚡ Fast-tracked — your group's KYC is reused from the Formalization wizard. One tap to open.</p>
+      <h3 style="margin-top:18px">What the system needs</h3>
+      <ul class="docs" id="docList"></ul>
+      <div class="row">
+        <div class="stat"><div class="k">Minimum opening deposit</div><div class="v" id="minDep"></div></div>
+        <div class="stat"><div class="k">Minimum share capital</div><div class="v" id="minShare"></div></div>
+      </div>
+      <button class="cta">Open my SACCO+ account</button>
+      <p class="fine">By opening an account you accept the SACCO+ terms, aligned to your country's cooperative and financial regulator. First month of the platform is free.</p>
+    </div>
+  </section>
+
+  <!-- SAVE -->
+  <section class="panel" id="p-save">
+    <div class="grid g3">
+      <div class="card">
+        <h3>Deposits earn while they sit</h3>
+        <label for="bal">Savings balance</label>
+        <input id="bal" type="number" value="250000">
+        <div class="row">
+          <div class="stat"><div class="k">Interest on deposits</div><div class="v">10% per year</div></div>
+          <div class="stat"><div class="k">You earn monthly</div><div class="v hi" id="intOut"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Share capital pays dividends</h3>
+        <label for="shr">Share capital held</label>
+        <input id="shr" type="number" value="50000">
+        <div class="row">
+          <div class="stat"><div class="k">Dividend rate</div><div class="v">13% per year</div></div>
+          <div class="stat"><div class="k">Annual dividend</div><div class="v hi" id="divOut"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Send money for less</h3>
+        <label for="rem">Amount to send</label>
+        <input id="rem" type="number" value="10000">
+        <div class="row"><div class="stat"><div class="k">Flat digital fee</div><div class="v hi" id="feeOut"></div></div></div>
+        <p class="fine">No branches or paper to pay for — the savings become your savings. Deposits and withdrawals ride M-Pesa, bank, or card rails instantly, with receipts and real-time member dashboards.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BORROW -->
+  <section class="panel" id="p-borrow">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px" id="prods"></div>
+    <div class="grid g2">
+      <div class="card">
+        <h3>Your numbers</h3>
+        <label for="dep">My deposits</label><input id="dep" type="number" value="100000">
+        <label for="amt">Loan I want</label><input id="amt" type="number" value="150000">
+        <label for="mo">Repay over (months) — <span id="moMax"></span></label><input id="mo" type="number" value="12">
+        <label for="stk">Saving streak (months)</label><input id="stk" type="number" value="8">
+        <label for="ten">Months as a member</label><input id="ten" type="number" value="12">
+      </div>
+      <div class="card">
+        <h3>System decision — in seconds</h3>
+        <span class="pill ok" id="verdict"></span>
+        <div class="row">
+          <div class="stat"><div class="k">Score</div><div class="v mono" id="score"></div></div>
+          <div class="stat"><div class="k">Your rate</div><div class="v mono" id="rate"></div></div>
+          <div class="stat"><div class="k">Your limit</div><div class="v mono" id="limit"></div></div>
+        </div>
+        <div class="row" id="payRow">
+          <div class="stat"><div class="k">Monthly instalment</div><div class="v hi mono" id="pay"></div></div>
+          <div class="stat"><div class="k">Total interest</div><div class="v mono" id="tint"></div></div>
+        </div>
+        <h3 style="margin-top:16px">How the score was built</h3>
+        <ul class="reasons" id="reasons"></ul>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;overflow-x:auto" id="schedCard">
+      <h3>Reducing-balance schedule (first 6 months)</h3>
+      <table><thead><tr><th>Month</th><th>Payment</th><th>Interest</th><th>Principal</th><th>Balance</th></tr></thead><tbody id="sched"></tbody></table>
+    </div>
+  </section>
+
+  <!-- GROW -->
+  <section class="panel" id="p-grow">
+    <div class="card">
+      <h3>The graduation ladder</h3>
+      <div class="ladder" id="ladder"></div>
+      <div class="row">
+        <div class="stat"><div class="k">Capital adequacy</div><div class="v mono" id="capR"></div></div>
+        <div class="stat"><div class="k">Liquidity (floor 15%)</div><div class="v mono hi" id="liqR"></div></div>
+        <div class="stat"><div class="k">NPL ratio</div><div class="v mono" id="nplR"></div></div>
+        <div class="stat" style="min-width:220px"><div class="k" id="readyK"></div><div class="v hi mono" id="readyV"></div><div class="meter"><i id="readyBar"></i></div></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h3 id="nextH"></h3>
+      <ul class="checks" id="checks"></ul>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h3>Why others failed — and how Stawi closes each gap</h3>
+      <div class="grid g3" id="gaps"></div>
+    </div>
+  </section>
+
+  <footer>Stawi SACCO+ · self-contained design preview · logic mirrors <span class="mono">@stawi/core</span> savings.ts / credit.ts / graduation.ts</footer>
+</div>
+
+<script>
+/* ── inline port of @stawi/core Pillar 4 (money in whole currency units here for display) ── */
+const fmt = n => n.toLocaleString('en-KE', {maximumFractionDigits: 0});
+
+const ENTITIES = {
+  REGISTERED_GROUP:{label:'Registered group / chama',fast:true,minDep:1000,minShare:5000,docs:['Group registration certificate (auto-filled from Formalization wizard)','Officials list — chairman, secretary, treasurer (auto-filled)','Group resolution/minute to open the account']},
+  BUSINESS:{label:'Business',fast:false,minDep:1000,minShare:5000,docs:['Business registration / incorporation certificate','Tax PIN of the business','ID of at least one director/owner']},
+  INDIVIDUAL:{label:'Individual',fast:false,minDep:200,minShare:1000,docs:['National ID or passport','Phone number (mobile-money verified)']},
+  INSTITUTION:{label:'Institution / union / organization',fast:false,minDep:5000,minShare:10000,docs:['Certificate of registration (society, union, NGO, church…)','Constitution or governing document','Board/committee resolution to open the account','Signatories list with IDs']}
+};
+const PRODUCTS = {
+  DEVELOPMENT:{name:'Development loan',blurb:'Long-term projects — land, housing, education. Up to 3× your deposits.',rate:1.0,mult:3,maxMo:36,instantCap:null,minTenure:3},
+  EMERGENCY:{name:'Instant emergency loan',blurb:'Scored and disbursed by the system in minutes, day or night.',rate:1.5,mult:0.5,maxMo:6,instantCap:50000,minTenure:1},
+  BUSINESS_BOOST:{name:'Business boost loan',blurb:'Working capital for a venture matched in Pillar 2 or running in Pillar 3.',rate:1.2,mult:3,maxMo:24,instantCap:null,minTenure:3}
+};
+const TIER_PREM = {A:0,B:0.25,C:0.5};
+
+function score(p, req, inp){
+  const rs=[]; let s=0;
+  if(inp.tenure >= p.minTenure){ const pts=Math.min(15,5+inp.tenure); s+=pts; rs.push(`+${pts} membership tenure (${inp.tenure} months)`);}
+  else { rs.push(`Blocked: needs ${p.minTenure} months of membership, has ${inp.tenure}.`); return dec(p,inp,rs);}
+  const st=Math.min(25,inp.streak*3); s+=st; rs.push(`+${st} saving streak (${inp.streak} consecutive months)`);
+  const rp=Math.round(30*inp.onTime); s+=rp; rs.push(`+${rp} on-time repayment history (${Math.round(inp.onTime*100)}%)`);
+  const lim=Math.max(0,Math.floor(inp.dep*p.mult)-inp.existing);
+  if(lim<=0||req>lim){ rs.push(`Blocked: request exceeds the ${p.mult}× deposit limit (max ${fmt(lim)}).`); return dec(p,inp,rs);}
+  const cap=Math.round(10+10*(1-req/lim)); s+=cap; rs.push(`+${cap} borrowing headroom (using ${Math.round(req/lim*100)}% of limit)`);
+  const inst=p.instantCap!==null&&req<=p.instantCap;
+  const cov=inp.dep+inp.guar;
+  if(!inst&&cov<req){ rs.push(`Blocked: deposits + guarantors cover ${fmt(cov)} of ${fmt(req)} — add guarantors.`); return dec(p,inp,rs);}
+  const sec=inst?5:10; s+=sec; rs.push(inst?`+${sec} instant product (no guarantor needed under cap)`:`+${sec} fully secured by deposits + guarantors`);
+  const tier=s>=80?'A':s>=60?'B':s>=45?'C':'DECLINE';
+  if(tier==='DECLINE'){ rs.push('Score below the 45-point approval floor.'); return dec(p,inp,rs,s);}
+  return {score:s,tier,rate:+(p.rate+TIER_PREM[tier]).toFixed(2),limit:lim,reasons:rs,ok:true};
+  function dec(p,inp,rs,sc=0){return {score:sc,tier:'DECLINE',rate:p.rate,limit:Math.max(0,Math.floor(inp.dep*p.mult)-inp.existing),reasons:rs,ok:false};}
+}
+function amortize(P, mPct, n){
+  if(P<=0||n<=0) return {rows:[],ti:0,pay:0};
+  const r=mPct/100;
+  const pay=r===0?Math.ceil(P/n):Math.ceil(P*r/(1-Math.pow(1+r,-n)));
+  const rows=[]; let bal=P,ti=0;
+  for(let m=1;m<=n&&bal>0;m++){
+    const i=Math.round(bal*r); let pr=pay-i,pp=pay;
+    if(m===n||pr>=bal){pr=bal;pp=pr+i;}
+    bal-=pr; ti+=i; rows.push({m,pp,i,pr,bal});
+  }
+  return {rows,ti,pay};
+}
+const STAGES=['CHAMA','SELF_HELP_GROUP','SACCO','DEPOSIT_TAKING_SACCO','MICROFINANCE_BANK','COMMERCIAL_BANK','LISTED'];
+const SLBL={CHAMA:'Informal chama',SELF_HELP_GROUP:'Registered self-help group',SACCO:'Registered SACCO (BOSA)',DEPOSIT_TAKING_SACCO:'Deposit-taking SACCO (FOSA)',MICROFINANCE_BANK:'Microfinance bank',COMMERCIAL_BANK:'Commercial bank',LISTED:'Listed on a securities exchange'};
+const GAPS=[
+ {g:'Governance failure & insider fraud',w:'Forensic audits (e.g. KUSCCO, Sh13.8B lost) show unchecked officials and weak boards precede almost every collapse.',s:'Dual-approval on every disbursement, immutable audit trail, role-based permissions, treasurer actions visible to all members in real time.'},
+ {g:'Liquidity breaches and runs',w:'DT-SACCOs must keep ≥15% of deposits liquid; failures cluster where nobody watched the ratio until withdrawals stalled.',s:'Live liquidity meter with automatic alerts and a lending brake near the 15% floor.'},
+ {g:'Thin core capital',w:'Institutions cannot absorb losses or meet licensing thresholds, so regulators refuse the next licence tier.',s:'Share-capital tracking per member, retained-earnings view, capital-adequacy gauge against the next stage.'},
+ {g:'Poor books & unauditable records',w:'Paper ledgers and missing reconciliations make audited accounts (a graduation prerequisite) impossible.',s:'Every shilling double-entered digitally from day one (Pillars 1+3); audit-ready statements export anytime.'},
+ {g:'Opaque lending & high NPLs',w:'Committee-based, relationship-driven loans breed defaults; NPLs above ~5% sink the balance sheet.',s:'Deterministic eligibility scoring with published determinants, multiplier limits, enforced guarantor coverage.'},
+ {g:'Ballooning physical costs',w:'Branches, paper and sales wages force rate hikes and hidden charges; a digital account costs 80–95% less to serve.',s:'Branchless by design: onboarding, deposits, loans, notifications and CRM all digital.'},
+ {g:'Uninformed membership & low trust',w:'Members who cannot see or understand the numbers leave, and dormant members stall growth.',s:'Member-visible capital ratios, plain-language statements, in-app nudges teaching each member\'s next step.'},
+ {g:'Regulatory non-compliance',w:'Dual/unclear regulation leaves thousands of small societies unsupervised until a licence application fails.',s:'Country-aware compliance packs, aligned T&Cs, filing reminders, stage-gated checklists.'}
+];
+const DEMO={members:180,coreCap:4500000,assets:38000000,liquid:5200000,deposits:29000000,npl:700000,gross:21000000,audited:1,profit:1,gov:{board:true,dual:true,trail:true,audit:false},reg:true};
+function pct(a,b){return b<=0?0:Math.round(a/b*10000)/100;}
+function checksFor(st,i){
+  const cap=pct(i.coreCap,i.assets),liq=pct(i.liquid,i.deposits),npl=pct(i.npl,i.gross),g=i.gov;
+  const C=(l,m,d)=>({l,m,d});
+  switch(st){
+    case 'SELF_HELP_GROUP':return [C('At least 10 members',i.members>=10,`${i.members} members`),C('Elected officials in place',g.board,g.board?'Board elected':'Elect chairman, secretary, treasurer'),C('Registered with the regulator',i.reg,i.reg?'Registered':'Use the Formalization wizard')];
+    case 'SACCO':return [C('At least 10 members',i.members>=10,`${i.members} members`),C('Digital books with audit trail',g.trail,'Auditable ledger required'),C('Registered with the regulator',i.reg,'Cooperative registration'),C('1+ year of audited financials',i.audited>=1,`${i.audited} audited years`)];
+    case 'DEPOSIT_TAKING_SACCO':return [C('Liquidity ratio ≥ 15%',liq>=15,`${liq}% of deposits held liquid`),C('Core capital ≥ 10% of assets',cap>=10,`${cap}% capital adequacy`),C('NPL ratio ≤ 5%',npl<=5,`${npl}% non-performing`),C('Dual approval on disbursements',g.dual,'Fraud control required by licence'),C('2+ years audited financials',i.audited>=2,`${i.audited} audited years`),C('At least 500 members',i.members>=500,`${i.members} members`)];
+    case 'MICROFINANCE_BANK':return [C('Core capital ≥ 12% of assets',cap>=12,`${cap}%`),C('Liquidity ratio ≥ 20%',liq>=20,`${liq}%`),C('NPL ratio ≤ 5%',npl<=5,`${npl}%`),C('3+ years audited financials',i.audited>=3,`${i.audited} years`),C('2+ consecutive profitable years',i.profit>=2,`${i.profit} years`),C('At least 5,000 members',i.members>=5000,`${i.members}`)];
+    case 'COMMERCIAL_BANK':return [C('Core capital ≥ 14.5% of assets',cap>=14.5,`${cap}%`),C('Liquidity ratio ≥ 20%',liq>=20,`${liq}%`),C('NPL ratio ≤ 5%',npl<=5,`${npl}%`),C('5+ years audited financials',i.audited>=5,`${i.audited} years`),C('3+ consecutive profitable years',i.profit>=3,`${i.profit} years`),C('Annual external audit done',g.audit,'Statutory requirement')];
+    case 'LISTED':return [C('5-year satisfactory track record',i.audited>=5,`${i.audited} audited years`),C('Net profit in the last 2 years',i.profit>=2,`${i.profit} profitable years`),C('Full governance stack live',g.board&&g.dual&&g.trail&&g.audit,'Board, dual approval, audit trail, annual audit'),C('At least 25,000 members',i.members>=25000,`${i.members} members`)];
+    default:return [];
+  }
+}
+function assess(i){
+  let cur='CHAMA';
+  for(const st of STAGES.slice(1)){ if(checksFor(st,i).every(c=>c.m)) cur=st; else break; }
+  const idx=STAGES.indexOf(cur), next=idx+1<STAGES.length?STAGES[idx+1]:null;
+  const cs=next?checksFor(next,i):[];
+  return {cur,next,cs,ready:cs.length?Math.round(cs.filter(c=>c.m).length/cs.length*100):100,
+    ratios:{cap:pct(i.coreCap,i.assets),liq:pct(i.liquid,i.deposits),npl:pct(i.npl,i.gross)}};
+}
+
+/* ── UI wiring ── */
+const $=id=>document.getElementById(id);
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+b.dataset.t));
+}));
+
+/* Join */
+let ent='REGISTERED_GROUP';
+function renderJoin(){
+  $('entities').innerHTML=Object.entries(ENTITIES).map(([k,v])=>`<button class="chip ${k===ent?'on':''}" data-e="${k}">${v.label}</button>`).join('');
+  $('entities').querySelectorAll('button').forEach(b=>b.onclick=()=>{ent=b.dataset.e;renderJoin();});
+  const e=ENTITIES[ent];
+  $('fastNote').hidden=!e.fast;
+  $('docList').innerHTML=e.docs.map(d=>`<li>${d}</li>`).join('');
+  $('minDep').textContent=fmt(e.minDep); $('minShare').textContent=fmt(e.minShare);
+}
+renderJoin();
+
+/* Save */
+function renderSave(){
+  const b=+$('bal').value||0, s=+$('shr').value||0, r=+$('rem').value||0;
+  $('intOut').textContent=fmt(Math.round(b*0.10/12));
+  $('divOut').textContent=fmt(Math.round(s*0.13));
+  const fee=r<=0?0:r<=1000?10:r<=10000?50:Math.min(200,Math.round(r*0.004));
+  $('feeOut').textContent=fmt(fee);
+}
+['bal','shr','rem'].forEach(id=>$(id).addEventListener('input',renderSave)); renderSave();
+
+/* Borrow */
+let prod='DEVELOPMENT';
+function renderProds(){
+  $('prods').innerHTML=Object.entries(PRODUCTS).map(([k,p])=>`<button class="prodbtn ${k===prod?'on':''}" data-p="${k}"><strong>${p.name}</strong><p>${p.blurb}</p><div class="rate">${p.rate}%/month reducing · up to ${p.mult}× deposits</div></button>`).join('');
+  $('prods').querySelectorAll('button').forEach(b=>b.onclick=()=>{prod=b.dataset.p;renderProds();renderBorrow();});
+}
+function renderBorrow(){
+  const p=PRODUCTS[prod];
+  $('moMax').textContent='max '+p.maxMo;
+  const dep=+$('dep').value||0, amt=+$('amt').value||0;
+  const mo=Math.min(+$('mo').value||1,p.maxMo);
+  const r=score(p,amt,{tenure:+$('ten').value||0,dep,streak:+$('stk').value||0,onTime:1,existing:0,guar:Math.max(0,amt-dep)});
+  $('verdict').textContent=r.ok?`Qualified — Tier ${r.tier}`:'Not yet qualified';
+  $('verdict').className='pill '+(r.ok?'ok':'no');
+  $('score').textContent=r.score+'/100';
+  $('rate').textContent=r.rate+'%/mo';
+  $('limit').textContent=fmt(r.limit);
+  $('reasons').innerHTML=r.reasons.map(x=>`<li>${x}</li>`).join('');
+  const sc=amortize(amt,r.rate,mo);
+  $('payRow').style.display=r.ok?'flex':'none';
+  $('schedCard').style.display=r.ok&&sc.rows.length?'block':'none';
+  if(r.ok&&sc.rows.length){
+    $('pay').textContent=fmt(sc.pay); $('tint').textContent=fmt(sc.ti);
+    $('sched').innerHTML=sc.rows.slice(0,6).map(x=>`<tr><td>${x.m}</td><td class="mono">${fmt(x.pp)}</td><td class="mono">${fmt(x.i)}</td><td class="mono">${fmt(x.pr)}</td><td class="mono">${fmt(x.bal)}</td></tr>`).join('');
+  }
+}
+renderProds();
+['dep','amt','mo','stk','ten'].forEach(id=>$(id).addEventListener('input',renderBorrow)); renderBorrow();
+
+/* Grow */
+(function renderGrow(){
+  const a=assess(DEMO), ci=STAGES.indexOf(a.cur);
+  $('ladder').innerHTML=STAGES.map((s,i)=>`<span class="rung ${i<ci?'past':i===ci?'now':''}">${SLBL[s]}</span>${i<STAGES.length-1?'<span class="arrow">→</span>':''}`).join('');
+  $('capR').textContent=a.ratios.cap+'%'; $('liqR').textContent=a.ratios.liq+'%'; $('nplR').textContent=a.ratios.npl+'%';
+  $('readyK').textContent='Readiness for '+(a.next?SLBL[a.next]:'the top');
+  $('readyV').textContent=a.ready+'%'; $('readyBar').style.width=a.ready+'%';
+  $('nextH').textContent="What's between you and "+(a.next?SLBL[a.next]:'the summit');
+  $('checks').innerHTML=a.cs.map(c=>`<li><span class="tick ${c.m?'y':'n'}">${c.m?'✓':'✗'}</span><span><strong>${c.l}</strong> <span style="color:var(--ink-2)">— ${c.d}</span></span></li>`).join('');
+  $('gaps').innerHTML=GAPS.map(g=>`<div class="gap"><strong>${g.g}</strong><p class="why">${g.w}</p><p class="sol"><b>Stawi:</b> ${g.s}</p></div>`).join('');
+})();
+</script>
+</body>
+</html>
