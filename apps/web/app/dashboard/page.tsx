@@ -1,5 +1,6 @@
 import { DashboardClient } from './DashboardClient';
 import { LiveRefresh } from '@/components/LiveRefresh';
+import { MomentsStrip } from '@/components/MomentsStrip';
 import { SaccoActivationCard } from '@/components/SaccoActivationCard';
 import { getMyGroups } from '@/lib/data';
 
@@ -11,6 +12,7 @@ export default async function DashboardPage() {
     <main style={{ maxWidth: 920, margin: '0 auto', padding: '28px 24px 80px' }}>
       <LiveRefresh />
       <DashboardClient groups={groups} />
+      <MomentsStrip />
       <SaccoActivationCard />
     </main>
   );

@@ -1,5 +1,27 @@
 import Link from 'next/link';
+import {
+  assessCreditTier,
+  tierAdjustedRatePct,
+  tierAdjustedLimitCents,
+  monthlyDepositInterestCents,
+  formatMoney,
+} from '@stawi/core';
 import { getSaccoAccountsData } from '@/lib/data';
+
+/**
+ * Performance signals from Pillars 1–3 (live from DB when wired; demo seed
+ * mirrors Umoja). Even BEFORE opting in, a party's record earns them a tier —
+ * the activation card shows the merits already waiting for them.
+ */
+const PERFORMANCE = {
+  monthsActive: 12,
+  savingStreakMonths: 8,
+  onTimeRepaymentRate: 1,
+  loansCleared: 1,
+  depositsCents: 12_800_000, // group pot ≈ entry deposits
+  booksMonths: 4,
+  hasDefaultHistory: false,
+};
 
 /**
  * Pillar 4 opt-in entry point (server component).
@@ -12,6 +34,7 @@ import { getSaccoAccountsData } from '@/lib/data';
 export async function SaccoActivationCard({ compact = false }: { compact?: boolean }) {
   const accounts = await getSaccoAccountsData();
   const active = accounts.length > 0;
+  const merit = assessCreditTier(PERFORMANCE);
 
   if (compact) {
     return (
@@ -63,12 +86,29 @@ export async function SaccoActivationCard({ compact = false }: { compact?: boole
           <p style={{ margin: 0, fontSize: 14, color: 'var(--ink-2)', maxWidth: 620 }}>
             Stawi works fully without it — keep your table banking, books and transparent
             reports here even if your group already saves or borrows with another
-            institution. Activating SACCO+ is optional and instant: 10% p.a. on deposits,
-            13% dividends, loans from 1%/month reducing balance, and a system — not a
-            committee — that scores every application. No branches, no hidden charges,
-            no lock-in. Your Pillar 1–3 history fast-tracks onboarding and already counts
-            toward your loan limit.
+            institution. But your record has been earning quietly. If you activated today:
           </p>
+          <ul style={{ margin: '10px 0 0', paddingLeft: 20, fontSize: 13.5, color: 'var(--ink-2)', maxWidth: 620 }}>
+            <li style={{ marginBottom: 5 }}>
+              You&apos;d enter at the <strong>{merit.tier.name}</strong> tier — earned by your
+              {' '}{PERFORMANCE.savingStreakMonths}-month streak and {PERFORMANCE.booksMonths} months of clean books, not granted by a committee.
+            </li>
+            <li style={{ marginBottom: 5 }}>
+              Development loans at <strong>{tierAdjustedRatePct(1.0, merit.tier.id)}%/month reducing</strong> — a limit of
+              {' '}<strong>{formatMoney(tierAdjustedLimitCents(PERFORMANCE.depositsCents, merit.tier.id))}</strong> from day one.
+            </li>
+            <li style={{ marginBottom: 5 }}>
+              Your current pot would earn <strong>{formatMoney(monthlyDepositInterestCents(PERFORMANCE.depositsCents))}/month</strong> in
+              interest (10% p.a.) + 13% dividends on shares — automatically, from the first day.
+            </li>
+            <li style={{ marginBottom: 5 }}>
+              Instant, guarantor-free micro-loans up to <strong>{formatMoney(merit.tier.benefits.instantCapCents)}</strong>, day or night.
+            </li>
+            <li>
+              One-tap onboarding (KYC reused from Formalization), zero branches, zero
+              hidden charges, no lock-in — leave anytime, records stay yours.
+            </li>
+          </ul>
         </>
       )}
       <Link

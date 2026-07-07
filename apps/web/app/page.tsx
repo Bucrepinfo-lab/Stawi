@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { FAILURE_GAPS } from '@stawi/core';
 
 const navLink: React.CSSProperties = { fontWeight: 600, color: 'var(--ink-2)' };
 const PILLARS = ['1 - Table Banking', '2 - Business Matching', '3 - Accounting & Admin', '4 - SACCO+ Savings & Credit'];
@@ -46,6 +47,33 @@ export default function Home() {
             </span>
           ))}
         </div>
+      </section>
+
+      <section aria-label="Why others failed" style={{ padding: '30px 0 10px' }}>
+        <p style={{ fontSize: 12, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700 }}>
+          Our niche — built on the reasons others failed
+        </p>
+        <h2 className="display" style={{ fontWeight: 600, fontSize: 'clamp(24px,3.5vw,36px)', marginTop: 8, maxWidth: 720 }}>
+          Eight reasons microfinance collapses.<br />Eight guard-rails, built in.
+        </h2>
+        <p style={{ marginTop: 10, color: 'var(--ink-2)', maxWidth: 680, fontSize: 15 }}>
+          We studied why savings groups never graduate into SACCOs, banks and listed
+          institutions — fraud, liquidity runs, thin capital, paper books, committee
+          lending, branch costs, uninformed members, compliance gaps — and digitalized
+          the cure for each one. That research is the product.
+        </p>
+        <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', marginTop: 20 }}>
+          {FAILURE_GAPS.map((g, i) => (
+            <div key={g.id} style={{ background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 14, padding: 16 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--gold-deep)' }}>{String(i + 1).padStart(2, '0')}</span>
+              <h3 style={{ fontSize: 14.5, margin: '4px 0 6px' }}>{g.gap}</h3>
+              <p style={{ fontSize: 12.5, color: 'var(--ink-2)', margin: 0 }}>{g.stawiSolution}</p>
+            </div>
+          ))}
+        </div>
+        <Link href="/sacco" style={{ display: 'inline-block', marginTop: 18, fontWeight: 800, color: 'var(--forest-deep)' }}>
+          See the full graduation engine →
+        </Link>
       </section>
 
       <footer style={{ marginTop: 60, paddingTop: 24, borderTop: '1px solid var(--line)', color: 'var(--faint)', fontSize: 13, display: 'flex', gap: 16, flexWrap: 'wrap' }}>

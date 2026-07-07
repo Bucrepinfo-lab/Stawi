@@ -4,7 +4,7 @@
 > **Locked decisions (2026-06-20):** Name = **Stawi** · Theme = **Trustworthy fintech base + warm pan-African accents** · Business-matching ventures = **AI-generated on the fly** (fits the reset/re-roll button) · M-Pesa = **Daraja sandbox first** (live Paybill before launch) · First build = **Pillar 1, Table Banking**.
 
 **Owner:** Jacob (bucrepinfo@gmail.com)
-**Status:** **v1.2 — 4 pillars built, all code seams closed, realtime live** (~143 core tests; SSE push; Pillar 4 wired end-to-end; awaiting external account keys to go live)
+**Status:** **v1.2 — 4 pillars built, all code seams closed, realtime live** (~150 core tests; SSE push; Pillar 4 wired end-to-end; awaiting external account keys to go live)
 **Last updated:** 2026-07-07
 **Primary market:** Global, multi-tenant (Kenya-first; 12 countries seeded)
 **Stack of record:** Next.js (web) · React Native/Expo (mobile) · Clerk (auth) · DigitalOcean (deploy)
@@ -137,6 +137,21 @@ Each tier unlocks concrete benefits: deposit multiplier 1×→2×→3×→4×, r
 Defaults block progression; the top tier requires 6+ months of books — transparency
 is literally rewarded with cheaper money. Rendered as the first section of the
 /sacco Graduate tab (tier cards + "you are here" + gap checklist + readiness %).
+
+**Retention & Mobilization engine (added 2026-07-07):** the Graduate-tab pattern,
+platform-wide. `core/moments.ts` catalogs 12 machine-triggered "moments" across all
+4 pillars × 4 goals (retain/mobilize/refer/monetize) — streak milestones, payout
+countdowns, member-drive gaps, venture unlocks, clean-books streaks, tax deadlines,
+interest posted, tier-close, ladder progress, trial ending — each with ready channel
+copy (in-app hook, ≤160-char SMS, email subject, poster headline, newsletter blurb).
+Rendered as `MomentsStrip` on the dashboard; **the same catalog is the single source
+for ALL CRM content** — rules in `docs/CRM-CONTENT-GUIDE.md` (no trigger → no send;
+≤2 touches/week; failure-gaps are the marketing spine, never name competitors;
+prudential figures never in member-facing content). SACCO+ activation marketing is
+always personalised: `SaccoActivationCard` computes the merits a performing party
+ALREADY earned (entry tier, rate, limit, monthly interest on current pot). Landing
+page leads the niche: "Eight reasons microfinance collapses. Eight guard-rails,
+built in." (+7 moments tests; ~150 core tests.)
 
 **Institution-ladder visibility (decided 2026-07-07):** role-graded, not hidden.
 Members SEE the ladder position + readiness % (it recruits and retains — gap #7

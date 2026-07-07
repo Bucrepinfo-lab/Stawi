@@ -16,3 +16,4 @@ export * from './savings';
 export * from './credit';
 export * from './graduation';
 export * from './tiers';
+export * from './moments';
