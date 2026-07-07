@@ -15,6 +15,12 @@ import {
   remittanceFeeCents,
   liquidityStatus,
   formatMoney,
+  CREDIT_TIER_ORDER,
+  CREDIT_TIERS,
+  assessCreditTier,
+  tierAdjustedRatePct,
+  tierAdjustedLimitCents,
+  type CreditTierInput,
   type SaccoEntityType,
   type LoanProductId,
   type GraduationInput,
@@ -87,7 +93,7 @@ export function SaccoStudio({ accounts = [] }: { accounts?: WebSaccoAccount[] })
         {tab === 'join' && <JoinTab />}
         {tab === 'save' && <SaveTab account={account} />}
         {tab === 'borrow' && <BorrowTab account={account} />}
-        {tab === 'grow' && <GrowTab />}
+        {tab === 'grow' && <GrowTab account={account} />}
       </div>
     </div>
   );
@@ -453,15 +459,92 @@ const DEMO_INSTITUTION: GraduationInput = {
   registeredWithRegulator: true,
 };
 
-function GrowTab() {
+const DEMO_PARTY: CreditTierInput = {
+  monthsActive: 12,
+  savingStreakMonths: 8,
+  onTimeRepaymentRate: 0.96,
+  loansCleared: 1,
+  depositsCents: 100_000_00,
+  booksMonths: 4,
+  hasDefaultHistory: false,
+};
+
+function GrowTab({ account }: { account?: WebSaccoAccount }) {
+  const party = useMemo(
+    () => assessCreditTier({ ...DEMO_PARTY, depositsCents: account?.balanceCents ?? DEMO_PARTY.depositsCents }),
+    [account],
+  );
+  const deposits = account?.balanceCents ?? DEMO_PARTY.depositsCents;
   const a = assessGraduation(DEMO_INSTITUTION);
   const liq = liquidityStatus(DEMO_INSTITUTION.liquidAssetsCents, DEMO_INSTITUTION.totalDepositsCents);
   const currentIdx = STAGE_ORDER.indexOf(a.currentStage);
+  const partyIdx = CREDIT_TIER_ORDER.indexOf(party.tier.id);
 
   return (
     <section style={{ display: 'grid', gap: 16 }}>
       <div style={card}>
-        <h3 style={{ marginTop: 0 }}>The graduation ladder</h3>
+        <h3 style={{ marginTop: 0 }}>Your credit graduation — earned by wholistic performance</h3>
+        <p style={{ margin: '0 0 14px', fontSize: 13.5, color: 'var(--ink-2)', maxWidth: 640 }}>
+          Every party on the credit trail — member, group or business — graduates through
+          tiers the system awards from saving discipline, repayment behaviour, tenure and
+          the books you keep in Pillar 3. Each tier unlocks bigger multipliers, cheaper
+          rates and larger instant caps. No committee decides; your record does.
+        </p>
+        <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+          {CREDIT_TIER_ORDER.map((id, i) => {
+            const t = CREDIT_TIERS[id];
+            const state = i < partyIdx ? 'past' : i === partyIdx ? 'now' : 'ahead';
+            return (
+              <div
+                key={id}
+                aria-current={state === 'now' ? 'step' : undefined}
+                style={{
+                  borderRadius: 12,
+                  padding: 12,
+                  border: state === 'now' ? '2px solid var(--forest-deep, #1f4d3a)' : '1px solid var(--line, #e6e0d4)',
+                  background: state === 'now' ? 'var(--sand, #f6f1e6)' : state === 'past' ? 'rgba(47,125,82,.07)' : 'transparent',
+                  opacity: state === 'ahead' ? 0.85 : 1,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <strong style={{ fontSize: 14 }}>{t.name}</strong>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: state === 'past' ? 'var(--forest-deep, #1f4d3a)' : state === 'now' ? 'var(--gold-deep, #b97e15)' : 'var(--faint, #8b8375)' }}>
+                    {state === 'past' ? 'EARNED ✓' : state === 'now' ? 'YOU ARE HERE' : 'AHEAD'}
+                  </span>
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--ink-2)', margin: '4px 0 8px' }}>{t.tagline}</p>
+                <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: 'var(--ink-2)' }}>
+                  <li>{t.benefits.depositMultiplier}× deposits · up to {t.benefits.maxTermMonths} mo</li>
+                  <li>Dev-loan rate {tierAdjustedRatePct(1.0, id)}%/mo · instant cap {formatMoney(t.benefits.instantCapCents)}</li>
+                  {t.benefits.perks.slice(0, 2).map((perk) => <li key={perk}>{perk}</li>)}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ display: 'flex', gap: 24, marginTop: 14, flexWrap: 'wrap' }}>
+          <Stat label="Your tier" value={party.tier.name} highlight />
+          <Stat label="Your limit at this tier" value={formatMoney(tierAdjustedLimitCents(deposits, party.tier.id))} />
+          <Stat label="Your dev-loan rate" value={`${tierAdjustedRatePct(1.0, party.tier.id)}%/mo`} />
+          {party.nextTier && <Stat label={`Readiness for ${party.nextTier.name}`} value={`${party.readinessPct}%`} highlight />}
+        </div>
+        {party.nextTier && (
+          <>
+            <h4 style={{ margin: '16px 0 6px' }}>To graduate to {party.nextTier.name}</h4>
+            <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none' }}>
+              {party.checks.map((c) => (
+                <li key={c.label} style={{ padding: '7px 0', borderBottom: '1px solid var(--line, #e6e0d4)', display: 'flex', gap: 10, fontSize: 13.5 }}>
+                  <span aria-hidden style={{ fontWeight: 800, color: c.met ? 'var(--forest-deep, #1f4d3a)' : '#a33' }}>{c.met ? '✓' : '✗'}</span>
+                  <span><strong>{c.label}</strong><span style={{ color: 'var(--ink-2)' }}> — {c.detail}</span></span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+
+      <div style={card}>
+        <h3 style={{ marginTop: 0 }}>Your institution's ladder</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
           {STAGE_ORDER.map((s, i) => (
             <span key={s} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

@@ -189,7 +189,15 @@ footer{margin-top:48px;color:var(--faint);font-size:12.5px}
   <!-- GROW -->
   <section class="panel" id="p-grow">
     <div class="card">
-      <h3>The graduation ladder</h3>
+      <h3>Your credit graduation — earned by wholistic performance</h3>
+      <p style="font-size:13px;color:var(--ink-2);max-width:640px;margin-bottom:12px">Every party on the credit trail — member, group or business — graduates through tiers awarded from saving discipline, repayment behaviour, tenure and the books kept in Pillar 3. No committee; your record decides.</p>
+      <div class="grid g3" id="tierGrid"></div>
+      <div class="row" id="tierStats"></div>
+      <h3 style="margin-top:16px" id="tierNextH"></h3>
+      <ul class="checks" id="tierChecks"></ul>
+    </div>
+    <div class="card">
+      <h3>Your institution's ladder</h3>
       <div class="ladder" id="ladder"></div>
       <div class="row">
         <div class="stat"><div class="k">Capital adequacy</div><div class="v mono" id="capR"></div></div>
@@ -370,6 +378,48 @@ renderProds();
 ['dep','amt','mo','stk','ten'].forEach(id=>$(id).addEventListener('input',renderBorrow)); renderBorrow();
 
 /* Grow */
+const TIERS={
+ SEED:{name:'Seed',tag:'Every party starts here — save, and the system starts scoring.',mult:1,disc:0,cap:10000,term:6},
+ SPROUT:{name:'Sprout',tag:'Consistent saver — real limits unlock.',mult:2,disc:0,cap:30000,term:12},
+ HARVEST:{name:'Harvest',tag:'Proven repayer — cheaper money, longer terms.',mult:3,disc:0.1,cap:50000,term:24},
+ MKUBWA:{name:'Mkubwa',tag:'Trail-blazer — best rates, biggest room.',mult:4,disc:0.25,cap:100000,term:36}};
+const TIER_ORDER=['SEED','SPROUT','HARVEST','MKUBWA'];
+function tierChecks(t,i){
+  const C=(l,m,d)=>({l,m,d});
+  switch(t){
+    case 'SPROUT':return [C('3+ months active',i.months>=3,i.months+' months'),C('3-month saving streak',i.streak>=3,i.streak+' consecutive'),C('No unresolved default',!i.def,'Clean record')];
+    case 'HARVEST':return [C('9+ months active',i.months>=9,i.months+' months'),C('6-month saving streak',i.streak>=6,i.streak+' consecutive'),C('1+ loan fully cleared',i.cleared>=1,i.cleared+' cleared'),C('≥90% on-time repayment',i.onTime>=0.9,Math.round(i.onTime*100)+'% on time'),C('No unresolved default',!i.def,'Clean record')];
+    case 'MKUBWA':return [C('18+ months active',i.months>=18,i.months+' months'),C('12-month saving streak',i.streak>=12,i.streak+' consecutive'),C('3+ loans cleared',i.cleared>=3,i.cleared+' cleared'),C('≥98% on-time repayment',i.onTime>=0.98,Math.round(i.onTime*100)+'% on time'),C('6+ months of books (Pillar 3)',i.books>=6,i.books+' months of P&L'),C('No default in history',!i.def,'Clean record')];
+    default:return [];
+  }
+}
+function assessTier(i){
+  let cur='SEED';
+  for(const t of TIER_ORDER.slice(1)){ if(tierChecks(t,i).every(c=>c.m)) cur=t; else break; }
+  const idx=TIER_ORDER.indexOf(cur), next=idx+1<TIER_ORDER.length?TIER_ORDER[idx+1]:null;
+  const cs=next?tierChecks(next,i):[];
+  return {cur,next,cs,ready:cs.length?Math.round(cs.filter(c=>c.m).length/cs.length*100):100};
+}
+(function renderTiers(){
+  const party={months:12,streak:8,onTime:0.96,cleared:1,books:4,def:false,deposits:100000};
+  const a=assessTier(party), ci=TIER_ORDER.indexOf(a.cur);
+  $('tierGrid').innerHTML=TIER_ORDER.map((id,i)=>{
+    const t=TIERS[id], st=i<ci?'past':i===ci?'now':'ahead';
+    return `<div class="gap" style="${st==='now'?'border:2px solid var(--forest-deep);background:var(--bone-2)':st==='past'?'background:rgba(47,125,82,.07)':''}">
+      <div style="display:flex;justify-content:space-between"><strong>${t.name}</strong>
+      <span style="font-size:10.5px;font-weight:800;color:${st==='past'?'var(--good)':st==='now'?'var(--gold-deep)':'var(--faint)'}">${st==='past'?'EARNED ✓':st==='now'?'YOU ARE HERE':'AHEAD'}</span></div>
+      <p class="why">${t.tag}</p>
+      <p class="sol">${t.mult}× deposits · ${(1.0-t.disc).toFixed(2)}%/mo dev rate · instant cap ${fmt(t.cap)} · up to ${t.term} mo</p></div>`;
+  }).join('');
+  $('tierStats').innerHTML=`<div class="stat"><div class="k">Your tier</div><div class="v" style="color:var(--forest-deep)">${TIERS[a.cur].name}</div></div>
+    <div class="stat"><div class="k">Your limit at this tier</div><div class="v mono">${fmt(party.deposits*TIERS[a.cur].mult)}</div></div>
+    <div class="stat"><div class="k">Your dev-loan rate</div><div class="v mono">${(1.0-TIERS[a.cur].disc).toFixed(2)}%/mo</div></div>
+    ${a.next?`<div class="stat"><div class="k">Readiness for ${TIERS[a.next].name}</div><div class="v mono" style="color:var(--forest-deep)">${a.ready}%</div></div>`:''}`;
+  if(a.next){
+    $('tierNextH').textContent='To graduate to '+TIERS[a.next].name;
+    $('tierChecks').innerHTML=a.cs.map(c=>`<li><span class="tick ${c.m?'y':'n'}">${c.m?'✓':'✗'}</span><span><strong>${c.l}</strong> <span style="color:var(--ink-2)">— ${c.d}</span></span></li>`).join('');
+  }
+})();
 (function renderGrow(){
   const a=assess(DEMO), ci=STAGES.indexOf(a.cur);
   $('ladder').innerHTML=STAGES.map((s,i)=>`<span class="rung ${i<ci?'past':i===ci?'now':''}">${SLBL[s]}</span>${i<STAGES.length-1?'<span class="arrow">→</span>':''}`).join('');

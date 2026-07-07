@@ -4,7 +4,7 @@
 > **Locked decisions (2026-06-20):** Name = **Stawi** · Theme = **Trustworthy fintech base + warm pan-African accents** · Business-matching ventures = **AI-generated on the fly** (fits the reset/re-roll button) · M-Pesa = **Daraja sandbox first** (live Paybill before launch) · First build = **Pillar 1, Table Banking**.
 
 **Owner:** Jacob (bucrepinfo@gmail.com)
-**Status:** **v1.2 — 4 pillars built, all code seams closed, realtime live** (~135 core tests; SSE push; Pillar 4 wired end-to-end; awaiting external account keys to go live)
+**Status:** **v1.2 — 4 pillars built, all code seams closed, realtime live** (~143 core tests; SSE push; Pillar 4 wired end-to-end; awaiting external account keys to go live)
 **Last updated:** 2026-07-07
 **Primary market:** Global, multi-tenant (Kenya-first; 12 countries seeded)
 **Stack of record:** Next.js (web) · React Native/Expo (mobile) · Clerk (auth) · DigitalOcean (deploy)
@@ -126,6 +126,17 @@ The foundation. Chosen to build first because it creates the group, the members,
 2. **Loans** — reducing-balance only (the honest method): **Development 1.0%/mo, 3× deposits, 36 mo · Instant Emergency 1.5%/mo, auto-disbursed under cap, no guarantors · Business Boost 1.2%/mo, 24 mo** (feeds Pillars 2–3 ventures). Risk-based pricing: Tier A base rate, B +0.25, C +0.5.
 3. **Qualifiable determinants (credit scoring)** — deterministic 100-point score, every point explained: tenure (15), saving streak (25), on-time repayment (30), borrowing headroom (20), security/guarantor coverage (10); hard blocks on defaults, multiplier breach, under-coverage. Approval floor 45; no committee.
 4. **Remittances & transfers** — flat digital fee tiers (10 / 50 / 0.4% capped at 200 units) under mobile-money/bank rates.
+
+**Credit-graduation tiers (party level, added 2026-07-07):** while the Graduation
+Engine tracks the INSTITUTION up the chama→listed ladder, every PARTY on the credit
+trail (member, group, business) graduates through earned tiers from **wholistic
+performance** — saving discipline, repayment behaviour, tenure, loans cleared, and
+Pillar-3 books kept: **Seed → Sprout → Harvest → Mkubwa** (`core/tiers.ts`, 8 tests).
+Each tier unlocks concrete benefits: deposit multiplier 1×→2×→3×→4×, rate discount
+0→−0.25%/mo (floor 0.5%), instant guarantor-free caps 10k→100k units, terms 6→36 mo.
+Defaults block progression; the top tier requires 6+ months of books — transparency
+is literally rewarded with cheaper money. Rendered as the first section of the
+/sacco Graduate tab (tier cards + "you are here" + gap checklist + readiness %).
 
 **Opt-in positioning (locked 2026-07-07):** SACCO+ is NEVER a prerequisite.
 Many target groups will join Stawi for Pillars 1–3 alone — to solve financial-books
