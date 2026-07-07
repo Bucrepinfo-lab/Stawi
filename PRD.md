@@ -322,8 +322,13 @@ Groups. Isolation enforced at the query layer (`getTenantContext`, `assertSameTe
 - ✅ `/api/cron` (CRON_SECRET-guarded): month-end interest accrual (idempotent) + subscription dunning.
 
 **Product backlog (not yet built):**
-- Real-time push (websockets) for live dashboards; member messaging/calling beyond
-  the moderated composer; mobile screens for the newer features; i18n/localization of
+- ✅ Real-time push (2026-07-07): SSE bus (`lib/events.ts` + `/api/events` +
+  `LiveRefresh`) — server actions publish, every open dashboard refreshes <1s.
+  (Swap in-process bus for Redis pub/sub when scaling to multiple instances.)
+- ✅ /sacco page wired to data provider + server actions (open account, deposit,
+  submit loan application) with demo-mode fallback (2026-07-07).
+- ✅ Mobile SACCO+ screen (`apps/mobile/SaccoScreen.tsx` + tab switcher) (2026-07-07).
+- Member messaging/calling beyond the moderated composer; i18n/localization of
   UI strings + per-market Privacy Policy;
   receipts to PDF via DO Spaces; reconcile Clerk-Org-as-Group vs Tenant (current:
   Org→Tenant, Group.clerkOrgId retained).

@@ -9,6 +9,7 @@
 
 import { assertClean } from '@stawi/core';
 import { dbEnabled } from '@/lib/data';
+import { publishEvent } from '@/lib/events';
 
 async function tenantId(): Promise<string | undefined> {
   const { prisma, getTenantContext } = await import('@stawi/db');
@@ -25,7 +26,10 @@ export async function recordContributionAction(input: {
   amountCents: number;
 }): Promise<{ ok: boolean; persisted: boolean; error?: string }> {
   if (input.amountCents <= 0) return { ok: false, persisted: false, error: 'Amount must be positive' };
-  if (!dbEnabled() || !input.groupId) return { ok: true, persisted: false };
+  if (!dbEnabled() || !input.groupId) {
+    publishEvent({ type: 'contribution', channel: 'public' });
+    return { ok: true, persisted: false };
+  }
   const { prisma, recordContribution } = await import('@stawi/db');
   const { auth } = await import('@clerk/nextjs/server');
   const { userId } = await auth();
@@ -42,6 +46,7 @@ export async function recordContributionAction(input: {
   } catch (e) {
     return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Write failed' };
   }
+  publishEvent({ type: 'contribution', channel: (await tenantId()) ?? 'public' });
   return { ok: true, persisted: true };
 }
 
@@ -139,6 +144,7 @@ export async function saccoTxnAction(input: {
       approvedByClerkId:
         input.type === 'WITHDRAWAL' || input.type === 'REMITTANCE_OUT' ? userId : undefined,
     });
+    publishEvent({ type: 'sacco_txn', channel: tid });
     return { ok: true, persisted: true, balanceCents: r.balanceCents };
   } catch (e) {
     return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Write failed' };
@@ -180,6 +186,7 @@ export async function applyLoanAction(input: {
       onTimeRepaymentRate: input.onTimeRepaymentRate ?? 1,
       guarantorCoverageCents: input.guarantorCoverageCents,
     });
+    publishEvent({ type: 'loan', channel: tid });
     return {
       ok: true,
       persisted: true,

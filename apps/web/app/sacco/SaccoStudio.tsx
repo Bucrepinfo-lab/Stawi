@@ -19,6 +19,8 @@ import {
   type LoanProductId,
   type GraduationInput,
 } from '@stawi/core';
+import type { WebSaccoAccount } from '@/lib/data';
+import { openSaccoAccountAction, saccoTxnAction, applyLoanAction } from '../actions';
 
 type Tab = 'join' | 'save' | 'borrow' | 'grow';
 
@@ -53,8 +55,9 @@ const input: React.CSSProperties = {
   fontFamily: 'inherit',
 };
 
-export function SaccoStudio() {
+export function SaccoStudio({ accounts = [] }: { accounts?: WebSaccoAccount[] }) {
   const [tab, setTab] = useState<Tab>('join');
+  const account = accounts[0];
 
   return (
     <div style={{ marginTop: 24 }}>
@@ -82,8 +85,8 @@ export function SaccoStudio() {
       </div>
       <div style={{ marginTop: 20 }}>
         {tab === 'join' && <JoinTab />}
-        {tab === 'save' && <SaveTab />}
-        {tab === 'borrow' && <BorrowTab />}
+        {tab === 'save' && <SaveTab account={account} />}
+        {tab === 'borrow' && <BorrowTab account={account} />}
         {tab === 'grow' && <GrowTab />}
       </div>
     </div>
@@ -94,7 +97,26 @@ export function SaccoStudio() {
 
 function JoinTab() {
   const [entity, setEntity] = useState<SaccoEntityType>('REGISTERED_GROUP');
+  const [status, setStatus] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const info = ENTITY_ONBOARDING[entity];
+
+  async function open() {
+    setBusy(true);
+    setStatus(null);
+    const r = await openSaccoAccountAction({
+      entityType: entity,
+      displayName: `${info.label} — SACCO+`,
+    });
+    setBusy(false);
+    setStatus(
+      !r.ok
+        ? `Could not open: ${r.error}`
+        : r.persisted
+          ? 'Account opened and saved — deposits start earning immediately.'
+          : 'Account opened (demo mode — connect a database to persist).',
+    );
+  }
 
   return (
     <section style={{ display: 'grid', gap: 16 }}>
@@ -136,6 +158,8 @@ function JoinTab() {
           <Stat label="Minimum share capital" value={formatMoney(info.minShareCapitalCents)} />
         </div>
         <button
+          onClick={open}
+          disabled={busy}
           style={{
             marginTop: 18,
             padding: '12px 22px',
@@ -147,10 +171,16 @@ function JoinTab() {
             fontSize: 15,
             cursor: 'pointer',
             fontFamily: 'inherit',
+            opacity: busy ? 0.6 : 1,
           }}
         >
-          Open my SACCO+ account
+          {busy ? 'Opening…' : 'Open my SACCO+ account'}
         </button>
+        {status && (
+          <p role="status" style={{ marginTop: 10, fontWeight: 700, color: 'var(--forest-deep, #1f4d3a)' }}>
+            {status}
+          </p>
+        )}
         <p style={{ fontSize: 12, color: 'var(--faint, #8b8375)', marginTop: 10 }}>
           By opening an account you accept the SACCO+ terms, aligned to your country&apos;s
           cooperative and financial regulator. First month of the platform is free.
@@ -162,8 +192,19 @@ function JoinTab() {
 
 /* ───────────────────────── Save ───────────────────────── */
 
-function SaveTab() {
-  const [balance, setBalance] = useState(250_000_00); // cents
+function SaveTab({ account }: { account?: WebSaccoAccount }) {
+  const [balance, setBalance] = useState(account?.balanceCents ?? 250_000_00); // cents
+  const [note, setNote] = useState<string | null>(null);
+
+  async function quickDeposit() {
+    const amount = 100_000; // KES 1,000
+    setBalance((b) => b + amount);
+    if (!account) { setNote('Deposit simulated (demo mode).'); return; }
+    const r = await saccoTxnAction({ accountId: account.id, type: 'DEPOSIT', amountCents: amount });
+    setNote(
+      !r.ok ? `Failed: ${r.error}` : r.persisted ? 'Deposit posted to your account ✓' : 'Deposit simulated (demo mode).',
+    );
+  }
   const [shares, setShares] = useState(50_000_00);
   const [remit, setRemit] = useState(10_000_00);
 
@@ -182,6 +223,13 @@ function SaveTab() {
           <Stat label="Interest on deposits" value="10% per year" />
           <Stat label="You earn monthly" value={formatMoney(monthlyInterest)} highlight />
         </div>
+        <button
+          onClick={quickDeposit}
+          style={{ marginTop: 12, padding: '10px 16px', borderRadius: 10, border: 'none', background: 'var(--gold, #d9a441)', color: 'var(--forest-deep, #1f4d3a)', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}
+        >
+          Deposit 1,000 now
+        </button>
+        {note && <p role="status" style={{ fontSize: 13, fontWeight: 700, marginTop: 8, color: 'var(--forest-deep, #1f4d3a)' }}>{note}</p>}
       </div>
       <div style={card}>
         <h3 style={{ marginTop: 0 }}>Share capital pays dividends</h3>
@@ -213,9 +261,11 @@ function SaveTab() {
 
 /* ───────────────────────── Borrow ───────────────────────── */
 
-function BorrowTab() {
+function BorrowTab({ account }: { account?: WebSaccoAccount }) {
   const [productId, setProductId] = useState<LoanProductId>('DEVELOPMENT');
-  const [deposits, setDeposits] = useState(100_000_00);
+  const [deposits, setDeposits] = useState(account?.balanceCents ?? 100_000_00);
+  const [appStatus, setAppStatus] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [amount, setAmount] = useState(150_000_00);
   const [months, setMonths] = useState(12);
   const [streak, setStreak] = useState(8);
@@ -313,6 +363,35 @@ function BorrowTab() {
               <Stat label="Total interest" value={formatMoney(schedule.totalInterestCents)} />
             </div>
           )}
+          {result.qualified && (
+            <button
+              onClick={async () => {
+                setSubmitting(true);
+                setAppStatus(null);
+                const r = await applyLoanAction({
+                  accountId: account?.id ?? 'demo',
+                  product: productId,
+                  principalCents: amount,
+                  termMonths: Math.min(months, product.maxTermMonths),
+                  monthsActive: tenure,
+                  savingStreakMonths: streak,
+                });
+                setSubmitting(false);
+                setAppStatus(
+                  !r.ok
+                    ? `Failed: ${r.error}`
+                    : r.persisted
+                      ? `Application ${r.qualified ? 'APPROVED' : 'declined'} — Tier ${r.tier} at ${r.monthlyRatePct}%/mo (saved with full score snapshot).`
+                      : 'Application scored (demo mode — connect a database to persist).',
+                );
+              }}
+              disabled={submitting}
+              style={{ marginTop: 14, padding: '11px 18px', borderRadius: 10, border: 'none', background: 'var(--forest-deep, #1f4d3a)', color: '#fff', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', opacity: submitting ? 0.6 : 1 }}
+            >
+              {submitting ? 'Submitting…' : 'Submit loan application'}
+            </button>
+          )}
+          {appStatus && <p role="status" style={{ fontSize: 13, fontWeight: 700, marginTop: 8, color: 'var(--forest-deep, #1f4d3a)' }}>{appStatus}</p>}
           <h4 style={{ marginBottom: 6, marginTop: 16 }}>How the score was built</h4>
           <ul style={{ margin: 0, paddingLeft: 20, fontSize: 13, color: 'var(--ink-2)' }}>
             {result.reasons.map((r) => (

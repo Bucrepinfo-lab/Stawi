@@ -1,4 +1,6 @@
 import { SaccoStudio } from './SaccoStudio';
+import { LiveRefresh } from '@/components/LiveRefresh';
+import { getSaccoAccountsData } from '@/lib/data';
 
 export const metadata = {
   title: 'Stawi SACCO+ — savings & credit services',
@@ -6,7 +8,8 @@ export const metadata = {
     'Open an account, save with interest, borrow at 1%/month reducing balance, and watch your institution climb the ladder from chama to listed bank.',
 };
 
-export default function SaccoPage() {
+export default async function SaccoPage() {
+  const accounts = await getSaccoAccountsData();
   return (
     <main style={{ maxWidth: 980, margin: '0 auto', padding: '28px 24px 80px' }}>
       <p
@@ -29,7 +32,8 @@ export default function SaccoPage() {
         committee — scores every application in seconds. Built on the reasons
         others failed, so your group doesn&apos;t.
       </p>
-      <SaccoStudio />
+      <LiveRefresh />
+      <SaccoStudio accounts={accounts} />
     </main>
   );
 }

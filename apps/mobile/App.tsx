@@ -15,6 +15,7 @@ import {
   type MemberContribution,
 } from '@stawi/core';
 import { colors, radius, spacing } from './theme/tokens';
+import { SaccoScreen } from './SaccoScreen';
 
 const SEED: (MemberContribution & { role: string })[] = [
   { memberId: 'a', name: 'Amina Wanjiru', role: 'Treasurer', totalCents: 4_200_000 },
@@ -24,6 +25,7 @@ const SEED: (MemberContribution & { role: string })[] = [
 ];
 
 export default function App() {
+  const [screen, setScreen] = useState<'home' | 'sacco'>('home');
   const [members, setMembers] = useState(SEED);
   const snap = useMemo(() => computeCapitalShares(members), [members]);
 
@@ -42,8 +44,20 @@ export default function App() {
       <StatusBar style="light" />
       <View style={styles.header}>
         <Text style={styles.greet}>Umoja Women Group</Text>
-        <Text style={styles.h1}>Group capital, live</Text>
+        <Text style={styles.h1}>{screen === 'home' ? 'Group capital, live' : 'SACCO+ — save, borrow, graduate'}</Text>
+        <View style={styles.tabs}>
+          {(['home', 'sacco'] as const).map((t) => (
+            <TouchableOpacity key={t} onPress={() => setScreen(t)} style={[styles.tab, screen === t && styles.tabOn]}>
+              <Text style={[styles.tabTxt, screen === t && styles.tabTxtOn]}>
+                {t === 'home' ? 'Table banking' : 'SACCO+'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
+      {screen === 'sacco' ? (
+        <SaccoScreen />
+      ) : (
       <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
         <View style={styles.balance}>
           <Text style={styles.label}>Total group capital</Text>
@@ -63,6 +77,7 @@ export default function App() {
           </TouchableOpacity>
         ))}
       </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -81,4 +96,9 @@ const styles = StyleSheet.create({
   barBg: { height: 6, borderRadius: 6, backgroundColor: colors.bone2, overflow: 'hidden', marginTop: 6 },
   barFill: { height: '100%', borderRadius: 6, backgroundColor: colors.gold },
   pct: { fontVariant: ['tabular-nums'], fontWeight: '600', color: colors.ink2 },
+  tabs: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
+  tab: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: radius.pill, borderWidth: 1, borderColor: 'rgba(246,241,231,0.35)' },
+  tabOn: { backgroundColor: colors.gold, borderColor: colors.gold },
+  tabTxt: { color: colors.bone, fontSize: 12, fontWeight: '700' },
+  tabTxtOn: { color: colors.forestDeep },
 });
