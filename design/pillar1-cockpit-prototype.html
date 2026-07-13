@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stawi · Pillar 1 — Phone-first Group Cockpit (prototype)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bone:#f6f1e7;--bone-2:#efe8d9;--paper:#fffdf8;--ink:#16261f;--ink-2:#2c4339;
+    --forest:#1f4d3a;--forest-deep:#16382a;--gold:#e0a32e;--gold-deep:#b97e15;--clay:#c5613c;
+    --dim:#6b7c73;--faint:#9aa79f;--line:#dcd3c2;--good:#2f7d52;--warn:#cc8a1e;--danger:#c4452f;
+    --radius:18px;--radius-sm:12px;--shadow:0 1px 2px rgba(22,38,31,.06),0 8px 24px -12px rgba(22,38,31,.22);
+    --font-display:'Fraunces',Georgia,serif;--font-body:'Hanken Grotesk',system-ui,sans-serif;--font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(224,163,46,.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(31,77,58,.10), transparent 60%),
+      var(--bone);
+    color:var(--ink);font-family:var(--font-body);-webkit-font-smoothing:antialiased;min-height:100vh;
+    display:grid;place-items:center;padding:28px 14px 60px;}
+  .mono{font-family:var(--font-mono);font-feature-settings:"tnum"}
+  .display{font-family:var(--font-display);letter-spacing:-.02em}
+  .wrap{width:100%;max-width:1120px;display:grid;grid-template-columns:392px 1fr;gap:36px;align-items:start}
+  @media(max-width:960px){.wrap{grid-template-columns:1fr;max-width:440px}.aside{display:none}}
+  /* phone frame */
+  .phone{width:392px;background:#0d1712;border-radius:44px;padding:12px;box-shadow:0 40px 80px -30px rgba(22,38,31,.6),0 0 0 2px rgba(255,255,255,.04) inset;position:sticky;top:24px}
+  .screen{background:var(--bone);border-radius:34px;overflow:hidden;height:760px;display:flex;flex-direction:column;position:relative}
+  .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:120px;height:26px;background:#0d1712;border-radius:0 0 16px 16px;z-index:20}
+  .statusbar{height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:12px;font-weight:700;color:var(--forest-deep)}
+  .app{flex:1;overflow-y:auto;overflow-x:hidden}
+  .app::-webkit-scrollbar{width:0}
+  .pad{padding:8px 18px 26px}
+  /* generic */
+  .brandbar{display:flex;align-items:center;gap:10px;padding:6px 18px 10px}
+  .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--forest),var(--forest-deep));display:grid;place-items:center;color:var(--gold);font-family:var(--font-display);font-weight:600;font-size:18px}
+  .kicker{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-deep);font-weight:800}
+  h1.big{font-family:var(--font-display);font-weight:600;font-size:27px;line-height:1.1;margin:6px 0 0}
+  .sub{color:var(--ink-2);font-size:13.5px;margin-top:7px;line-height:1.55}
+  label.lb{display:block;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--dim);margin:0 0 6px}
+  input,select,textarea{width:100%;padding:12px 13px;border-radius:11px;border:1px solid var(--line);background:#fff;font-family:inherit;font-size:14px;color:var(--ink)}
+  textarea{resize:vertical}
+  .btn{border:none;border-radius:12px;padding:13px 18px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer}
+  .btn-gold{background:var(--gold);color:var(--forest-deep)}
+  .btn-forest{background:var(--forest-deep);color:var(--bone)}
+  .btn-ghost{background:transparent;color:var(--forest-deep);border:1px solid var(--line)}
+  .btn-block{width:100%}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .muted{color:var(--dim);font-size:12.5px}
+  .row{display:flex;justify-content:space-between;align-items:center}
+  .badge{font-size:10px;font-weight:800;letter-spacing:.05em;padding:3px 8px;border-radius:7px;text-transform:uppercase}
+  .b-official{background:rgba(224,163,46,.16);color:var(--gold-deep)}
+  .b-member{background:var(--bone-2);color:var(--dim)}
+  .b-draft{background:var(--bone-2);color:var(--dim)}
+  .b-posted{background:rgba(47,125,82,.15);color:var(--good)}
+  .tabs{display:flex;gap:4px;background:var(--bone-2);padding:5px;border-radius:13px;margin:2px 0 4px}
+  .tab{flex:1;text-align:center;padding:8px 4px;border-radius:9px;border:none;background:transparent;font-family:inherit;font-weight:700;font-size:11.5px;color:var(--ink-2);cursor:pointer}
+  .tab.on{background:var(--forest-deep);color:var(--bone)}
+  .hint{margin-top:10px;display:flex;gap:8px;align-items:flex-start;background:rgba(224,163,46,.12);border:1px solid rgba(224,163,46,.35);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--ink-2);font-weight:600}
+  .att{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:10px;border:1px solid;cursor:pointer;margin-bottom:6px;font-size:13px}
+  .prog{height:8px;border-radius:8px;background:var(--bone-2);overflow:hidden}
+  .prog>i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--forest));transition:width .4s}
+  .doc h4{font-size:12.5px;font-weight:800;color:var(--forest-deep);margin:14px 0 4px}
+  .doc p{font-size:12.5px;line-height:1.65;margin:4px 0}
+  .fintab{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+  .fintab td{padding:6px 3px;border-bottom:1px solid var(--line)}
+  .stat{background:var(--bone-2);border-radius:11px;padding:10px;text-align:center}
+  .stat b{display:block;font-family:var(--font-mono);font-size:15px;font-weight:800;color:var(--forest-deep)}
+  .stat span{font-size:10px;color:var(--dim)}
+  .chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:var(--bone-2);font-size:12px;font-weight:600;margin:0 5px 5px 0}
+  .aside .card{padding:22px}
+  .aside h3{font-family:var(--font-display);font-weight:600;font-size:22px;margin:0 0 4px}
+  .step{display:flex;gap:12px;padding:11px 0;border-bottom:1px dashed var(--line)}
+  .step:last-child{border-bottom:none}
+  .num{flex:none;width:26px;height:26px;border-radius:8px;background:var(--forest-deep);color:var(--gold);display:grid;place-items:center;font-weight:800;font-size:12px}
+  .try{display:inline-block;background:var(--forest-deep);color:var(--bone);font-family:var(--font-mono);font-size:12px;padding:2px 8px;border-radius:6px;cursor:pointer}
+  a{color:var(--forest)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- PHONE -->
+  <div class="phone">
+    <div class="screen">
+      <div class="notch"></div>
+      <div class="statusbar"><span>9:41</span><span>Stawi ▲ ● ▂</span></div>
+      <div class="app" id="app"></div>
+    </div>
+  </div>
+
+  <!-- EXPLAINER -->
+  <div class="aside">
+    <div class="kicker">Stawi · Pillar 1</div>
+    <h1 class="display" style="font-size:38px;font-weight:600;margin:8px 0 0;color:var(--forest-deep)">Phone-first group cockpit</h1>
+    <p style="color:var(--ink-2);font-size:15px;max-width:520px;margin-top:10px;line-height:1.6">
+      A self-contained, working prototype — no build, no libraries. It shows the flow you asked for:
+      you sign in with a <b>phone number</b> (no email), and every group whose roster carries that
+      number appears automatically, with the right role. Officials can capture the charter, minute a
+      meeting, and let Stawi paraphrase it into a bank-ready document plus a month-end statement.
+    </p>
+    <div class="card" style="margin-top:18px">
+      <h3>Try these numbers</h3>
+      <p class="muted" style="margin:0 0 12px">Tap to auto-fill the login, then continue.</p>
+      <div class="step"><span class="num">1</span><div><b>Amina — Chairperson</b><br><span class="try" data-phone="0712345678">0712 345 678</span> <span class="muted">→ official of Umoja</span></div></div>
+      <div class="step"><span class="num">2</span><div><b>Grace — Treasurer</b><br><span class="try" data-phone="0722000111">0722 000 111</span> <span class="muted">→ official of Umoja</span></div></div>
+      <div class="step"><span class="num">3</span><div><b>David — Member</b><br><span class="try" data-phone="0701222333">0701 222 333</span> <span class="muted">→ member (view-only)</span></div></div>
+      <div class="step"><span class="num">4</span><div><b>A new number</b><br><span class="try" data-phone="0790000000">0790 000 000</span> <span class="muted">→ no groups yet → create one</span></div></div>
+    </div>
+    <p class="muted" style="margin-top:14px;max-width:520px">The paraphrasing engine, phone-matching and month-end reconciliation shown here are the exact algorithms implemented and unit-tested in <span class="mono">@stawi/core</span> (<span class="mono">identity.ts</span>, <span class="mono">minutes-prose.ts</span>, <span class="mono">statement.ts</span>). This file just inlines them so it can render anywhere.</p>
+  </div>
+</div>
+
+<script>
+/* ---------- inlined @stawi/core logic (identity + paraphraser + statement) ---------- */
+const KES = c => 'KES ' + (Math.round(c)/100).toLocaleString('en-KE',{minimumFractionDigits:(Math.round(c)/100)%1?2:0,maximumFractionDigits:2});
+const ordinal = n => { const s=['th','st','nd','rd'],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); };
+function dateLong(iso){ if(!iso) return ''; const d=new Date(iso+'T00:00:00Z'); if(isNaN(d))return iso;
+  const dd=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],mm=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return dd[d.getUTCDay()]+', '+ordinal(d.getUTCDate())+' '+mm[d.getUTCMonth()]+' '+d.getUTCFullYear(); }
+const phoneKey = r => (r||'').replace(/\D/g,'').replace(/^0+/,'').slice(-9);
+const phoneMatches = (a,b)=>{const k=phoneKey(a);return k.length>=8&&k===phoneKey(b);};
+function findMemberGroups(phone, dirs){ const out=[]; for(const d of dirs){ const hit=d.members.find(m=>phoneMatches(m.phone,phone)); if(hit) out.push({groupId:d.groupId,groupName:d.groupName,memberName:hit.name,designation:hit.designation,isOfficial:isOfficial(hit.designation)}); } return out; }
+const OFFICIALS=['Chairperson','Vice Chairperson','Secretary','Assistant Secretary','Treasurer','Assistant Treasurer','Organising Secretary','Signatory','Committee Member','Member'];
+const isOfficial = d => d && d!=='Member' && d!=='Committee Member';
+function cleanClause(raw){ let s=(raw||'').trim().replace(/\s+/g,' ').replace(/[.]+$/,'');
+  s=s.replace(/^(we\s+)?(agreed|resolved|decided|proposed|suggested)\s+(to|that)\s+/i,'');
+  s=s.replace(/^(to|that)\s+/i,''); s=s.replace(/^we\s+(will|shall|should|would|are going to|are)\s+/i,''); return s.trim(); }
+const lowerFirst=s=>s?s[0].toLowerCase()+s.slice(1):s;
+function formalResolution(raw){ const c=cleanClause(raw); if(!c) return ''; let body;
+  if(/^we\b/i.test(c)) body=c.replace(/^we\b/i,'the group');
+  else if(/^(the |members\b|all\b|each\b|every\b|it\b|officials?\b|committee\b|a )/i.test(c)) body=c;
+  else body='the group shall '+lowerFirst(c);
+  return 'RESOLVED THAT '+body+'.'; }
+const sentence=s=>{s=(s||'').trim().replace(/\s+/g,' ');if(!s)return '';s=s[0].toUpperCase()+s.slice(1);return /[.!?]$/.test(s)?s:s+'.';};
+function joinNames(a,empty){a=(a||[]).filter(Boolean);if(!a.length)return empty||'none';if(a.length===1)return a[0];return a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
+function tally(att){const by=s=>att.filter(a=>a.status===s);const p=by('present'),ab=by('absent'),ap=by('apology'),t=att.length;
+  return{present:p.length,absent:ab.length,apology:ap.length,total:t,presentPct:t?Math.round(p.length/t*100):0,quorumMet:t>0&&p.length*2>t,presentNames:p.map(x=>x.name),absentNames:ab.map(x=>x.name),apologyNames:ap.map(x=>x.name)};}
+const sum=xs=>xs.reduce((s,x)=>s+Math.round(x.amountCents||0),0);
+function finSummary(tb){const opening=Math.round(tb.openingBalanceCents||0),contr=sum(tb.contributions||[]),fines=sum(tb.fines||[]),payout=Math.round(tb.payoutCents||0);
+  const totalIn=contr+fines,totalOut=payout;return{openingCents:opening,contributionsCents:contr,finesCents:fines,payoutCents:payout,totalInCents:totalIn,totalOutCents:totalOut,closingBalanceCents:opening+totalIn-totalOut,contributorCount:(tb.contributions||[]).filter(c=>c.amountCents>0).length};}
+function paraphrase(m, charter){
+  const gn=(charter.name||'The Group'); const t=tally(m.attendance); const fin=finSummary(m.tableBanking);
+  const title='MINUTES OF THE '+ordinal(m.meetingNo).toUpperCase()+' MEETING OF '+gn.toUpperCase();
+  const opening=[
+    'The '+ordinal(m.meetingNo)+' meeting of '+gn+' was held on '+(dateLong(m.date)||'the stated date')+(m.venue?' at '+m.venue:'')+'. The meeting was called to order at '+(m.startTime||'the appointed time')+' by the Chairperson, '+(m.chairpersonName||'the Chairperson')+'.',
+    t.quorumMet?'The Secretary confirmed that the required quorum was present and the meeting proceeded to business.':'The Secretary noted the attendance; members present resolved to proceed with the business of the day.'];
+  const attendance=['A total of '+t.total+' members were on the register. Present ('+t.present+'): '+joinNames(t.presentNames)+'. Absent with apology ('+t.apology+'): '+joinNames(t.apologyNames)+'. Absent without apology ('+t.absent+'): '+joinNames(t.absentNames)+'.'];
+  const confirm=[m.meetingNo>1?'The minutes of the previous meeting were read, confirmed as a true record, and signed by the Chairperson.':'This being the inaugural meeting on record, there were no previous minutes to confirm.'];
+  const agenda=[]; (m.agendas||[]).filter(a=>a.title.trim()).forEach((a,i)=>{const bits=['4.'+(i+1)+' '+sentence(a.title)];
+    if(a.discussion.trim())bits.push('The meeting deliberated on '+lowerFirst(sentence(a.discussion)).replace(/\.$/,'')+'.');
+    if(a.proposedBy&&a.proposedBy.trim()){const sec=a.secondedBy&&a.secondedBy.trim()?' and seconded by '+a.secondedBy.trim():'';bits.push('The matter was proposed by '+a.proposedBy.trim()+sec+'.');}
+    if(a.resolution.trim())bits.push(formalResolution(a.resolution)); agenda.push(bits.join(' '));});
+  if(!agenda.length)agenda.push('No agenda items were formally minuted for this meeting.');
+  const finance=[]; if(fin.contributorCount>0||fin.finesCents>0||fin.payoutCents>0){const parts=[];
+    if(fin.contributorCount>0)parts.push('contributions totalling '+KES(fin.contributionsCents)+' were collected from '+fin.contributorCount+' member(s)');
+    if(fin.finesCents>0)parts.push('fines and penalties amounting to '+KES(fin.finesCents)+' were levied');
+    finance.push('During the table-banking session, '+joinNames(parts,'no monies were transacted')+'.');
+    if(fin.payoutCents>0)finance.push('A merry-go-round payout of '+KES(fin.payoutCents)+' was made to '+(m.tableBanking.payoutRecipient||'the member next in rotation')+'.');
+    finance.push('The meeting opened with a balance of '+KES(fin.openingCents)+'. Total receipts were '+KES(fin.totalInCents)+' and total disbursements '+KES(fin.totalOutCents)+', leaving a closing balance of '+KES(fin.closingBalanceCents)+'.');
+  } else finance.push('No table-banking transactions were recorded at this meeting.');
+  const adjourn=['There being no further business, the meeting was adjourned at '+(m.adjournmentTime||m.endTime||'the scheduled time')+' with a word of prayer.'+(m.nextMeetingDate?' The next meeting is scheduled for '+dateLong(m.nextMeetingDate)+'.':'')];
+  const sections=[['1. PRELIMINARIES',opening],['2. ATTENDANCE',attendance],['3. CONFIRMATION OF PREVIOUS MINUTES',confirm],['4. AGENDA & DELIBERATIONS',agenda],['5. TABLE-BANKING / FINANCIAL REPORT',finance],['6. ANY OTHER BUSINESS (AOB)',[(m.aobs&&m.aobs.length)?m.aobs.map(a=>sentence(a.topic)+': '+(a.deliberation?sentence(a.deliberation):'Noted for follow-up.')).join(' '):'There was no other business.']],['7. ADJOURNMENT',adjourn]];
+  const financeRows=[['Opening balance',KES(fin.openingCents)],['Contributions collected',KES(fin.contributionsCents)],['Fines & penalties',KES(fin.finesCents)],['Merry-go-round payout',KES(fin.payoutCents)],['Closing balance',KES(fin.closingBalanceCents),true]];
+  return {title,dateLong:dateLong(m.date),venue:m.venue,timeRange:[m.startTime,m.endTime].filter(Boolean).join(' – '),attendanceLine:t.present+'/'+t.total+' present ('+t.presentPct+'%) · quorum '+(t.quorumMet?'met':'not met'),sections,financeRows,signatories:[['Chairperson',m.chairpersonName||'____'],['Secretary',m.secretaryName||'____']]};
+}
+function reconcile(meetings, charter, ym){
+  const inM=meetings.filter(m=>m.date&&m.date.slice(0,7)===ym).sort((a,b)=>a.date.localeCompare(b.date));
+  const reg=charter.members.map(m=>({id:m.id,name:m.fullName}));
+  const held=inM.length;
+  const members=reg.map(r=>{let p=0,c=0,f=0;for(const mt of inM){const mk=mt.attendance.find(a=>a.memberId===r.id);if(mk&&mk.status==='present')p++;c+=(mt.tableBanking.contributions||[]).filter(x=>x.memberId===r.id).reduce((s,x)=>s+x.amountCents,0);f+=(mt.tableBanking.fines||[]).filter(x=>x.memberId===r.id).reduce((s,x)=>s+x.amountCents,0);}return{name:r.name,present:p,attendancePct:held?Math.round(p/held*100):0,contributedCents:c,finesCents:f};});
+  const S=inM.map(m=>finSummary(m.tableBanking));
+  const finance={openingCents:S[0]?S[0].openingCents:0,contributionsCents:S.reduce((s,x)=>s+x.contributionsCents,0),finesCents:S.reduce((s,x)=>s+x.finesCents,0),totalInCents:S.reduce((s,x)=>s+x.totalInCents,0),totalOutCents:S.reduce((s,x)=>s+x.totalOutCents,0),closingCents:S.length?S[S.length-1].closingBalanceCents:0};
+  const resolutions=[];inM.forEach(m=>(m.agendas||[]).forEach(a=>{if(a.resolution.trim())resolutions.push(formalResolution(a.resolution));}));
+  const avg=members.length?Math.round(members.reduce((s,m)=>s+m.attendancePct,0)/members.length):0;
+  const mm=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const label=mm[parseInt(ym.slice(5))-1]+' '+ym.slice(0,4);
+  const narrative=[
+    'During the month of '+label+', '+charter.name+' convened '+held+' meeting'+(held===1?'':'s')+', with an average member attendance of '+avg+'%. The group has '+members.length+' members on its register.',
+    'A total of '+KES(finance.contributionsCents)+' was contributed and '+KES(finance.finesCents)+' collected in fines. Opening the month with '+KES(finance.openingCents)+', the group closed with a balance of '+KES(finance.closingCents)+'.',
+    'This statement is a harmonised reconciliation of all attendance, contributions, fines and resolutions for '+label+', and may be presented as evidence of the group’s continuing activity and financial discipline.'];
+  return {label,held,membersOnRegister:members.length,avg,members,finance,resolutions,narrative};
+}
+
+/* ---------- seed data ---------- */
+function mk(id,serial,fullName,designation,phone){return{id,serial,fullName,designation,phone};}
+const CHARTERS={
+  umoja:{groupId:'umoja',name:'Umoja Women Group',motto:'Together we rise',mission:'To pool our savings, support one another, and grow member businesses.',vision:'A financially independent, united community of women.',coreValues:['Integrity','Unity','Diligence','Accountability'],
+    schedule:{venue:'At Zawadi Hotel, Kayole',days:['Friday'],startTime:'4:00 PM',endTime:'6:00 PM',frequency:'Weekly'},
+    constitution:'The group shall be known as UMOJA WOMEN GROUP. Membership is open to women of good standing resident within Kayole ward. Each member shall contribute a minimum of KES 500 weekly. Officials shall be elected every two years. A member absent for three consecutive meetings without apology shall be fined.',
+    members:[mk('a',1,'Amina Wanjiru','Chairperson','0712345678'),mk('b',2,'Grace Otieno','Treasurer','0722000111'),mk('c',3,'Faith Njeri','Secretary','0733222333'),mk('d',4,'Joseph Kamau','Committee Member','0700111222'),mk('e',5,'David Mwangi','Member','0701222333'),mk('f',6,'Brian Ouma','Member','0702333444')]}
+};
+const DIRS=Object.values(CHARTERS).map(c=>({groupId:c.groupId,groupName:c.name,members:c.members.map(m=>({name:m.fullName,phone:m.phone,designation:m.designation}))}));
+function seedMeetings(){
+  const c=CHARTERS.umoja, roster=c.members.map(m=>({memberId:m.id,name:m.fullName,designation:m.designation}));
+  const att=()=>roster.map(r=>({memberId:r.memberId,name:r.name,designation:r.designation,status:'present'}));
+  const m1={id:'m1',meetingNo:1,date:'2026-06-05',day:'Friday',venue:c.schedule.venue,startTime:'4:00 PM',endTime:'6:00 PM',adjournmentTime:'6:05 PM',chairpersonName:'Amina Wanjiru',secretaryName:'Faith Njeri',nextMeetingDate:'2026-06-12',status:'POSTED',attendance:att(),
+    agendas:[{title:'Opening of the group account',discussion:'we should open a bank account for the group',proposedBy:'Grace Otieno',secondedBy:'Faith Njeri',resolution:'open a group bank account at the nearest bank'}],aobs:[],
+    tableBanking:{openingBalanceCents:0,contributions:c.members.map(m=>({memberId:m.id,name:m.fullName,amountCents:50000})),fines:[],payoutRecipient:'Amina Wanjiru',payoutCents:250000}};
+  const a2=att(); a2[5].status='absent';
+  const m2={id:'m2',meetingNo:2,date:'2026-06-12',day:'Friday',venue:c.schedule.venue,startTime:'4:00 PM',endTime:'6:00 PM',adjournmentTime:'6:10 PM',chairpersonName:'Amina Wanjiru',secretaryName:'Faith Njeri',nextMeetingDate:'2026-06-19',status:'DRAFT',attendance:a2,
+    agendas:[{title:'Purchase of meeting chairs',discussion:'we need our own chairs for meetings',proposedBy:'Faith Njeri',secondedBy:'Grace Otieno',resolution:'buy 20 plastic chairs before the next meeting'}],aobs:[],
+    tableBanking:{openingBalanceCents:50000,contributions:c.members.slice(0,5).map(m=>({memberId:m.id,name:m.fullName,amountCents:50000})),fines:[{memberId:'f',name:'Brian Ouma',reason:'absence without apology',amountCents:10000}],payoutRecipient:'Grace Otieno',payoutCents:250000}};
+  return [m2,m1];
+}
+
+/* ---------- app state + router ---------- */
+const S={phone:'',links:[],groupId:null,tab:'charter',meetings:seedMeetings(),draft:null,gen:null};
+const app=()=>document.getElementById('app');
+const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function login(){ app().innerHTML=`
+  <div class="brandbar"><div class="logo">S</div><b class="display" style="font-size:19px;color:var(--forest-deep)">Stawi</b></div>
+  <div class="pad">
+    <div class="kicker">Save together · grow together</div>
+    <h1 class="big">Enter with your phone</h1>
+    <p class="sub">No email needed. Use the number your group registered you with — your groups appear the moment you’re in.</p>
+    <div style="margin-top:20px">
+      <label class="lb">Phone number</label>
+      <div style="display:flex;gap:8px">
+        <div style="display:grid;place-items:center;padding:0 12px;border:1px solid var(--line);border-radius:11px;background:#fff;font-weight:700;font-size:14px">🇰🇪 +254</div>
+        <input id="ph" inputmode="tel" placeholder="0712 345 678" value="${esc(S.phone)}" />
+      </div>
+      <button class="btn btn-gold btn-block" style="margin-top:14px" onclick="doLogin()">Send code & continue →</button>
+      <p class="muted" style="text-align:center;margin-top:12px">We’ll text a one-time code. (Prototype: continues instantly.)</p>
+    </div>
+  </div>`;
+}
+window.doLogin=function(){ const v=document.getElementById('ph').value.trim(); S.phone=v; S.links=findMemberGroups(v,DIRS); groupsHome(); };
+
+function groupsHome(){
+  const links=S.links;
+  const list = links.length? links.map(l=>`
+    <div class="card" style="padding:15px;margin-bottom:10px;cursor:pointer" onclick="openGroup('${l.groupId}')">
+      <div class="row"><b class="display" style="font-size:18px">${esc(l.groupName)}</b><span class="badge ${l.isOfficial?'b-official':'b-member'}">${l.isOfficial?esc(l.designation):'Member'}</span></div>
+      <div class="muted" style="margin-top:4px">You are ${esc(l.memberName)} · tap to open workspace →</div>
+    </div>`).join('') : `
+    <div class="card" style="padding:18px;text-align:center">
+      <div style="font-size:30px">📭</div>
+      <b>No groups linked to ${esc(S.phone||'this number')} yet.</b>
+      <p class="muted" style="margin:6px 0 0">When an official adds this number to a group’s roster, it will appear here automatically. Or start one:</p>
+      <button class="btn btn-forest btn-block" style="margin-top:12px" onclick="openGroup('umoja')">＋ Create / preview a group</button>
+    </div>`;
+  app().innerHTML=`
+  <div class="brandbar"><div class="logo">S</div><b class="display" style="font-size:19px;color:var(--forest-deep)">Stawi</b>
+    <span style="margin-left:auto" class="muted mono">${esc(S.phone)}</span></div>
+  <div class="pad">
+    <div class="kicker">Your groups</div>
+    <h1 class="big" style="font-size:23px">Linked by your phone number</h1>
+    <p class="sub">These are the groups whose roster carries <b>${esc(S.phone)}</b>.</p>
+    <div style="margin-top:16px">${list}</div>
+    <button class="btn btn-ghost btn-block" style="margin-top:6px" onclick="login()">← Use a different number</button>
+  </div>`;
+}
+window.login=login; window.groupsHome=groupsHome;
+window.openGroup=function(id){ S.groupId=id; S.tab='charter'; S.draft=null; S.gen=null; groupView(); };
+
+function header(){ const c=CHARTERS[S.groupId]||{name:'New Group'}; const link=S.links.find(l=>l.groupId===S.groupId);
+  const canEdit = link? link.isOfficial : true;
+  return {c,canEdit,link};
+}
+function groupView(){
+  const {c,canEdit}=header();
+  const tabs=[['charter','📋 Charter'],['minutes','📝 Minutes'],['documents','📄 Docs'],['statement','📊 Month-End']];
+  app().innerHTML=`
+  <div class="brandbar"><span class="try" style="background:transparent;color:var(--forest);padding:0" onclick="groupsHome()">← Groups</span>
+    <b class="display" style="font-size:16px;margin-left:6px;color:var(--forest-deep)">${esc(c.name)}</b>
+    <span style="margin-left:auto" class="badge ${canEdit?'b-official':'b-member'}">${canEdit?'Official':'Member'}</span></div>
+  <div class="pad">
+    <div class="tabs">${tabs.map(t=>`<button class="tab ${S.tab===t[0]?'on':''}" onclick="setTab('${t[0]}')">${t[1]}</button>`).join('')}</div>
+    <div id="tabbody"></div>
+  </div>`;
+  renderTab();
+}
+window.setTab=function(t){S.tab=t;S.gen=null;groupView();};
+
+function renderTab(){
+  const {c,canEdit}=header(); const body=document.getElementById('tabbody');
+  if(S.tab==='charter') body.innerHTML=charterView(c,canEdit);
+  else if(S.tab==='minutes') body.innerHTML=minutesView(c,canEdit);
+  else if(S.tab==='documents') body.innerHTML=docsView(c);
+  else body.innerHTML=statementView(c,canEdit);
+}
+function reqFields(c){return[['Name',!!c.name],['Meeting place',!!(c.schedule&&c.schedule.venue)],['Day(s)',!!(c.schedule&&c.schedule.days.length)],['Time',!!(c.schedule&&c.schedule.startTime)],['Members (3+)',c.members.filter(m=>m.fullName).length>=3],['Officials (2+)',c.members.filter(m=>isOfficial(m.designation)).length>=2],['Constitution',(c.constitution||'').length>=40],['Motto',!!c.motto],['Mission',(c.mission||'').length>5],['Vision',(c.vision||'').length>5],['Core values',(c.coreValues||[]).length>=1]];}
+function charterView(c,canEdit){
+  const f=reqFields(c); const pct=Math.round(f.filter(x=>x[1]).length/f.length*100); const missing=f.find(x=>!x[1]);
+  const off=c.members.filter(m=>isOfficial(m.designation));
+  return `
+  <div class="card" style="padding:15px;margin-bottom:12px">
+    <div class="row"><b style="font-size:13.5px">Charter completeness</b><b class="mono" style="color:${pct===100?'var(--good)':'var(--gold-deep)'}">${pct}%</b></div>
+    <div class="prog" style="margin-top:9px"><i style="width:${pct}%"></i></div>
+    ${missing?`<div class="hint">👉 Next: fill <b>${esc(missing[0])}</b>.</div>`:`<p style="color:var(--good);font-weight:700;font-size:12.5px;margin:10px 0 0">✓ Bank-ready profile complete.</p>`}
+  </div>
+  <div class="card" style="padding:15px;margin-bottom:12px">
+    <b class="display" style="font-size:16px">${esc(c.name)}</b>
+    <p class="muted" style="margin:2px 0 10px">${esc(c.schedule.venue)} · ${esc(c.schedule.days.join(', '))} · ${esc(c.schedule.startTime)}–${esc(c.schedule.endTime)}</p>
+    <div style="margin-top:4px">${(c.coreValues||[]).map(v=>`<span class="chip">${esc(v)}</span>`).join('')}</div>
+    <div style="display:grid;gap:6px;margin-top:6px">
+      <div><span class="lb" style="display:inline">Motto</span> <span style="font-style:italic">“${esc(c.motto)}”</span></div>
+      <div><span class="lb" style="display:inline">Mission</span> <span style="font-size:13px">${esc(c.mission)}</span></div>
+      <div><span class="lb" style="display:inline">Vision</span> <span style="font-size:13px">${esc(c.vision)}</span></div>
+    </div>
+  </div>
+  <div class="card" style="padding:15px">
+    <div class="row" style="margin-bottom:8px"><b style="font-size:13.5px">Members & officials</b><span class="muted">${c.members.length} on roster</span></div>
+    ${c.members.map(m=>`<div class="row" style="padding:7px 0;border-bottom:1px solid var(--line)">
+      <div><b style="font-size:13px">${m.serial}. ${esc(m.fullName)}</b><div class="muted mono">${esc(m.phone)}</div></div>
+      <span class="badge ${isOfficial(m.designation)?'b-official':'b-member'}">${esc(m.designation)}</span></div>`).join('')}
+    <p class="muted" style="margin-top:10px">These phone numbers are the join key: each member sees this group when they sign in with their number.</p>
+    ${canEdit?'<button class="btn btn-ghost btn-block" style="margin-top:12px" onclick="alert(\'In the full app this opens the editable roster (add / remove members).\')">✎ Edit charter</button>':''}
+  </div>`;
+}
+function minutesView(c,canEdit){
+  if(!canEdit) return `<div class="card" style="padding:16px"><p class="muted">You are a member of this group. Only officials (Chairperson, Secretary, Treasurer) can record and post minutes. Ask your secretary to add the meeting.</p></div>`;
+  const rows=S.meetings.map(m=>{const t=tally(m.attendance);return `<div class="card" style="padding:13px;margin-bottom:9px"><div class="row"><b>Meeting No. ${m.meetingNo}</b><span class="badge ${m.status==='POSTED'?'b-posted':'b-draft'}">${m.status}</span></div><div class="muted" style="margin-top:3px">${esc(m.date)} · ${t.present}/${t.total} present · ${(m.agendas||[]).length} agenda</div><button class="btn btn-ghost btn-block" style="margin-top:9px" onclick="editMeeting('${m.id}')">${m.status==='POSTED'?'View →':'Continue →'}</button></div>`;}).join('');
+  return `<button class="btn btn-gold btn-block" style="margin-bottom:12px" onclick="editMeeting('m2')">＋ Record / open a meeting</button>${rows}`;
+}
+window.editMeeting=function(id){ S.draft=JSON.parse(JSON.stringify(S.meetings.find(m=>m.id===id))); S.gen=null; meetingForm(); };
+function meetingForm(){
+  const {c}=header(); const m=S.draft; const fin=finSummary(m.tableBanking);
+  const done = m.date&&m.venue&&m.startTime&&m.chairpersonName&&m.secretaryName&&(m.agendas||[]).some(a=>a.title.trim())&&m.adjournmentTime;
+  const body=document.getElementById('tabbody');
+  body.innerHTML=`
+  <div class="row" style="margin-bottom:8px"><b class="display" style="font-size:18px">Meeting No. ${m.meetingNo}</b><span class="try" onclick="setTab('minutes')">← All</span></div>
+  <div class="card" style="padding:14px;margin-bottom:10px">
+    <b style="font-size:13px">Attendance</b><p class="muted" style="margin:2px 0 8px">Tap to cycle: Present → Apology → Absent.</p>
+    ${m.attendance.map((a,i)=>{const col=a.status==='present'?'var(--good)':a.status==='apology'?'var(--warn)':'var(--danger)';const bg=a.status==='present'?'rgba(47,125,82,.10)':a.status==='apology'?'rgba(204,138,30,.12)':'rgba(196,69,47,.10)';
+      return `<div class="att" style="border-color:${col};background:${bg}" onclick="cycleAtt(${i})"><span>${esc(a.name)}</span><b style="color:${col};font-size:11px;text-transform:uppercase">${a.status==='present'?'✓ Present':a.status==='apology'?'⚑ Apology':'✕ Absent'}</b></div>`;}).join('')}
+  </div>
+  <div class="card" style="padding:14px;margin-bottom:10px">
+    <b style="font-size:13px">Agenda</b>
+    ${(m.agendas||[]).map((a,i)=>`<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:8px">
+      <input value="${esc(a.title)}" oninput="agEdit(${i},'title',this.value)" placeholder="Agenda title"/>
+      <textarea style="margin-top:6px" rows="2" oninput="agEdit(${i},'discussion',this.value)" placeholder="What was discussed (plain words)">${esc(a.discussion)}</textarea>
+      <input style="margin-top:6px" value="${esc(a.resolution)}" oninput="agEdit(${i},'resolution',this.value)" placeholder="What was agreed (e.g. buy 20 chairs)"/>
+    </div>`).join('')}
+  </div>
+  <div class="card" style="padding:14px;margin-bottom:10px">
+    <b style="font-size:13px">Table-banking</b>
+    <div style="margin-top:8px">${m.tableBanking.contributions.map((x,i)=>`<div class="row" style="margin-bottom:5px"><span style="font-size:12.5px;color:var(--ink-2)">${esc(x.name)}</span><input style="width:100px;padding:7px 9px" value="${(x.amountCents/100)}" oninput="conEdit(${i},this.value)"/></div>`).join('')}</div>
+    <div class="stat" style="margin-top:10px;text-align:left;background:var(--bone-2);padding:11px 13px">
+      <div class="row"><span class="muted">Contributions</span><b class="mono">${KES(fin.contributionsCents)}</b></div>
+      <div class="row"><span class="muted">Fines</span><b class="mono">${KES(fin.finesCents)}</b></div>
+      <div class="row"><span class="muted">Payout</span><b class="mono">− ${KES(fin.payoutCents)}</b></div>
+      <div class="row" style="border-top:1px solid var(--line);margin-top:5px;padding-top:5px"><b>Closing</b><b class="mono" style="color:var(--forest-deep)">${KES(fin.closingBalanceCents)}</b></div>
+    </div>
+  </div>
+  ${!done?'<div class="hint">👉 Fill date, venue, chair/secretary, an agenda and adjournment to generate the document. (Pre-filled here.)</div>':''}
+  <button class="btn btn-gold btn-block" style="margin-top:10px" onclick="generateDoc()">⚙ Generate professional minutes</button>`;
+}
+window.cycleAtt=function(i){const o=['present','apology','absent'];const a=S.draft.attendance[i];a.status=o[(o.indexOf(a.status)+1)%3];meetingForm();};
+window.agEdit=function(i,k,v){S.draft.agendas[i][k]=v;};
+window.conEdit=function(i,v){S.draft.tableBanking.contributions[i].amountCents=Math.round((parseFloat(v)||0)*100);meetingForm();};
+window.generateDoc=function(){ const {c}=header(); S.gen={doc:paraphrase(S.draft,c),text:''}; S.gen.text=docPlain(S.gen.doc,c); previewDoc(); };
+function docPlain(d,c){let L=[c.name.toUpperCase()];if(c.motto)L.push('"'+c.motto+'"');L.push('',d.title,[d.dateLong,d.venue,d.timeRange].filter(Boolean).join(' · '),'');d.sections.forEach(s=>{L.push(s[0]);s[1].forEach(p=>L.push(p));L.push('');});L.push('SIGNED:');d.signatories.forEach(s=>L.push('  '+s[0]+': '+s[1]));return L.join('\n');}
+function previewDoc(){
+  const {c}=header(); const d=S.gen.doc; const body=document.getElementById('tabbody');
+  body.innerHTML=`
+  <div class="row" style="margin-bottom:8px"><b class="display" style="font-size:16px">Review before posting</b><span class="try" onclick="meetingForm()">← Edit</span></div>
+  <p class="muted" style="margin:0 0 10px">Stawi paraphrased your entries into formal minutes. As an official, fine-tune the wording, then post.</p>
+  ${docHTML(d,c)}
+  <div class="card" style="padding:13px;margin-top:10px">
+    <label class="lb">✎ Fine-tune wording (official edit)</label>
+    <textarea rows="7" style="font-family:var(--font-mono);font-size:11px;line-height:1.55" oninput="S.gen.text=this.value">${esc(S.gen.text)}</textarea>
+    <button class="btn btn-forest btn-block" style="margin-top:10px" onclick="postDoc()">✓ Post minutes to group</button>
+  </div>`;
+}
+function docHTML(d,c){return `<div class="card doc" style="padding:18px">
+  <div style="display:flex;align-items:center;gap:10px;border-bottom:2px solid var(--forest-deep);padding-bottom:10px">
+    <div class="logo" style="width:38px;height:38px">🪙</div><div style="flex:1"><b class="display" style="font-size:16px;color:var(--forest-deep)">${esc(c.name)}</b>${c.motto?`<div class="muted" style="font-style:italic">“${esc(c.motto)}”</div>`:''}</div>
+    <span class="badge b-official">Official minutes</span></div>
+  <h4 style="text-align:center;font-size:13px;margin-top:12px">${esc(d.title)}</h4>
+  <p style="text-align:center" class="muted">${esc([d.dateLong,d.venue,d.timeRange].filter(Boolean).join(' · '))}</p>
+  <p style="text-align:center;color:var(--forest);font-weight:700;font-size:11.5px">${esc(d.attendanceLine)}</p>
+  ${d.sections.map(s=>`<h4>${esc(s[0])}</h4>${s[1].map(p=>`<p>${esc(p)}</p>`).join('')}${s[0][0]==='5'?`<table class="fintab">${d.financeRows.map(r=>`<tr><td>${esc(r[0])}</td><td style="text-align:right;font-weight:${r[2]?800:600};color:${r[2]?'var(--forest-deep)':'var(--ink)'}" class="mono">${esc(r[1])}</td></tr>`).join('')}</table>`:''}`).join('')}
+  <div style="display:flex;gap:16px;margin-top:18px">${d.signatories.map(s=>`<div style="flex:1"><div style="border-bottom:1px solid var(--ink);height:26px"></div><div class="muted" style="margin-top:3px">${esc(s[0])}: <b style="color:var(--ink)">${esc(s[1])}</b></div></div>`).join('')}</div>
+  <p class="muted" style="text-align:center;margin-top:14px;font-size:10px">Generated by Stawi · A supporting record of the group’s activities.</p></div>`;}
+window.postDoc=function(){ const m=S.meetings.find(x=>x.id===S.draft.id); Object.assign(m,S.draft); m.status='POSTED'; S.gen=null; S.tab='documents'; groupView(); };
+function docsView(c){
+  const posted=S.meetings.filter(m=>m.status==='POSTED');
+  if(!posted.length) return `<div class="card" style="padding:16px"><p class="muted">No posted documents yet. Record a meeting, generate the minutes and post them — they appear here, ready to download and present to a bank or SACCO.</p></div>`;
+  const d=paraphrase(posted[0],c);
+  return `<p class="muted" style="margin:0 0 8px">${posted.length} posted document(s). Tap print in the full app to save as PDF.</p>${docHTML(d,c)}`;
+}
+function statementView(c,canEdit){
+  const st=reconcile(S.meetings,c,'2026-06');
+  return `<div class="card doc" style="padding:18px">
+    <div style="display:flex;align-items:center;gap:10px;border-bottom:2px solid var(--forest-deep);padding-bottom:10px"><div class="logo" style="width:38px;height:38px">🪙</div><div style="flex:1"><b class="display" style="font-size:16px;color:var(--forest-deep)">${esc(c.name)}</b></div><span class="badge b-official">Month-End</span></div>
+    <h4 style="text-align:center;font-size:14px;margin-top:10px">Statement for ${st.label}</h4>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:12px">
+      <div class="stat"><b>${st.held}</b><span>Meetings</span></div><div class="stat"><b>${st.membersOnRegister}</b><span>Members</span></div><div class="stat"><b>${st.avg}%</b><span>Avg att.</span></div><div class="stat"><b>${KES(st.finance.closingCents)}</b><span>Closing</span></div></div>
+    <h4>1. NARRATIVE</h4>${st.narrative.map(p=>`<p>${esc(p)}</p>`).join('')}
+    <h4>2. ATTENDANCE & CONTRIBUTIONS</h4>
+    <table class="fintab"><tr style="border-bottom:2px solid var(--forest-deep)"><td><b>Member</b></td><td style="text-align:center"><b>Att.%</b></td><td style="text-align:right"><b>Contributed</b></td><td style="text-align:right"><b>Fines</b></td></tr>
+    ${st.members.map(m=>`<tr><td>${esc(m.name)}</td><td style="text-align:center" class="mono">${m.attendancePct}%</td><td style="text-align:right" class="mono">${KES(m.contributedCents)}</td><td style="text-align:right" class="mono">${KES(m.finesCents)}</td></tr>`).join('')}</table>
+    <h4>3. FINANCIAL RECONCILIATION</h4>
+    <div class="stat" style="text-align:left;background:var(--bone-2);padding:11px">
+      <div class="row"><span class="muted">Opening</span><b class="mono">${KES(st.finance.openingCents)}</b></div>
+      <div class="row"><span class="muted">Contributions</span><b class="mono">${KES(st.finance.contributionsCents)}</b></div>
+      <div class="row"><span class="muted">Fines</span><b class="mono">${KES(st.finance.finesCents)}</b></div>
+      <div class="row" style="border-top:1px solid var(--line);margin-top:5px;padding-top:5px"><b>Closing</b><b class="mono" style="color:var(--forest-deep)">${KES(st.finance.closingCents)}</b></div></div>
+    ${st.resolutions.length?`<h4>4. RESOLUTIONS PASSED</h4><ul style="padding-left:16px;margin:4px 0">${st.resolutions.map(r=>`<li style="font-size:12px;line-height:1.5">${esc(r)}</li>`).join('')}</ul>`:''}
+    <p class="muted" style="text-align:center;margin-top:14px;font-size:10px">Generated by Stawi · Harmonised reconciliation of ${st.label}.</p></div>
+    ${canEdit?'<button class="btn btn-gold btn-block" style="margin-top:10px" onclick="alert(\'In the full app: edit narrative → Print / Save PDF → Post statement.\')">↓ Print / Post statement</button>':''}`;
+}
+
+document.addEventListener('click',e=>{const t=e.target.closest('.try[data-phone]');if(t){document.getElementById('ph')&&(document.getElementById('ph').value=t.dataset.phone);S.phone=t.dataset.phone;}});
+login();
+</script>
+</body>
+</html>

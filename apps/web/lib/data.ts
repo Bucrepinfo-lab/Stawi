@@ -47,8 +47,21 @@ async function tenantCtx() {
 export async function getMyGroups(): Promise<GroupAccount[]> {
   const c = await tenantCtx();
   if (!c) return MY_GROUPS;
-  const dtos = await c.db.getMemberGroups(c.db.prisma, c.userId, c.tenantId);
-  return dtos as unknown as GroupAccount[];
+  // Primary: groups where this Clerk user is a linked member.
+  const byUser = await c.db.getMemberGroups(c.db.prisma, c.userId, c.tenantId);
+  // Phone-first: also surface groups whose roster carries the user's phone number
+  // (covers the window before the sign-in webhook links pending roster rows).
+  let byPhone: unknown[] = [];
+  try {
+    const { currentUser } = await import('@clerk/nextjs/server');
+    const u = await currentUser();
+    const phone = u?.primaryPhoneNumber?.phoneNumber
+      ?? u?.phoneNumbers?.[0]?.phoneNumber;
+    if (phone) byPhone = await c.db.getGroupsByPhone(c.db.prisma, phone, c.tenantId ?? undefined);
+  } catch { /* phone lookup is best-effort */ }
+  const merged = new Map<string, GroupAccount>();
+  for (const g of [...(byUser as GroupAccount[]), ...(byPhone as GroupAccount[])]) merged.set(g.id, g);
+  return [...merged.values()];
 }
 
 export async function getBusinessMap(

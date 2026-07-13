@@ -703,3 +703,87 @@ export async function saveMonthlyStatement(
     select: { id: true },
   });
 }
+
+// ───────────────── Phone-first identity (Pillar 1 join key) ──────────────
+
+/** Last 9 significant digits — tolerant match key across 07…/2547…/+2547… forms. */
+function phoneKey(raw: string): string {
+  return (raw || '').replace(/\D/g, '').replace(/^0+/, '').slice(-9);
+}
+
+/**
+ * Provision membership rows from a charter roster so members exist (phone-keyed)
+ * before they ever sign in. Rows without a matching clerkUserId are "pending"
+ * and get linked automatically on first phone sign-in.
+ */
+export async function provisionRosterMemberships(
+  prisma: PrismaClient,
+  input: { groupId: string; tenantId?: string; roster: { fullName: string; phone: string; designation?: string }[] },
+): Promise<{ created: number }> {
+  if (input.tenantId) await assertGroupInTenant(prisma, input.groupId, input.tenantId);
+  const roleMap: Record<string, 'CHAIRMAN' | 'SECRETARY' | 'TREASURER' | 'SIGNATORY' | 'MEMBER'> = {
+    Chairperson: 'CHAIRMAN', Secretary: 'SECRETARY', Treasurer: 'TREASURER', Signatory: 'SIGNATORY',
+  };
+  const existing = await prisma.membership.findMany({ where: { groupId: input.groupId }, select: { phone: true } });
+  const have = new Set(existing.map((m) => phoneKey(m.phone ?? '')).filter(Boolean));
+  let created = 0;
+  for (const r of input.roster) {
+    const key = phoneKey(r.phone);
+    if (!key || have.has(key)) continue;
+    await prisma.membership.create({
+      data: {
+        groupId: input.groupId,
+        clerkUserId: `pending:${key}`, // placeholder until the person signs in
+        fullName: r.fullName,
+        phone: r.phone,
+        role: roleMap[r.designation ?? 'Member'] ?? 'MEMBER',
+      },
+    }).catch(() => {});
+    created++;
+  }
+  return { created };
+}
+
+/**
+ * On phone sign-in, link every pending roster row that matches one of the user's
+ * verified phone numbers to their real Clerk user id.
+ */
+export async function linkMembershipsByPhone(
+  prisma: PrismaClient,
+  clerkUserId: string,
+  phones: string[],
+): Promise<{ linked: number }> {
+  let linked = 0;
+  for (const p of phones) {
+    const key = phoneKey(p);
+    if (!key) continue;
+    const rows = await prisma.membership.findMany({ where: { phone: { endsWith: key } } });
+    for (const row of rows) {
+      if (row.clerkUserId === clerkUserId) continue;
+      await prisma.membership.update({ where: { id: row.id }, data: { clerkUserId } }).catch(() => {});
+      linked++;
+    }
+  }
+  return { linked };
+}
+
+/** Groups a phone number participates in (direct roster match), tenant-optional. */
+export async function getGroupsByPhone(prisma: PrismaClient, phone: string, tenantId?: string): Promise<GroupAccountDTO[]> {
+  const key = phoneKey(phone);
+  if (!key) return [];
+  const memberships = await prisma.membership.findMany({
+    where: { phone: { endsWith: key }, ...(tenantId ? { group: { tenantId } } : {}) },
+    include: { group: { include: { members: { include: { contributions: { where: { status: 'CONFIRMED' } } }, orderBy: { rotationOrder: 'asc' } } } } },
+  });
+  return memberships.map((m) => {
+    const g = m.group;
+    const members: MemberDTO[] = g.members.map((mem) => ({
+      memberId: mem.id,
+      name: mem.fullName,
+      totalCents: mem.contributions.reduce((s, c) => s + c.amountCents, 0),
+      role: titleRole(mem.role),
+      paid: mem.contributions.length > 0,
+    }));
+    return { id: g.id, name: g.name, myRole: titleRole(m.role), flag: g.flagEmoji, type: mapKind(g.type), members };
+  });
+}

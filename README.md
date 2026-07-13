@@ -8,7 +8,7 @@ running that business with QuickBooks-grade accounting and tax compliance →
 full savings & credit services with a graduation path to a licensed, listed
 institution. Mobile-first and M-Pesa-native.
 
-> Status: **v1.5 — four pillars + Pillar 1 data-entry cockpit.** Domain logic
+> Status: **v1.6 — phone-first identity + Pillar 1 cockpit.** Domain logic
 > implemented and tested, realtime SSE push live, all activation seams closed.
 > New: a role-gated group workspace that captures the charter, minutes every
 > meeting, auto-paraphrases them into bank-ready documents, and reconciles a

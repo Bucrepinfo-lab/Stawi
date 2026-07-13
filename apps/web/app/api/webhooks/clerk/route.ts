@@ -73,6 +73,15 @@ export async function POST(req: Request) {
           clerkUserId: d.public_user_data?.user_id,
         });
         break;
+      case 'user.created':
+      case 'user.updated': {
+        // Phone-first identity: link roster rows to this user by matching phone.
+        const phones: string[] = Array.isArray(d.phone_numbers)
+          ? d.phone_numbers.map((p: any) => p?.phone_number).filter(Boolean)
+          : [];
+        if (d.id && phones.length) await db.linkMembershipsByPhone(db.prisma, d.id, phones);
+        break;
+      }
       case 'user.deleted':
         await db.removeUserData(db.prisma, d.id);
         break;

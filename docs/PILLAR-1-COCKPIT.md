@@ -61,3 +61,27 @@ in `apps/web/app/actions.ts` write through when the DB is live.
 The charter roster + capital feed Pillar 2 (matching); officials + registration
 intent feed Pillar 3 (accounting/compliance/admin); the constitution + roster feed
 Pillar 4 (SACCO+). One point of entry, reused everywhere.
+
+## Phone-first identity (added 2026-07-13)
+
+Phone number is the primary auth credential — many members have no email. The
+number a member is registered with in the charter roster **is** their identity;
+when they download the app and sign up with that same number, they are linked to
+every group whose roster carries it, with the role their designation implies.
+
+- **Core:** `identity.ts` — `normalizePhone`, `phoneKey` (last-9 match key, tolerant
+  of `07…`/`2547…`/`+2547…`), `phoneMatches`, `findMemberGroups(phone, directories)`,
+  `viewerRoleFromLinks`, `isOfficialInGroup`. Tested in `test/identity.test.ts`.
+- **Provisioning:** saving a charter seeds `Membership` rows from the roster
+  (phone-keyed, `clerkUserId = pending:<key>`), so members exist before they ever
+  sign in (`provisionRosterMemberships`).
+- **Linking:** the Clerk webhook `user.created`/`user.updated` calls
+  `linkMembershipsByPhone` to attach pending roster rows to the real user by phone.
+- **Discovery:** `getMyGroups` unions the user's linked memberships with a live
+  phone match (`getGroupsByPhone`) so groups show up even before the webhook fires.
+- **Auth config (Clerk dashboard):** set **Phone number** as the primary identifier
+  and enable **SMS code**; email optional. Sign-in/up pages carry phone-first copy.
+
+Prototype: `design/pillar1-cockpit-prototype.html` — a self-contained, dependency-free
+demo (phone login → group discovery by number → charter/minutes/document/month-end),
+inlining the exact `@stawi/core` algorithms so it renders in any viewer.

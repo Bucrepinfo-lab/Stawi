@@ -21,3 +21,4 @@ export * from './charter';
 export * from './minutes';
 export * from './minutes-prose';
 export * from './statement';
+export * from './identity';

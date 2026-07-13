@@ -255,7 +255,7 @@ export async function saveCharterAction(input: {
     return { ok: true, persisted: false };
   }
   try {
-    const { prisma, upsertGroupCharter } = await import('@stawi/db');
+    const { prisma, upsertGroupCharter, provisionRosterMemberships } = await import('@stawi/db');
     await upsertGroupCharter(prisma, {
       groupId: input.groupId,
       tenantId: await tenantId(),
@@ -273,6 +273,13 @@ export async function saveCharterAction(input: {
       registeredNumber: c.registeredNumber,
       countryCode: c.countryCode ?? 'KE',
     });
+    // Phone-first: seed membership rows from the roster so members are linked on sign-in.
+    try {
+      const roster = (Array.isArray(c.members) ? c.members : [])
+        .filter((m: any) => m?.phone && m?.fullName)
+        .map((m: any) => ({ fullName: m.fullName, phone: m.phone, designation: m.designation }));
+      if (roster.length) await provisionRosterMemberships(prisma, { groupId: input.groupId, tenantId: await tenantId(), roster });
+    } catch { /* non-fatal */ }
     publishEvent({ type: 'charter', channel: (await tenantId()) ?? 'public' });
     return { ok: true, persisted: true };
   } catch (e) {
