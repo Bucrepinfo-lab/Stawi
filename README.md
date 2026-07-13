@@ -48,7 +48,7 @@ Africa's Talking SMS on payment confirmation).
 ```
 apps/
   web/        Next.js 15 (App Router) — member + admin web app
-  mobile/     Expo / React Native — member app (own design system, no UI kits)
+  mobile/     Expo / React Native — phone-first member app: login, groups-by-phone, full Pillar 1 cockpit
 packages/
   core/       Domain logic (capital, rotation, tax, matching, mpesa, accounting) — 58 tests
   db/         Prisma schema + client (PostgreSQL)

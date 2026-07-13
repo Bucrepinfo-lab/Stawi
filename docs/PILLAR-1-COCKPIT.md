@@ -85,3 +85,16 @@ every group whose roster carries it, with the role their designation implies.
 Prototype: `design/pillar1-cockpit-prototype.html` — a self-contained, dependency-free
 demo (phone login → group discovery by number → charter/minutes/document/month-end),
 inlining the exact `@stawi/core` algorithms so it renders in any viewer.
+
+## Mobile (Expo) parity (added 2026-07-13)
+
+Full React Native screens for the cockpit, phone-first end to end:
+- `apps/mobile/screens/PhoneLoginScreen.tsx` — phone-number entry → `findMemberGroups`.
+- `apps/mobile/screens/GroupsHomeScreen.tsx` — groups discovered by the number, role badges.
+- `apps/mobile/screens/CockpitScreen.tsx` — tabbed **Charter · Minutes · Documents ·
+  Month-End**: tap-cycle attendance, agenda + contribution capture, live paraphrase
+  → official edit → post, printable document view, reconciled month-end statement.
+- `apps/mobile/screens/TableBankingScreen.tsx` — capital view (extracted from the old home).
+- `apps/mobile/data/seed.ts` — self-contained charter + meetings + directories.
+- `App.tsx` — navigator: **login → groups → group** (Records / Table banking / SACCO+),
+  reusing the same `@stawi/core` engines as web. No new dependencies.
