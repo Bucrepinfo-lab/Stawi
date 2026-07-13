@@ -565,3 +565,141 @@ export async function activateSubscriptionForTenant(
   });
   return r.count;
 }
+
+// ───────────────── Pillar 1 — charter / meetings / statements ────────────
+
+/** Read a group's charter, or null if none saved yet. */
+export async function getGroupCharter(prisma: PrismaClient, groupId: string) {
+  return prisma.groupCharter.findUnique({ where: { groupId } });
+}
+
+/** Create or update a group's charter (upsert on the unique groupId). */
+export async function upsertGroupCharter(
+  prisma: PrismaClient,
+  input: {
+    groupId: string;
+    tenantId?: string;
+    name: string;
+    logoUrl?: string;
+    schedule: unknown;
+    members: unknown;
+    constitution?: string;
+    constitutionFileUrl?: string;
+    motto?: string;
+    mission?: string;
+    vision?: string;
+    coreValues?: unknown;
+    notes?: string;
+    registeredNumber?: string;
+    countryCode?: string;
+  },
+): Promise<{ id: string }> {
+  if (input.tenantId) await assertGroupInTenant(prisma, input.groupId, input.tenantId);
+  const data = {
+    tenantId: input.tenantId,
+    name: input.name,
+    logoUrl: input.logoUrl,
+    schedule: input.schedule as any,
+    members: input.members as any,
+    constitution: input.constitution ?? '',
+    constitutionFileUrl: input.constitutionFileUrl,
+    motto: input.motto ?? '',
+    mission: input.mission ?? '',
+    vision: input.vision ?? '',
+    coreValues: (input.coreValues ?? []) as any,
+    notes: input.notes,
+    registeredNumber: input.registeredNumber,
+    countryCode: input.countryCode ?? 'KE',
+  };
+  return prisma.groupCharter.upsert({
+    where: { groupId: input.groupId },
+    create: { groupId: input.groupId, ...data },
+    update: data,
+    select: { id: true },
+  });
+}
+
+export async function listMeetings(prisma: PrismaClient, groupId: string) {
+  return prisma.meeting.findMany({ where: { groupId }, orderBy: { meetingNo: 'desc' } });
+}
+
+/** Create or update a meeting (keyed by group + meetingNo). */
+export async function upsertMeeting(
+  prisma: PrismaClient,
+  input: {
+    groupId: string;
+    tenantId?: string;
+    meetingNo: number;
+    date: string;
+    venue?: string;
+    day?: string;
+    startTime?: string;
+    endTime?: string;
+    chairpersonName?: string;
+    secretaryName?: string;
+    attendance?: unknown;
+    agendas?: unknown;
+    aobs?: unknown;
+    tableBanking?: unknown;
+    adjournmentTime?: string;
+    nextMeetingDate?: string;
+    generatedDoc?: string;
+  },
+): Promise<{ id: string }> {
+  if (input.tenantId) await assertGroupInTenant(prisma, input.groupId, input.tenantId);
+  const data: any = {
+    tenantId: input.tenantId,
+    date: input.date,
+    venue: input.venue ?? '',
+    day: input.day ?? '',
+    startTime: input.startTime ?? '',
+    endTime: input.endTime ?? '',
+    chairpersonName: input.chairpersonName ?? '',
+    secretaryName: input.secretaryName ?? '',
+    attendance: (input.attendance ?? []) as any,
+    agendas: (input.agendas ?? []) as any,
+    aobs: (input.aobs ?? []) as any,
+    tableBanking: (input.tableBanking ?? {}) as any,
+    adjournmentTime: input.adjournmentTime ?? '',
+    nextMeetingDate: input.nextMeetingDate,
+    generatedDoc: input.generatedDoc,
+  };
+  return prisma.meeting.upsert({
+    where: { groupId_meetingNo: { groupId: input.groupId, meetingNo: input.meetingNo } },
+    create: { groupId: input.groupId, meetingNo: input.meetingNo, ...data },
+    update: data,
+    select: { id: true },
+  });
+}
+
+/** Official posts a meeting after editing its generated document. */
+export async function postMeeting(
+  prisma: PrismaClient,
+  input: { groupId: string; meetingNo: number; generatedDoc: string; tenantId?: string },
+): Promise<void> {
+  if (input.tenantId) await assertGroupInTenant(prisma, input.groupId, input.tenantId);
+  await prisma.meeting.update({
+    where: { groupId_meetingNo: { groupId: input.groupId, meetingNo: input.meetingNo } },
+    data: { generatedDoc: input.generatedDoc, status: 'POSTED', postedAt: new Date() },
+  });
+}
+
+/** Save (draft or posted) a month-end statement snapshot. */
+export async function saveMonthlyStatement(
+  prisma: PrismaClient,
+  input: { groupId: string; tenantId?: string; year: number; month: number; payload: unknown; post?: boolean },
+): Promise<{ id: string }> {
+  if (input.tenantId) await assertGroupInTenant(prisma, input.groupId, input.tenantId);
+  const data: any = {
+    tenantId: input.tenantId,
+    payload: input.payload as any,
+    status: input.post ? 'POSTED' : 'DRAFT',
+    postedAt: input.post ? new Date() : null,
+  };
+  return prisma.monthlyStatement.upsert({
+    where: { groupId_year_month: { groupId: input.groupId, year: input.year, month: input.month } },
+    create: { groupId: input.groupId, year: input.year, month: input.month, ...data },
+    update: data,
+    select: { id: true },
+  });
+}

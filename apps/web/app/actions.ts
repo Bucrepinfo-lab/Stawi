@@ -199,3 +199,150 @@ export async function applyLoanAction(input: {
     return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Write failed' };
   }
 }
+
+// ───────────────── Pillar 1 — cockpit writes (charter / minutes) ─────────
+
+/** Create a new group. Officials only (enforced in the page via viewer role). */
+export async function createGroupAction(input: {
+  name: string;
+  type?: 'CHAMA' | 'SELF_HELP_GROUP' | 'SACCO' | 'BUSINESS';
+  countryCode?: string;
+}): Promise<{ ok: boolean; groupId?: string; persisted: boolean; error?: string }> {
+  const name = input.name?.trim();
+  if (!name || name.length < 2) return { ok: false, persisted: false, error: 'Enter a group name.' };
+  const clean = await assertCleanSafe(name);
+  if (!clean.ok) return { ok: false, persisted: false, error: clean.error };
+  if (!dbEnabled()) {
+    // Demo: derive a stable-ish slug so the workspace opens.
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'group';
+    publishEvent({ type: 'group', channel: 'public' });
+    return { ok: true, persisted: false, groupId: slug };
+  }
+  try {
+    const { prisma } = await import('@stawi/db');
+    const { auth } = await import('@clerk/nextjs/server');
+    const { userId } = await auth();
+    const tid = await tenantId();
+    const g = await prisma.group.create({
+      data: { name, type: input.type ?? 'CHAMA', countryCode: input.countryCode ?? 'KE', tenantId: tid, clerkOrgId: `manual-${Date.now()}` },
+      select: { id: true },
+    });
+    if (userId) {
+      await prisma.membership.create({ data: { groupId: g.id, clerkUserId: userId, fullName: 'You', role: 'CHAIRMAN' } }).catch(() => {});
+    }
+    publishEvent({ type: 'group', channel: tid ?? 'public' });
+    return { ok: true, persisted: true, groupId: g.id };
+  } catch (e) {
+    return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Create failed' };
+  }
+}
+
+export async function saveCharterAction(input: {
+  groupId: string;
+  charter: unknown;
+}): Promise<{ ok: boolean; persisted: boolean; error?: string }> {
+  const c = input.charter as any;
+  if (!c?.name?.trim()) return { ok: false, persisted: false, error: 'Charter needs a group name.' };
+  // Screen the free-text governance fields.
+  for (const field of [c.constitution, c.motto, c.mission, c.vision, c.notes]) {
+    if (field) {
+      const clean = await assertCleanSafe(String(field));
+      if (!clean.ok) return { ok: false, persisted: false, error: clean.error };
+    }
+  }
+  if (!dbEnabled()) {
+    publishEvent({ type: 'charter', channel: 'public' });
+    return { ok: true, persisted: false };
+  }
+  try {
+    const { prisma, upsertGroupCharter } = await import('@stawi/db');
+    await upsertGroupCharter(prisma, {
+      groupId: input.groupId,
+      tenantId: await tenantId(),
+      name: c.name,
+      logoUrl: c.logoUrl,
+      schedule: c.schedule,
+      members: c.members,
+      constitution: c.constitution ?? '',
+      constitutionFileUrl: c.constitutionFileUrl,
+      motto: c.motto ?? '',
+      mission: c.mission ?? '',
+      vision: c.vision ?? '',
+      coreValues: c.coreValues ?? [],
+      notes: c.notes,
+      registeredNumber: c.registeredNumber,
+      countryCode: c.countryCode ?? 'KE',
+    });
+    publishEvent({ type: 'charter', channel: (await tenantId()) ?? 'public' });
+    return { ok: true, persisted: true };
+  } catch (e) {
+    return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Save failed' };
+  }
+}
+
+export async function saveMeetingAction(input: {
+  groupId: string;
+  meeting: unknown;
+}): Promise<{ ok: boolean; persisted: boolean; error?: string }> {
+  const m = input.meeting as any;
+  if (!m?.meetingNo) return { ok: false, persisted: false, error: 'Meeting number missing.' };
+  if (!dbEnabled()) {
+    publishEvent({ type: 'meeting', channel: 'public' });
+    return { ok: true, persisted: false };
+  }
+  try {
+    const { prisma, upsertMeeting } = await import('@stawi/db');
+    await upsertMeeting(prisma, { groupId: input.groupId, tenantId: await tenantId(), ...m });
+    publishEvent({ type: 'meeting', channel: (await tenantId()) ?? 'public' });
+    return { ok: true, persisted: true };
+  } catch (e) {
+    return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Save failed' };
+  }
+}
+
+/** Official posts a meeting after editing its generated professional document. */
+export async function postMeetingAction(input: {
+  groupId: string;
+  meetingNo: number;
+  generatedDoc: string;
+}): Promise<{ ok: boolean; persisted: boolean; error?: string }> {
+  if (!dbEnabled()) {
+    publishEvent({ type: 'meeting', channel: 'public' });
+    return { ok: true, persisted: false };
+  }
+  try {
+    const { prisma, postMeeting } = await import('@stawi/db');
+    await postMeeting(prisma, { groupId: input.groupId, meetingNo: input.meetingNo, generatedDoc: input.generatedDoc, tenantId: await tenantId() });
+    publishEvent({ type: 'meeting', channel: (await tenantId()) ?? 'public' });
+    return { ok: true, persisted: true };
+  } catch (e) {
+    return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Post failed' };
+  }
+}
+
+export async function saveStatementAction(input: {
+  groupId: string;
+  year: number;
+  month: number;
+  payload: unknown;
+  post?: boolean;
+}): Promise<{ ok: boolean; persisted: boolean; error?: string }> {
+  if (!dbEnabled()) return { ok: true, persisted: false };
+  try {
+    const { prisma, saveMonthlyStatement } = await import('@stawi/db');
+    await saveMonthlyStatement(prisma, { groupId: input.groupId, tenantId: await tenantId(), year: input.year, month: input.month, payload: input.payload, post: input.post });
+    return { ok: true, persisted: true };
+  } catch (e) {
+    return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Save failed' };
+  }
+}
+
+/** Moderation wrapper that never throws — returns a friendly error instead. */
+async function assertCleanSafe(text: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    assertClean(text);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Content not allowed' };
+  }
+}

@@ -95,6 +95,9 @@ model Group {
   cycles        Cycle[]
   subscription  Subscription?
   business      Business?
+  charter       GroupCharter?
+  meetings      Meeting[]
+  statements    MonthlyStatement[]
   salesRepId    String?
   salesRep      SalesAgent? @relation(fields: [salesRepId], references: [id])
 
@@ -412,4 +415,92 @@ model LoanRepayment {
   createdAt   DateTime @default(now())
 
   @@index([loanId])
+}
+
+// ───────────────── Pillar 1 — data-entry cockpit (charter / minutes) ─────────
+
+model GroupCharter {
+  id           String   @id @default(cuid())
+  group        Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId      String   @unique
+  tenantId     String?
+  name         String
+  logoUrl      String?
+  // MeetingSchedule { venue, days[], startTime, endTime, frequency }
+  schedule     Json
+  // CharterMember[] { id, serial, fullName, designation, phone, idNumber }
+  members      Json
+  constitution String   @default("")
+  constitutionFileUrl String?
+  motto        String   @default("")
+  mission      String   @default("")
+  vision       String   @default("")
+  coreValues   Json     @default("[]")
+  notes        String?
+  registeredNumber String?
+  countryCode  String   @default("KE")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([tenantId])
+}
+
+enum MeetingStatus {
+  DRAFT
+  POSTED
+}
+
+model Meeting {
+  id            String   @id @default(cuid())
+  group         Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId       String
+  tenantId      String?
+  meetingNo     Int
+  date          String
+  venue         String   @default("")
+  day           String   @default("")
+  startTime     String   @default("")
+  endTime       String   @default("")
+  chairpersonName String @default("")
+  secretaryName String   @default("")
+  // AttendanceMark[] { memberId, name, designation?, status }
+  attendance    Json     @default("[]")
+  // AgendaItem[] { id, order, title, discussion, proposedBy?, secondedBy?, resolution }
+  agendas       Json     @default("[]")
+  // AobItem[] { id, topic, deliberation }
+  aobs          Json     @default("[]")
+  // TableBanking { contributions[], fines[], payoutRecipient?, payoutCents?, otherIn[], otherOut[], openingBalanceCents }
+  tableBanking  Json     @default("{}")
+  adjournmentTime String @default("")
+  nextMeetingDate String?
+  // Official-edited professional document (paraphrased). Null until generated.
+  generatedDoc  String?
+  status        MeetingStatus @default(DRAFT)
+  postedAt      DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([groupId, meetingNo])
+  @@index([groupId, status])
+  @@index([tenantId])
+}
+
+model MonthlyStatement {
+  id           String   @id @default(cuid())
+  group        Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId      String
+  tenantId     String?
+  year         Int
+  month        Int
+  // MonthEndStatement snapshot (members[], finance, resolutions[], narrative[], ...)
+  payload      Json
+  // Official-edited version of the narrative, if edited before posting.
+  editedNarrative Json?
+  status       MeetingStatus @default(DRAFT)
+  postedAt     DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([groupId, year, month])
+  @@index([tenantId])
 }

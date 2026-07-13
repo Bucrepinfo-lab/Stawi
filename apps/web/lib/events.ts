@@ -8,7 +8,7 @@
  */
 
 export interface StawiEvent {
-  type: 'contribution' | 'sacco_txn' | 'loan' | 'ledger';
+  type: 'contribution' | 'sacco_txn' | 'loan' | 'ledger' | 'group' | 'charter' | 'meeting';
   channel: string; // tenant id or 'public' in seed mode
   at: number;
 }

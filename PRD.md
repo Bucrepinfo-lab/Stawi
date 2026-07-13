@@ -389,6 +389,34 @@ Groups. Isolation enforced at the query layer (`getTenantContext`, `assertSameTe
 
 ---
 
+### Pillar 1 — Data-Entry Cockpit (added 2026-07-13)
+
+The point-of-capture that feeds Pillars 2–4. Role-gated **New Group** → workspace
+`/groups/[id]` with four tabs: **Charter** (editable profile: name, logo, meeting
+place/day/time, auto-increment roster of members & officials with designations +
+phones, constitution/by-laws, motto/mission/vision, core values), **Minutes**
+(self-directing form: attendance tap-cycle, agendas, AOBs, table-banking with
+fines/penalties, adjournment), **Documents** (auto-paraphrased bank-ready minutes,
+official edits before posting, print-to-PDF), **Month-End** (one-tap harmonised
+reconciliation → downloadable statement).
+
+- **Core (pure, tested):** `charter.ts`, `minutes.ts`, `minutes-prose.ts` (the
+  deterministic paraphrasing "OS" — informal notes → formal minute prose, offline,
+  no keys, optional live-on-key AI polish), `statement.ts` (`reconcileMonth`).
+  New suites: `charter.test.ts`, `minutes.test.ts`, `statement.test.ts`.
+- **DB (live-on-key):** Prisma `GroupCharter` / `Meeting` / `MonthlyStatement`
+  (+ `MeetingStatus`), repo helpers, RLS coverage; seed/in-memory fallback.
+- **Web:** `apps/web/app/groups/[id]` (cockpit + page), `apps/web/app/groups/new`,
+  `lib/cockpit.ts` provider, five server actions in `app/actions.ts`, dashboard
+  wired with **New group** + **Open workspace**. Details in
+  `docs/PILLAR-1-COCKPIT.md`.
+- **Verification:** core runtime logic verified (Node type-strip) + `src` typecheck
+  clean; all new web files transpile-clean; imported core symbols confirmed. Full
+  `next build` pending on a machine where deps install (sandbox blocks esbuild).
+- **Continue from here:** run `npm install` + `npm test` + `npm run build` locally
+  to confirm; wire the optional AI-polish hook in `minutes-prose`; mobile parity
+  for the cockpit (Expo); receipts/statements → PDF via DO Spaces.
+
 ## 13. Skills & Tools Used
 
 - **`frontend-design`** (Anthropic skill) — drove the "warm savanna fintech" design

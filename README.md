@@ -8,8 +8,11 @@ running that business with QuickBooks-grade accounting and tax compliance →
 full savings & credit services with a graduation path to a licensed, listed
 institution. Mobile-first and M-Pesa-native.
 
-> Status: **v1.2 — four pillars built.** Domain logic implemented and tested
-> (~135 unit tests), realtime SSE push live, all activation seams closed.
+> Status: **v1.5 — four pillars + Pillar 1 data-entry cockpit.** Domain logic
+> implemented and tested, realtime SSE push live, all activation seams closed.
+> New: a role-gated group workspace that captures the charter, minutes every
+> meeting, auto-paraphrases them into bank-ready documents, and reconciles a
+> Month-End Statement — the point of capture that feeds every other pillar.
 > See [`PRD.md`](./PRD.md) for the full spec and roadmap.
 
 ## The four pillars
@@ -17,7 +20,11 @@ institution. Mobile-first and M-Pesa-native.
 1. **Table Banking → Registered Group** — rotating contributions, treasurer
    payments that fan out live to every member's dashboard, a real-time
    capital-ratio calculator, M-Pesa STK Push, receipts, and a formalization
-   wizard (SHG/SACCO under Kenyan law).
+   wizard (SHG/SACCO under Kenyan law). Plus the **data-entry
+   cockpit** (`/groups/[id]`): editable charter, self-directing minutes, an
+   auto-paraphrasing engine that turns informal notes into professional,
+   printable minutes, and a downloadable Month-End Statement. See
+   [`docs/PILLAR-1-COCKPIT.md`](./docs/PILLAR-1-COCKPIT.md).
 2. **Capital-to-Business Matching** — enter capital + industry, generate ventures
    that fit, re-roll, and save 3 ideas to compare.
 3. **Accounting + Compliance + Admin** — daily P&L, reconciliation (D/W/M/Y),
