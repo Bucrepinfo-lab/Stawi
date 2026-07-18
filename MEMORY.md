@@ -1,6 +1,13 @@
 # Stawi — session memory / start-here
 
-> **STATUS: v1.9 consolidated as Pillar 1 + SACCO+ opt-in activation added (2026-07-18).**
+> **STATUS: ✅ PRODUCTION BUILD GREEN (2026-07-18) — `next build` completes 24/24 pages.**
+> Fix chain that got there: strict type fixes → strip `.js` relative imports (core+db) →
+> `outputFileTracingRoot` + app-router `not-found.tsx` → `.npmrc` legacy-peer-deps →
+> root `overrides` react/react-dom=18.3.1 (single React; `npm ls` clean) →
+> `apps/web/.env.local` with Clerk keys (placeholder pk_test_Y2xlcmsuZXhhbXBsZS5jb20k —
+> **swap for real keys before launch**). NEXT: real Clerk keys → PRE-DEPLOY-CHECKLIST → DO deploy.
+>
+> **STATUS (prior): v1.9 consolidated as Pillar 1 + SACCO+ opt-in activation added (2026-07-18).**
 > The Desktop `Chamaa App` folder (7 duplicate snapshots) was consolidated into this repo —
 > v1.9-import-notes promoted as the single source of truth, duplicates removed.
 > Backup of all snapshots: `ChamaaApp-backup.tar.gz` (in the Cowork outputs folder).
