@@ -177,6 +177,82 @@ const VALUES: Partial<Record<Lang, string[]>> & { en: string[] } = {
   ar: ['الثقة', 'الشمول', 'الانضباط', 'النمو', 'البساطة'],
 };
 
+// Click-to-market: what each core value means in the product (aligned by
+// index with VALUES). Any missing language falls back to English.
+const VALUE_LINKS = ['/dashboard', '/subscribe', '/sacco', '/match', '/groups/new'] as const;
+const VALUE_DETAILS: Partial<Record<Lang, { cta: string; items: string[] }>> & { en: { cta: string; items: string[] } } = {
+  en: { cta: 'See it in action →', items: [
+    'Every contribution, loan and resolution is recorded on a tamper-proof, audit-ready trail. What your members see is what a bank sees — the same truth.',
+    'Phone-first, ten languages, works on an entry-level device — and any pillar is joinable directly. If you can save, you belong.',
+    'The eight reasons savings groups fail are built in as guard-rails — dual approval, liquidity brakes, and credit earned by consistency, not connections.',
+    'A ladder, not a ceiling: records become credit, credit becomes a business, and businesses graduate toward regulated institutions. Stawi grows with you.',
+    "The app always answers 'what do I do next?' — a self-directing journey from your first entry to your month-end statement in a few taps.",
+  ]},
+  sw: { cta: 'Ione ikifanya kazi →', items: [
+    'Kila mchango, mkopo na azimio hurekodiwa kwenye kumbukumbu isiyoweza kuchezewa, tayari kwa ukaguzi — wanachoona wanachama ndicho benki inachokiona.',
+    'Simu kwanza, lugha kumi, inafanya kazi kwenye simu ya bei nafuu — na unaweza kujiunga na nguzo yoyote moja kwa moja. Ukiweza kuweka akiba, unakaribishwa.',
+    'Sababu nane zinazoangusha vikundi vya akiba zimejengwa ndani kama ulinzi — idhini mbili, breki za ukwasi, na mikopo inayopatikana kwa nidhamu.',
+    'Ngazi, si dari: kumbukumbu huwa mikopo, mikopo huwa biashara, na biashara hukua kuelekea taasisi rasmi — Stawi hukua nawe.',
+    "Programu daima hujibu 'nifanye nini sasa?' — safari inayojielekeza kutoka ingizo la kwanza hadi taarifa ya mwisho wa mwezi.",
+  ]},
+  fr: { cta: 'Voir en action →', items: [
+    "Chaque cotisation, prêt et résolution est consigné dans un registre infalsifiable, prêt pour l'audit — ce que voient vos membres est ce que voit une banque.",
+    "Mobile d'abord, dix langues, fonctionne sur un téléphone d'entrée de gamme — et chaque pilier se rejoint directement.",
+    "Les huit causes d'échec des groupes d'épargne sont intégrées comme garde-fous — double validation, freins de liquidité, crédit gagné par la régularité.",
+    "Une échelle, pas un plafond : les registres deviennent du crédit, le crédit une entreprise, et l'entreprise grandit vers une institution formelle.",
+    "L'application répond toujours à « que faire ensuite ? » — un parcours auto-guidé, du premier enregistrement au relevé de fin de mois.",
+  ]},
+  es: { cta: 'Verlo en acción →', items: [
+    'Cada aporte, préstamo y resolución queda en un registro a prueba de manipulaciones, listo para auditoría — lo que ven tus miembros es lo que ve un banco.',
+    'Primero el teléfono, diez idiomas, funciona en un dispositivo básico — y cualquier pilar se une directamente.',
+    'Las ocho causas de fracaso de los grupos de ahorro están integradas como salvaguardas — doble aprobación, frenos de liquidez y crédito ganado con constancia.',
+    'Una escalera, no un techo: los registros se vuelven crédito, el crédito un negocio, y el negocio crece hacia una institución formal.',
+    "La app siempre responde '¿qué hago ahora?' — un recorrido autoguiado desde el primer registro hasta el estado de fin de mes.",
+  ]},
+  pt: { cta: 'Ver em ação →', items: [
+    'Cada contribuição, empréstimo e resolução fica num registo à prova de adulteração, pronto para auditoria — o que os membros veem é o que um banco vê.',
+    'Telemóvel primeiro, dez idiomas, funciona num aparelho básico — e qualquer pilar pode ser aderido diretamente.',
+    'As oito causas de fracasso dos grupos de poupança estão integradas como salvaguardas — dupla aprovação, travões de liquidez e crédito ganho com constância.',
+    'Uma escada, não um teto: registos viram crédito, crédito vira negócio, e o negócio cresce rumo a uma instituição formal.',
+    "A app responde sempre 'o que faço a seguir?' — um percurso autoguiado do primeiro registo ao extrato de fim de mês.",
+  ]},
+  ar: { cta: 'شاهدها عملياً ←', items: [
+    'كل مساهمة وقرض وقرار يُسجَّل في سجل غير قابل للتلاعب وجاهز للتدقيق — ما يراه أعضاؤك هو ما يراه البنك.',
+    'الهاتف أولاً، عشر لغات، يعمل على جهاز بسيط — ويمكن الانضمام إلى أي ركيزة مباشرة.',
+    'أسباب فشل مجموعات الادخار الثمانية مدمجة كضوابط — موافقة مزدوجة، وكوابح سيولة، وائتمان يُكتسب بالانتظام.',
+    'سُلَّم لا سقف: السجلات تصبح ائتماناً، والائتمان مشروعاً، والمشروع ينمو نحو مؤسسة رسمية — وستاوي ينمو معك.',
+    'التطبيق يجيب دائماً: «ماذا أفعل الآن؟» — رحلة ذاتية التوجيه من أول قيد حتى كشف نهاية الشهر.',
+  ]},
+  zh: { cta: '看看实际效果 →', items: [
+    '每笔缴款、贷款和决议都记录在防篡改、可随时审计的账本上——成员看到的，就是银行看到的。',
+    '手机优先、十种语言、入门级设备也能用——任何支柱都可直接加入。',
+    '储蓄小组失败的八大原因被内置为八道护栏——双重审批、流动性刹车、靠坚持赢得的信贷。',
+    '是阶梯而非天花板：记录变成信贷，信贷变成生意，生意成长为正规机构——Stawi 与你一同成长。',
+    "应用永远回答'下一步做什么'——从第一笔记录到月末报表的自导航之旅。",
+  ]},
+  hi: { cta: 'इसे काम करते देखें →', items: [
+    'हर योगदान, ऋण और प्रस्ताव छेड़छाड़-रोधी, ऑडिट-तैयार बही में दर्ज होता है — जो सदस्य देखते हैं, वही बैंक देखता है।',
+    'फोन-प्रथम, दस भाषाएँ, साधारण फोन पर भी चलता है — और किसी भी स्तंभ से सीधे जुड़ें।',
+    'बचत समूहों की विफलता के आठ कारण सुरक्षा-कवच के रूप में निर्मित हैं — दोहरी मंज़ूरी, तरलता ब्रेक, नियमितता से अर्जित ऋण।',
+    'सीढ़ी है, छत नहीं: अभिलेख ऋण बनते हैं, ऋण व्यवसाय, और व्यवसाय औपचारिक संस्था की ओर बढ़ता है — Stawi आपके साथ बढ़ता है।',
+    "ऐप हमेशा बताता है 'अब क्या करें?' — पहली प्रविष्टि से माह-अंत विवरण तक स्वयं-निर्देशित यात्रा।",
+  ]},
+  de: { cta: 'In Aktion sehen →', items: [
+    'Jeder Beitrag, Kredit und Beschluss landet in einem fälschungssicheren, prüfbereiten Register — was Ihre Mitglieder sehen, sieht auch die Bank.',
+    'Telefon zuerst, zehn Sprachen, läuft auf einem Einsteigergerät — und jede Säule ist direkt beitretbar.',
+    'Die acht Gründe, an denen Spargruppen scheitern, sind als Leitplanken eingebaut — Vier-Augen-Prinzip, Liquiditätsbremsen, Kredit durch Beständigkeit.',
+    'Eine Leiter, keine Decke: Aufzeichnungen werden Kredit, Kredit wird Geschäft, das Geschäft wächst zur formalen Institution — Stawi wächst mit.',
+    "Die App beantwortet immer 'Was jetzt?' — eine selbstführende Reise vom ersten Eintrag bis zum Monatsabschluss.",
+  ]},
+  ru: { cta: 'Посмотреть в действии →', items: [
+    'Каждый взнос, кредит и решение фиксируются в защищённом от подделки, готовом к аудиту реестре — члены видят то же, что и банк.',
+    'Сначала телефон, десять языков, работает на простом устройстве — и к любому направлению можно присоединиться напрямую.',
+    'Восемь причин краха сберегательных групп встроены как защита — двойное одобрение, тормоза ликвидности, кредит за постоянство.',
+    'Лестница, а не потолок: записи становятся кредитом, кредит — бизнесом, бизнес растёт до формального института — Stawi растёт вместе с вами.',
+    'Приложение всегда отвечает «что дальше?» — самонаправляемый путь от первой записи до отчёта на конец месяца.',
+  ]},
+};
+
 const navLink: React.CSSProperties = { fontWeight: 600, color: 'var(--ink-2)' };
 
 function LogoMark() {
@@ -201,6 +277,7 @@ function LogoMark() {
 export default function Home() {
   const [lang, setLang] = useState<Lang>('en');
   const [dark, setDark] = useState(false);
+  const [valOpen, setValOpen] = useState<number | null>(null);
   const t = { ...T.en, ...(T[lang] ?? {}) };
 
   useEffect(() => {
@@ -303,10 +380,33 @@ export default function Home() {
         <div style={{ background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 16, padding: 20 }}>
           <p style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 800 }}>{t.valuesT}</p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-            {(VALUES[lang] ?? VALUES.en).map((v) => (
-              <span key={v} style={{ fontSize: 13, fontWeight: 700, color: 'var(--forest-deep)', background: 'var(--bone-2)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: 999 }}>{v}</span>
+            {(VALUES[lang] ?? VALUES.en).map((v, i) => (
+              <button key={v} onClick={() => setValOpen(valOpen === i ? null : i)}
+                aria-expanded={valOpen === i}
+                style={{ fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                  color: valOpen === i ? 'var(--bone)' : 'var(--forest-deep)',
+                  background: valOpen === i ? 'var(--forest-deep)' : 'var(--bone-2)',
+                  border: `1px solid ${valOpen === i ? 'var(--forest-deep)' : 'var(--line)'}`,
+                  padding: '6px 12px', borderRadius: 999, transition: 'all .2s ease' }}>
+                {v}{valOpen === i ? ' ✕' : ''}
+              </button>
             ))}
           </div>
+          {valOpen !== null && (() => {
+            const d = VALUE_DETAILS[lang] ?? VALUE_DETAILS.en;
+            const title = (VALUES[lang] ?? VALUES.en)[valOpen] ?? '';
+            const pitch = d.items[valOpen] ?? VALUE_DETAILS.en.items[valOpen] ?? '';
+            const href = VALUE_LINKS[valOpen] ?? '/dashboard';
+            return (
+              <div style={{ marginTop: 12, background: 'var(--bone-2)', border: '1px solid var(--gold)', borderRadius: 12, padding: '13px 15px' }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--forest-deep)' }}>{title}</div>
+                <p style={{ marginTop: 6, fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.6 }}>{pitch}</p>
+                <Link href={href} style={{ display: 'inline-block', marginTop: 8, fontSize: 13, fontWeight: 800, color: 'var(--forest-deep)', textDecoration: 'none' }}>
+                  {d.cta}
+                </Link>
+              </div>
+            );
+          })()}
         </div>
       </section>
 
