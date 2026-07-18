@@ -101,7 +101,7 @@ describe('assessGraduation', () => {
     const before = assessGraduation({ ...base, memberCount: 25 });
     const after = assessGraduation({
       ...base,
-      memberCount: 600,
+      memberCount: 25, // stays a SACCO (still short of 500) — readiness must rise toward the SAME rung
       auditedFinancialYears: 2,
     });
     expect(after.readinessPct).toBeGreaterThan(before.readinessPct);
