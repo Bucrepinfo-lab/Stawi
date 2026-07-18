@@ -69,6 +69,8 @@ export interface JourneyInput {
   saccoReadinessPct: number;
   /** Pillar 4 — SACCO+ account is open. */
   saccoActive: boolean;
+  /** Pillars the member has subscribed to directly (any pillar, no Pillar-1 gate). */
+  subscribedPillars?: PillarId[];
 }
 
 const clampPct = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
@@ -103,67 +105,52 @@ function pillar1(i: JourneyInput): PillarProgress {
 }
 
 function pillar3(i: JourneyInput): PillarProgress {
-  const unlocked = i.charterPct >= 50;
-  const status: PillarStatus = i.registered
-    ? i.booksStarted
-      ? 'active'
-      : 'ready'
-    : unlocked
-      ? 'available'
-      : 'locked';
-  const pct = i.registered ? (i.booksStarted ? 100 : 70) : unlocked ? 20 : 0;
-  const nextAction = !i.registered
-    ? unlocked
-      ? { label: 'Register your group', target: { kind: 'route', href: '/formalize' } as JourneyTarget }
-      : undefined
-    : { label: i.booksStarted ? 'Update your books' : 'Start your books', target: { kind: 'route', href: '/books' } as JourneyTarget };
-  const summary = i.registered
-    ? i.booksStarted
+  // Directly joinable — any business can activate accounting without a group.
+  const started = !!i.booksStarted;
+  const status: PillarStatus = started ? (i.registered ? 'active' : 'in_progress') : 'available';
+  const pct = started ? (i.registered ? 100 : 65) : 0;
+  const nextAction: PillarProgress['nextAction'] = started
+    ? i.registered
+      ? { label: 'Update your books', target: { kind: 'route', href: '/books' } }
+      : { label: 'Register for legal standing', target: { kind: 'route', href: '/formalize' } }
+    : { label: 'Activate business accounting', target: { kind: 'route', href: '/books' } };
+  const summary = started
+    ? i.registered
       ? 'Registered · books live'
-      : 'Registered — start double-entry books'
-    : unlocked
-      ? 'Ready to register for legal standing'
-      : 'Add your roster first to unlock registration';
+      : 'Books live — register for legal standing'
+    : 'Pre-packed POS, books, tax & inventory — activate anytime';
   return { id: 3, key: 'accounting', title: PILLAR_TITLES[3], status, pct, summary, nextAction };
 }
 
 function pillar4(i: JourneyInput): PillarProgress {
-  const hasHistory = i.postedRecords >= 1;
-  const status: PillarStatus = i.saccoActive
-    ? 'active'
-    : i.saccoReadinessPct >= 100
-      ? 'ready'
-      : hasHistory
-        ? 'available'
-        : 'locked';
+  // Directly joinable — a saver, business or institution can open SACCO+ now.
+  // Pillar-1 history is a fast-track for better terms, not a requirement.
+  const status: PillarStatus = i.saccoActive ? 'active' : i.saccoReadinessPct >= 100 ? 'ready' : 'available';
   const pct = i.saccoActive ? 100 : clampPct(i.saccoReadinessPct);
-  const nextAction = i.saccoActive
-    ? { label: 'Manage savings & credit', target: { kind: 'tab', tab: 'sacco' } as JourneyTarget }
-    : hasHistory
-      ? { label: i.saccoReadinessPct >= 100 ? 'Join Stawi SACCO now' : 'Review SACCO+ readiness', target: { kind: 'tab', tab: 'sacco' } as JourneyTarget }
-      : undefined;
+  const nextAction: PillarProgress['nextAction'] = i.saccoActive
+    ? { label: 'Manage savings & credit', target: { kind: 'tab', tab: 'sacco' } }
+    : i.saccoReadinessPct >= 100
+      ? { label: 'Join Stawi SACCO now', target: { kind: 'tab', tab: 'sacco' } }
+      : { label: 'Open a SACCO+ account', target: { kind: 'tab', tab: 'sacco' } };
   const summary = i.saccoActive
     ? 'SACCO+ active — saving & lending'
     : i.saccoReadinessPct >= 100
       ? 'Fully lender-ready — one tap to join'
-      : hasHistory
-        ? `SACCO+ ${clampPct(i.saccoReadinessPct)}% lender-ready`
-        : 'Post records to build lender-ready history';
+      : i.saccoReadinessPct > 0
+        ? `Open now, or reach ${clampPct(i.saccoReadinessPct)}% lender-ready for better terms`
+        : 'Open savings & credit directly — no group required';
   return { id: 4, key: 'sacco', title: PILLAR_TITLES[4], status, pct, summary, nextAction };
 }
 
 function pillar2(i: JourneyInput): PillarProgress {
-  const unlocked = i.charterPct >= 100 || i.registered;
-  const status: PillarStatus = i.matchingStarted ? 'active' : unlocked ? 'available' : 'locked';
-  const pct = i.matchingStarted ? 100 : unlocked ? 15 : 0;
-  const nextAction = unlocked
-    ? { label: i.matchingStarted ? 'View your matches' : 'Find business matches', target: { kind: 'route', href: '/match' } as JourneyTarget }
-    : undefined;
-  const summary = i.matchingStarted
-    ? 'Matching live'
-    : unlocked
-      ? 'Turn your capital into business matches'
-      : 'Complete your charter to unlock matching';
+  // Directly joinable — investors and entrepreneurs can browse ventures anytime.
+  const status: PillarStatus = i.matchingStarted ? 'active' : 'available';
+  const pct = i.matchingStarted ? 100 : 0;
+  const nextAction: PillarProgress['nextAction'] = {
+    label: i.matchingStarted ? 'View your matches' : 'Find business matches',
+    target: { kind: 'route', href: '/match' },
+  };
+  const summary = i.matchingStarted ? 'Matching live' : 'Discover vetted ventures & suppliers — start anytime';
   return { id: 2, key: 'matching', title: PILLAR_TITLES[2], status, pct, summary, nextAction };
 }
 
@@ -182,10 +169,25 @@ export function computeJourney(input: JourneyInput): GroupJourney {
 
   const overallPct = clampPct((p1.pct + p2.pct + p3.pct + p4.pct) / 4);
 
-  // Self-directing priority ladder: foundation → legal standing → savings/credit
-  // when ready → keep books → growth. First actionable rung wins.
+  // If the member subscribed to specific pillars directly (no Pillar-1 gate),
+  // point them at the first of those that still needs action.
+  const byId: Record<PillarId, PillarProgress> = { 1: p1, 2: p2, 3: p3, 4: p4 };
+  const subs = input.subscribedPillars ?? [];
+  const subFocus = ([1, 3, 4, 2] as PillarId[])
+    .filter((id) => subs.includes(id))
+    .map((id) => byId[id])
+    .find((p) => p.status !== 'done' && p.status !== 'active' && p.nextAction);
+
+  // Otherwise, a self-directing ladder — but Pillar 1 is only *suggested*, never
+  // required: any pillar can be entered directly.
   const focus =
-    (p1.status !== 'done' && p1.nextAction && {
+    (subFocus && subFocus.nextAction && {
+      pillarId: subFocus.id,
+      label: subFocus.nextAction.label,
+      why: 'Pick up where you left off in the pillar you joined.',
+      target: subFocus.nextAction.target,
+    }) ||
+    (p1.status !== 'done' && (p1.pct > 0 || subs.length === 0) && p1.nextAction && {
       pillarId: 1 as PillarId,
       label: p1.nextAction.label,
       why: 'Your records are the foundation every other pillar builds on.',

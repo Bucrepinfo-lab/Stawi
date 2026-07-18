@@ -338,7 +338,8 @@ function PrintReceipt({ r, businessName }: { r: PosReceiptModel; businessName: s
         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px dashed #999', marginTop: 8, paddingTop: 8, fontWeight: 700 }}><span>TOTAL</span><span>{r.totalDisplay}</span></div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, padding: '3px 0' }}><span>Payment</span><span>{r.paymentLabel}</span></div>
       </div>
-      <div style={{ textAlign: 'center', marginTop: 12, fontSize: 11 }}>Asante sana — powered by Stawi</div>
+      <div style={{ textAlign: 'center', marginTop: 12, fontSize: 11, fontWeight: 700 }}>Asante sana — powered by Stawi</div>
+      <div style={{ textAlign: 'center', fontSize: 9.5, letterSpacing: 2, color: '#555' }}>SAVE · GROW · THRIVE</div>
     </div>
   );
 }

@@ -5,8 +5,25 @@
 > v1.9-import-notes promoted as the single source of truth, duplicates removed.
 > Backup of all snapshots: `ChamaaApp-backup.tar.gz` (in the Cowork outputs folder).
 > v1.9 adds: import written notes (photo/file → OCR/parse → minutes) + per-country phone length.
-> **KNOWN RED:** `graduation.test.ts` ("readiness rises as gaps close") fails — pre-existing bug in
-> `graduation.ts` readinessPct scoring; this is the failing GitHub CI job. Fix before deploy.
+
+## Session 2 log (2026-07-18) — build-out on top of the consolidation
+- **Pillar 1→4 bridge:** `sacco-activation.ts` + SACCO+ cockpit tab (opt-in join).
+- **Cross-pillar spine:** `journey.ts` + dashboard "journey strip" (self-directing next step).
+  **Open access:** journey now makes Pillars 2/3/4 **directly joinable — no Pillar-1 gate**
+  (`subscribedPillars`), so any saver/trader/business subscribes to any pillar directly.
+- **Pillar 3 business suite:** `business-activation.ts` (pre-packed accounting pack + owner
+  metrics + supplier links) wired into `/books`; `pos.ts` (item **EAN-13 barcodes**, printable
+  receipts, CSV exports, acknowledgeable stock alerts, **M-Pesa/cash/card payment prompts**);
+  `automation.ts` (auto-reorder POs, SMS/WhatsApp e-receipts, **KRA eTIMS** e-invoices,
+  close-of-day **Z-report**). All in `/books`.
+- **Brand:** `design/stawi-logo.svg` + `BRAND.md` (vision/mission/values, tagline *Save · Grow · Thrive*).
+  Reflected in landing, receipts (demo + app).
+- **Theme + language:** dark mode (`html.dark` vars in globals.css) + EN/SW/FR selector on the
+  landing; full theme+language in `design/business-cockpit-demo.html` (standalone, loads anywhere).
+- **Type fixes:** `apps/web` typecheck errors cleared (assertClean, graduation nextStage,
+  CountryCode ambiguity, strict indexing). Graduation CI bug fixed. Core suite **242 tests green**.
+- **STILL NEEDED on Jacob's machine:** `npm run -w packages/db generate` (Prisma client) so
+  `db/repo.ts` typechecks; then `npm run build`/`typecheck -w apps/web` to verify the app UI.
 
 ## Restructure log (2026-07-18)
 - Promoted `Chamaa App/Stawi-v1.9-import-notes` → repo root (superset of prior main; no pillars lost).

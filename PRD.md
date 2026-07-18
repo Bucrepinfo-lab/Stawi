@@ -446,3 +446,34 @@ Pillar 1 is complete end to end and the tree is locked pending go-live:
 - Not used but available and relevant for next phases: `pptx`/`docx` (investor deck,
   formal docs), `xlsx` (financial models), `pdf` (receipt generation), Figma skills
   (design handoff). Per the user's 5-step method, `frontend-design` = step 2 (Claude Design).
+
+---
+
+## Update — 2026-07-18 (open access, business suite, brand & i18n)
+
+**Open pillar access (marketing / growth).** Pillars 2, 3 and 4 are now **directly
+subscribable — a member does NOT have to start with Pillar 1 (a group)**. Chamas,
+solo traders and established businesses each join whichever pillar serves them; the
+cross-pillar journey engine (`@stawi/core/journey.ts`) treats Pillar 1 as a
+*fast-track for groups*, never a prerequisite (`subscribedPillars`). This opens the
+funnel to everyone and is the core growth lever.
+
+**Pillar 3 — full "real running business" suite.** Pre-packed on activation for any
+business: `business-activation.ts` (accounting pack + owner analytics metrics +
+demand→supply supplier links), `pos.ts` (item **EAN-13 barcodes** on purchase/stock/
+sale, printable receipts, CSV exports, acknowledgeable critical-stock alerts, and
+**payment prompts** for M-Pesa STK / cash-with-change / card), and `automation.ts`
+(auto-reorder purchase orders, SMS/WhatsApp e-receipts, **KRA eTIMS** e-invoicing,
+close-of-day **Z-report**). Surfaced in `/books`.
+
+**Brand & identity.** Logo (`design/stawi-logo.svg`), and vision / mission / core
+values in `BRAND.md`; tagline **"Save · Grow · Thrive."** Reflected across the landing
+page, receipts and the standalone cockpit as a marketing surface.
+
+**Multinational UX.** Dark/light **theme switch** and an **EN / Kiswahili / Français
+language selector** on the landing (and full theme + language in
+`design/business-cockpit-demo.html`).
+
+**Quality.** `@stawi/core` = **242 Vitest tests**, strict `tsc --noEmit` clean.
+Outstanding on the developer machine: `prisma generate` (so `packages/db` typechecks),
+then `npm run build` for `apps/web`.

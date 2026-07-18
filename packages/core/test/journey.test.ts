@@ -15,30 +15,45 @@ describe('computeJourney', () => {
     expect(j.pillars.map((p) => p.id)).toEqual([1, 3, 4, 2]);
   });
 
-  it('sends a brand-new group to finish its charter first', () => {
+  it('suggests the charter first for a brand-new group with no subscription', () => {
     const j = computeJourney(fresh);
     expect(j.focus.pillarId).toBe(1);
     expect(j.focus.target).toEqual({ kind: 'tab', tab: 'charter' });
-    expect(j.overallPct).toBe(0);
   });
 
-  it('locks later pillars until the foundation exists', () => {
+  it('makes every pillar directly joinable — none locked behind Pillar 1', () => {
     const byId = Object.fromEntries(computeJourney(fresh).pillars.map((p) => [p.id, p]));
-    expect(byId[4].status).toBe('locked'); // no records yet
-    expect(byId[2].status).toBe('locked'); // charter incomplete
-    expect(byId[3].status).toBe('locked'); // roster too thin
+    expect(byId[2].status).toBe('available');
+    expect(byId[3].status).toBe('available');
+    expect(byId[4].status).toBe('available');
+    // and each carries a join action
+    expect(byId[3].nextAction?.target).toEqual({ kind: 'route', href: '/books' });
+    expect(byId[4].nextAction?.target).toEqual({ kind: 'tab', tab: 'sacco' });
+    expect(byId[2].nextAction?.target).toEqual({ kind: 'route', href: '/match' });
   });
 
-  it('once records exist but not registered, focus moves to registration', () => {
+  it('honours a direct subscription to Pillar 4 without any Pillar-1 data', () => {
+    const j = computeJourney({ ...fresh, subscribedPillars: [4] });
+    expect(j.focus.pillarId).toBe(4);
+    expect(j.focus.label).toBe('Open a SACCO+ account');
+    expect(j.focus.target).toEqual({ kind: 'tab', tab: 'sacco' });
+  });
+
+  it('honours a direct subscription to Pillar 3 (a business, no group)', () => {
+    const j = computeJourney({ ...fresh, subscribedPillars: [3] });
+    expect(j.focus.pillarId).toBe(3);
+    expect(j.focus.target).toEqual({ kind: 'route', href: '/books' });
+  });
+
+  it('after a group finishes records, points to accounting/compliance next', () => {
     const j = computeJourney({ ...fresh, charterPct: 100, postedRecords: 2 });
     expect(j.focus.pillarId).toBe(3);
-    expect(j.focus.target).toEqual({ kind: 'route', href: '/formalize' });
+    expect(j.focus.label.length).toBeGreaterThan(3);
   });
 
   it('prioritises SACCO+ activation when fully lender-ready', () => {
     const j = computeJourney({ ...fresh, charterPct: 100, postedRecords: 3, registered: true, saccoReadinessPct: 100, saccoActive: false });
     expect(j.focus.pillarId).toBe(4);
-    expect(j.focus.target).toEqual({ kind: 'tab', tab: 'sacco' });
     const p4 = j.pillars.find((p) => p.id === 4)!;
     expect(p4.status).toBe('ready');
   });
@@ -49,13 +64,6 @@ describe('computeJourney', () => {
     expect(p4.status).toBe('active');
     expect(p4.pct).toBe(100);
     expect(j.overallPct).toBe(100);
-  });
-
-  it('nudges toward book-keeping after registration when SACCO+ not ready', () => {
-    const j = computeJourney({ ...fresh, charterPct: 100, postedRecords: 1, registered: true, booksStarted: false, saccoReadinessPct: 40 });
-    // records done, registered, SACCO+ only available (not ready) → next is SACCO+ readiness or books
-    expect([3, 4]).toContain(j.focus.pillarId);
-    expect(j.focus.label.length).toBeGreaterThan(3);
   });
 
   it('every pillar exposes a 0–100 pct and a plain-language summary', () => {

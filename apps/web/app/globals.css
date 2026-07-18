@@ -27,6 +27,23 @@
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
+/* Dark theme — toggled by adding `dark` to <html> */
+html.dark {
+  --bone: #0f1613;
+  --bone-2: #17211c;
+  --paper: #141d18;
+  --ink: #eaf0ea;
+  --ink-2: #c2ccc4;
+  --forest: #3f9d70;
+  --forest-deep: #2f855a;
+  --dim: #8a978d;
+  --faint: #6f7d74;
+  --line: #25302a;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.55);
+}
+html.dark body { background: #0b110e; }
+html, body { transition: background-color .3s ease, color .3s ease; }
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; }
