@@ -3,8 +3,8 @@
  * Pure models; delivery (in-app / SMS / push) is the app's concern.
  */
 
-import { formatMoney } from './capital.js';
-import type { StockInsight } from './accounting.js';
+import { formatMoney } from './capital';
+import type { StockInsight } from './accounting';
 
 export type NotificationKind =
   | 'PAYMENT_CONFIRMED'

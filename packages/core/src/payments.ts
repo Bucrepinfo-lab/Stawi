@@ -7,8 +7,8 @@
  * US/EU/UK, Flutterwave/Paystack for West & Southern Africa, etc.
  */
 
-import type { CountryCode } from './compliance.js';
-import { getPlan, type PlanTier } from './plans.js';
+import type { CountryCode } from './compliance';
+import { getPlan, type PlanTier } from './plans';
 
 export type PaymentProvider = 'MPESA' | 'STRIPE' | 'FLUTTERWAVE' | 'PAYSTACK' | 'MANUAL';
 

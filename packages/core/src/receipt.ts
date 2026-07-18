@@ -5,7 +5,7 @@
  * lives in the app; this is the pure, testable model.
  */
 
-import { formatMoney } from './capital.js';
+import { formatMoney } from './capital';
 
 export interface ReceiptInput {
   groupName: string;

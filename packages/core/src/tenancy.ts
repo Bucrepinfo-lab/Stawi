@@ -6,8 +6,8 @@
  * data row is scoped by tenantId. Roles cascade: platform → tenant → group.
  */
 
-import type { PlanTier } from './plans.js';
-import type { CountryCode } from './compliance.js';
+import type { PlanTier } from './plans';
+import type { CountryCode } from './compliance';
 
 export type TenantRole = 'OWNER' | 'ADMIN' | 'MANAGER' | 'MEMBER';
 
