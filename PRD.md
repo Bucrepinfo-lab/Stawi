@@ -4,9 +4,9 @@
 > **Locked decisions (2026-06-20):** Name = **Stawi** · Theme = **Trustworthy fintech base + warm pan-African accents** · Business-matching ventures = **AI-generated on the fly** (fits the reset/re-roll button) · M-Pesa = **Daraja sandbox first** (live Paybill before launch) · First build = **Pillar 1, Table Banking**.
 
 **Owner:** Jacob (bucrepinfo@gmail.com)
-**Status:** **v1.2 — 4 pillars built, all code seams closed, realtime live** (~150 core tests; SSE push; Pillar 4 wired end-to-end; awaiting external account keys to go live)
-**Last updated:** 2026-07-07
-**Primary market:** Global, multi-tenant (Kenya-first; 12 countries seeded)
+**Status:** **v2.0 — production build GREEN (24/24 pages)** · 4 pillars + open direct access · business suite (POS/barcodes/automation) · brand + 10-language i18n + theme · 242 core tests · single-React workspace resolved
+**Last updated:** 2026-07-18
+**Primary market:** Multi-tenant SaaS, localized per market (12 rule-packs seeded)
 **Stack of record:** Next.js (web) · React Native/Expo (mobile) · Clerk (auth) · DigitalOcean (deploy)
 
 > This document is the single source of truth. It is revised in place (do not fork new versions).
