@@ -148,11 +148,15 @@ export default function Home() {
         </div>
 
         <div style={{ display: 'flex', gap: 12, marginTop: 22, flexWrap: 'wrap' }}>
-          {PILLARS[lang].map((label, i) => (
-            <Link key={i} href={['/dashboard', '/match', '/books', '/sacco'][i]} style={{ fontSize: 13, fontWeight: 700, color: 'var(--forest-deep)', background: 'var(--paper)', border: '1px solid var(--line)', padding: '8px 14px', borderRadius: 999, textDecoration: 'none' }}>
-              {label}
-            </Link>
-          ))}
+          {PILLARS[lang].map((label, i) => {
+            const routes = ['/dashboard', '/match', '/books', '/sacco'] as const;
+            const href = routes[i] ?? '/dashboard';
+            return (
+              <Link key={href} href={href} style={{ fontSize: 13, fontWeight: 700, color: 'var(--forest-deep)', background: 'var(--paper)', border: '1px solid var(--line)', padding: '8px 14px', borderRadius: 999, textDecoration: 'none' }}>
+                {label}
+              </Link>
+            );
+          })}
         </div>
       </section>
 
