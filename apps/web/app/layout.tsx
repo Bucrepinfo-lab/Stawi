@@ -3,9 +3,17 @@ import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Stawi — save together, grow together',
+  title: 'Stawi — Save · Grow · Thrive',
   description:
-    'From the merry-go-round to a registered group to a real business — table banking, business matching, and accounting in one platform. Mobile-first, M-Pesa-native.',
+    'One trusted platform for every savings group, entrepreneur and enterprise to save, borrow, trade and grow — group savings, business matching, professional-grade accounting, and full savings & credit, adapted to your currency, language, tax and registration rules.',
+  applicationName: 'Stawi',
+  openGraph: {
+    title: 'Stawi — Save · Grow · Thrive',
+    description:
+      'Save together. Grow together. Thrive. Records & table banking, business matching, accounting & compliance, and savings & credit — one platform, any pillar, joinable directly.',
+    siteName: 'Stawi',
+    type: 'website',
+  },
 };
 
 export const viewport: Viewport = {

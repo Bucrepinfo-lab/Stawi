@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "echo \"(lint: web — ESLint not configured yet; typecheck + build are the gates)\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

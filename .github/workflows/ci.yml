@@ -27,12 +27,17 @@ jobs:
       - name: Build web
         run: npm run build --workspace @stawi/web
         env:
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
-          CLERK_SECRET_KEY: sk_test_ci_placeholder
+          # Well-formed dummy key (base64 domain + $) — prerender validates the
+          # format; a bare placeholder string fails the /_not-found export.
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+          CLERK_SECRET_KEY: sk_test_placeholder
 
   deploy:
     needs: build-test
-    if: github.ref == 'refs/heads/main'
+    # Only attempt deployment when explicitly enabled (repo Settings → Variables
+    # → DEPLOY_ENABLED=true) AND the DO secrets exist — otherwise this job fails
+    # on every push and keeps CI red before launch.
+    if: github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
