@@ -1,5 +1,21 @@
 # Stawi — session memory / start-here
 
+> **RESUME HERE (2026-07-18, end of session 2):**
+> 1. `git push origin main` if `git status` shows commits ahead (last local commit: `5e67b01`).
+> 2. Re-run `npm run build` once (landing changed after last green build) — expect 24/24.
+> 3. Watch GitHub Actions: build-test should be GREEN now (valid dummy Clerk key, lint no-op,
+>    deploy job gated behind repo var `DEPLOY_ENABLED` — set to 'true' only at launch).
+> 4. NEXT MILESTONE = **Step 5: Deploy** — real Clerk keys in `apps/web/.env.local`
+>    (placeholder pk_test_Y2xlcmsuZXhhbXBsZS5jb20k in place), DO Postgres + `DATABASE_URL`,
+>    `prisma migrate deploy`, then PRE-DEPLOY-CHECKLIST 1–15 + DEPLOYMENT-RUNBOOK.
+>
+> **Latest additions (post-green-build):** standalone landing demo
+> (`design/stawi-landing-demo.html`, 10 langs + RTL + theme, loads anywhere);
+> brand favicon `apps/web/app/icon.svg` + branded metadata/OpenGraph in layout;
+> CI workflow fixed (see 3); **clickable core-value chips** on the landing +
+> demo — each value opens a marketing pitch with a 'See it in action →' link
+> (10 languages, EN fallback; VALUE_DETAILS/VALUE_LINKS in page.tsx).
+>
 > **STATUS: ✅ PRODUCTION BUILD GREEN (2026-07-18) — `next build` completes 24/24 pages.**
 > Fix chain that got there: strict type fixes → strip `.js` relative imports (core+db) →
 > `outputFileTracingRoot` + app-router `not-found.tsx` → `.npmrc` legacy-peer-deps →
