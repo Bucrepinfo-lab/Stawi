@@ -15,7 +15,7 @@ import type {
   GroupKind,
   BusinessBooksDTO,
   MemberDTO,
-} from './dto.js';
+} from './dto';
 
 function mapKind(t: GroupType): GroupKind {
   switch (t) {
