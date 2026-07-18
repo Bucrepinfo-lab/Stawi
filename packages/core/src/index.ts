@@ -26,6 +26,7 @@ export * from './intake';
 export * from './sacco-activation';
 export * from './business-activation';
 export * from './pos';
+export * from './automation';
 export * from './journey';
 
 // `CountryCode` is declared in both ./tax ('KE') and ./compliance (multi-country).

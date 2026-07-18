@@ -102,6 +102,7 @@
       <button class="btn gold sm" onclick="downloadLedger()">⬇ Ledger CSV</button>
       <button class="btn gold sm" onclick="downloadStock()">⬇ Stock CSV</button>
       <button class="btn gold sm" onclick="downloadTax()">⬇ Tax report CSV</button>
+      <button class="btn gold sm" onclick="closeDay()">🧾 Close of day (Z-report)</button>
       <button class="btn ghost sm" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="window.print()">🖨 Print page</button>
     </div>
   </div>
@@ -192,7 +193,7 @@ let stock=[
   {id:'s3',name:'Soap',code:'',qty:40,reorder:10,sold:5,price:12000,supplier:'',phone:''},
   {id:'s4',name:'Old calendars',code:'',qty:30,reorder:5,sold:0,price:5000,supplier:'',phone:''},
 ];
-let acks={}, lastReceipt=null, saleSeq=100, pending=null;
+let acks={}, lastReceipt=null, saleSeq=100, pending=null, payMix=[];
 
 // ---------- core helpers (mirror @stawi/core/pos.ts) ----------
 const kes=c=>'KES '+(c/100).toLocaleString('en-KE',{minimumFractionDigits:0});
@@ -247,6 +248,7 @@ function charge(){
   document.getElementById('pay-fields').innerHTML=p.fields.map(f=>
     `<label style="margin-top:8px"><span class="lab">${f.label}</span><input id="pf-${f.id}" class="${f.kind==='money'||f.kind==='phone'?'mono':''}" placeholder="${f.placeholder||''}"></label>`).join('');
   document.getElementById('pay-cta').textContent=p.cta;
+  document.getElementById('pay-cta').onclick=settle;
   document.getElementById('pay-msg').textContent='';
   document.getElementById('pay-backdrop').classList.add('show');
   setTimeout(()=>{const f=document.querySelector('#pay-fields input');f&&f.focus();},50);
@@ -268,7 +270,7 @@ function settle(){
     result={ok:true,message:t-s.total>0?'Give change '+kes(t-s.total):'Exact cash — no change',change:t-s.total}; }
   else if(method==='MPESA'){ const ph=val('phone').replace(/[^\d+]/g,'');
     if(ph.replace(/\D/g,'').length<9){ payMsg('Enter a valid phone number',true); return; }
-    result={ok:true,message:'STK push sent to '+ph+' for '+kes(s.total)+'. Awaiting PIN…',ref:'STK-'+receiptNo(ph+s.total).slice(4)}; }
+    result={ok:true,message:'STK push sent to '+ph+' for '+kes(s.total)+'. Awaiting PIN…',ref:'STK-'+receiptNo(ph+s.total).slice(4),phone:ph}; }
   else { const ref=val('reference'); if(!ref){ payMsg('Enter the payment reference',true); return; }
     result={ok:true,message:(method==='CARD'?'Card':'Transfer')+' confirmed ('+ref+')',ref}; }
   payMsg('✓ '+result.message,false);
@@ -276,14 +278,56 @@ function settle(){
 }
 function payMsg(m,err){const el=document.getElementById('pay-msg');el.textContent=m;el.style.color=err?'var(--danger)':'var(--forest-deep)';}
 function closePay(){document.getElementById('pay-backdrop').classList.remove('show');}
+function etimsCode(seed){let h=2166136261;for(let i=0;i<seed.length;i++){h^=seed.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(16).toUpperCase().padStart(8,'0');}
 function finalize(s,result){
   const id='sale-'+(saleSeq++);
   ledger.unshift({id,type:'SALE',desc:`${s.qty}× ${s.item}`,cents:s.subtotal,at:Date.now()});
+  payMix.push({amountCents:s.subtotal,method:s.pay});
   if(s.known){ s.known.qty=Math.max(0,s.known.qty-s.qty); s.known.sold+=s.qty; }
+  // KRA eTIMS e-invoice for this sale
+  const ctrl=etimsCode(id+s.total);
+  const etims={invoiceNo:'INV-'+receiptNo(id).slice(4),scuId:'KRACU'+etimsCode(id).slice(0,10),controlCode:ctrl,
+    qrUrl:'https://etims.kra.go.ke/common/link/etims/receipt/indexEtimsReceiptData?Data='+ctrl};
   lastReceipt={no:receiptNo(id),item:s.item,code:s.code,qty:s.qty,unit:s.unit,subtotal:s.subtotal,tax:s.tax,total:s.total,pay:s.pay,at:Date.now(),
-    change:result.change||0,ref:result.ref||''};
+    change:result.change||0,ref:result.ref||'',phone:result.phone||'',etims};
   document.getElementById('reprint').disabled=false;
   renderReceipt(); renderAll();
+}
+function sendEreceipt(){
+  if(!lastReceipt)return; const r=lastReceipt;
+  let phone=r.phone;
+  if(!phone){ phone=prompt('Customer phone for the e-receipt (SMS):','07'); if(!phone)return; }
+  const text=`${BUSINESS}: receipt ${r.no}. Total ${kes(r.total)} (VAT ${kes(r.tax)}) paid via ${r.pay}. Thank you!`;
+  toast('📱 SMS e-receipt sent to '+phone);
+}
+function closeDay(){
+  let sales=0,cogs=0,exp=0,count=0;
+  for(const e of ledger){ if(e.type==='SALE'){sales+=e.cents;count++;} else if(e.type==='PURCHASE')cogs+=e.cents; else exp+=e.cents; }
+  const vat=Math.round(sales*VAT_RATE/(1+VAT_RATE)), net=sales-cogs-exp;
+  const mix={}; for(const p of (payMix.length?payMix:[{amountCents:sales,method:'CASH'}])){ mix[p.method]=mix[p.method]||{c:0,a:0}; mix[p.method].c++; mix[p.method].a+=p.amountCents; }
+  const cls=classify();
+  const sold=cls.filter(s=>s.sold>0).sort((a,b)=>b.sold-a.sold);
+  const reorder=cls.filter(s=>s.needsReorder);
+  const lines=[`${BUSINESS} — CLOSE OF DAY (Z-REPORT)`,new Date().toLocaleDateString('en-KE',{dateStyle:'full'}),'',
+    `Sales:            ${count}`,`Gross sales:      ${kes(sales)}`,`Cost of goods:    ${kes(cogs)}`,`Expenses:         ${kes(exp)}`,
+    `VAT due:          ${kes(vat)}`,`Net profit:       ${kes(net)}`,'','By payment method:',
+    ...Object.entries(mix).map(([m,v])=>`  ${m.padEnd(6)} ${String(v.c).padStart(3)} txns  ${kes(v.a)}`),
+    `Cash expected in drawer: ${kes((mix.CASH||{a:0}).a)}`,'','Items sold:',...sold.map(s=>`  ${s.name} × ${s.sold}`),'',
+    reorder.length?'Reorder before tomorrow:':'No reorders needed.',...reorder.map(s=>`  ${s.name} (${s.qty} left, level ${s.reorder})`)];
+  const text=lines.join('\n');
+  document.getElementById('pay-title').textContent='Close of day — Z-report';
+  document.getElementById('pay-instr').textContent='End-of-day summary. Download it or send the owner digest.';
+  document.getElementById('pay-fields').innerHTML=`<pre style="white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--bone);border:1px solid var(--line);border-radius:10px;padding:12px;max-height:260px;overflow:auto">${text}</pre>`;
+  document.getElementById('pay-msg').textContent='';
+  document.getElementById('pay-cta').textContent='⬇ Download Z-report';
+  document.getElementById('pay-cta').onclick=()=>{ download('stawi-zreport.csv',text); document.getElementById('pay-cta').onclick=settle; };
+  document.getElementById('pay-backdrop').classList.add('show');
+  toast('📱 Owner digest: '+count+' sales, '+kes(sales)+' in');
+}
+function autoPO(id){
+  const s=stock.find(x=>x.id===id); const order=Math.max(1,s.reorder*2-s.qty);
+  const txt=`Hi${s.supplier?' '+s.supplier:''}, ${BUSINESS} would like to order ${order} units of ${s.name}. Please confirm price & delivery. Asante.`;
+  toast(s.phone?('⚡ PO drafted → SMS to '+s.supplier+' ('+order+' units)'):('⚡ PO drafted for '+order+' units — add a supplier to send'));
 }
 function renderReceipt(){
   if(!lastReceipt){document.getElementById('last-receipt').innerHTML='';return;}
@@ -296,6 +340,9 @@ function renderReceipt(){
       <div class="between"><b>Total</b><b class="mono" style="color:var(--forest-deep)">${kes(r.total)}</b></div>
       <div class="muted" style="margin-top:4px">Paid by ${r.pay}${r.change?(' · change '+kes(r.change)):''}${r.ref?(' · '+r.ref):''}</div>
       <div style="margin-top:8px">${barcodeHTML(r.code,'sm')}</div>
+      <div class="muted" style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px">
+        KRA eTIMS ${r.etims.invoiceNo} · SCU ${r.etims.scuId}<br>Control code <span class="mono">${r.etims.controlCode}</span></div>
+      <div class="row" style="margin-top:8px"><button class="btn sm" onclick="sendEreceipt()">📱 Send e-receipt (SMS)</button></div>
     </div>`;
 }
 function printLast(){
@@ -347,7 +394,7 @@ function renderAlerts(){
   document.getElementById('alerts').innerHTML=cls.map(s=>{
     const ack=acks[s.id]; if(!ack)outstanding++;
     const sup=s.supplier?`${s.supplier} · ${s.phone}`:'No supplier on file';
-    const act=s.supplier?`<a class="btn gold sm" style="text-decoration:none" href="tel:${s.phone}">Order ↗</a>`:`<button class="btn ghost sm" onclick="toast('Opens Pillar 2 supplier match')">Find supplier ↗</button>`;
+    const act=`<button class="btn sm" onclick="autoPO('${s.id}')">⚡ Auto-PO</button>`+(s.supplier?`<a class="btn gold sm" style="text-decoration:none" href="tel:${s.phone}">Order ↗</a>`:`<button class="btn ghost sm" onclick="toast('Opens Pillar 2 supplier match')">Find supplier ↗</button>`);
     if(ack)return `<div class="alert ok"><div><b>${s.name}</b> — ${s.qty} left · <span class="muted">${sup}</span>
       <div style="margin-top:6px"><span class="ack">✓ ${fbLabel(ack.feedback)}</span><span class="muted" style="margin-left:8px">acknowledged ${new Date(ack.at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'})}</span></div></div>
       <button class="btn ghost sm" onclick="delete acks['${s.id}'];renderAll()">Undo</button></div>`;
