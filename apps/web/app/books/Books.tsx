@@ -8,10 +8,14 @@ import {
   financialSuggestions,
   computeBusinessTaxes,
   formatMoney,
+  buildBusinessPack,
   type LedgerEntry,
   type StockItem,
   type Period,
   type EntryType,
+  type Industry,
+  type BusinessAccountingPack,
+  type SupplierLink,
 } from '@stawi/core';
 import { addLedgerEntryAction } from '@/app/actions';
 
@@ -22,6 +26,8 @@ export interface BooksProps {
   tourismSector: boolean;
   initialEntries: LedgerEntry[];
   stock: StockItem[];
+  /** Business sector — drives supplier matching. Defaults to retail. */
+  industry?: Industry;
 }
 
 const card: React.CSSProperties = {
@@ -36,7 +42,7 @@ const card: React.CSSProperties = {
 const PERIODS: Period[] = ['day', 'week', 'month', 'year'];
 const MOVE_COLOR = { fast: 'var(--good)', slow: 'var(--danger)', dead: 'var(--dim)' } as const;
 
-export function Books({ businessId, businessName, vatRegistered, tourismSector, initialEntries, stock }: BooksProps) {
+export function Books({ businessId, businessName, vatRegistered, tourismSector, initialEntries, stock, industry = 'retail' }: BooksProps) {
   const [entries, setEntries] = useState<LedgerEntry[]>(initialEntries);
   const [period, setPeriod] = useState<Period>('day');
   const [type, setType] = useState<EntryType>('SALE');
@@ -60,6 +66,12 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
 
   const tips = useMemo(() => financialSuggestions(pnl, insights), [pnl, insights]);
 
+  // Pre-packed business accounting pack: toolkit + owner metrics + supplier links.
+  const pack = useMemo(
+    () => buildBusinessPack({ businessId: businessId ?? businessName, name: businessName, industry, vatRegistered, tourismSector }, entries, stock),
+    [businessId, businessName, industry, vatRegistered, tourismSector, entries, stock],
+  );
+
   function addEntry() {
     const cents = Math.round((parseFloat(amount) || 0) * 100);
     if (cents <= 0) return;
@@ -75,6 +87,8 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
 
   return (
     <div>
+      <BusinessPackPanel pack={pack} />
+
       <div style={{ display: 'flex', gap: 4, marginTop: 22, background: 'var(--bone-2)', padding: 6, borderRadius: 999, width: 'fit-content' }}>
         {PERIODS.map((p) => (
           <button key={p} onClick={() => setPeriod(p)} style={{ padding: '8px 18px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, fontSize: 13, textTransform: 'capitalize', background: period === p ? 'var(--forest-deep)' : 'transparent', color: period === p ? 'var(--bone)' : 'var(--ink-2)' }}>
@@ -191,6 +205,99 @@ function Stat({ label, value, accent }: { label: string; value: number; accent?:
     <div style={{ background: 'var(--bone)', border: '1px solid var(--line)', borderRadius: 12, padding: 14 }}>
       <div style={{ fontSize: 11, color: 'var(--dim)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{label}</div>
       <div className="mono" style={{ fontSize: 20, fontWeight: 600, color: accent ?? 'var(--forest-deep)', marginTop: 4 }}>KES {formatMoney(value)}</div>
+    </div>
+  );
+}
+
+// ───────────────── Pre-packed business accounting pack (Pillar 3) ─────────────────
+// Everything a business owner gets on activation: the toolkit, the owner
+// analytics metrics, and demand→supply supplier links — from one source.
+
+function KpiChip({ label, value, tone }: { label: string; value: string; tone?: string }) {
+  return (
+    <div style={{ background: 'var(--bone)', border: '1px solid var(--line)', borderRadius: 11, padding: '11px 13px' }}>
+      <div style={{ fontSize: 10.5, color: 'var(--dim)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.05em' }}>{label}</div>
+      <div className="mono" style={{ fontSize: 17, fontWeight: 700, color: tone ?? 'var(--forest-deep)', marginTop: 3 }}>{value}</div>
+    </div>
+  );
+}
+
+function BusinessPackPanel({ pack }: { pack: BusinessAccountingPack }) {
+  const m = pack.metrics;
+  const kes = (c: number) => `KES ${formatMoney(c)}`;
+  return (
+    <div style={{ ...card, marginTop: 0, background: 'linear-gradient(135deg, var(--forest-deep), var(--forest))', color: 'var(--bone)', border: 'none' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ maxWidth: 560 }}>
+          <div style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', opacity: .82 }}>Business accounting — pre-packed</div>
+          <h2 className="display" style={{ fontSize: 22, fontWeight: 600, margin: '5px 0 6px' }}>{pack.name}</h2>
+          <p style={{ fontSize: 13.5, lineHeight: 1.55, opacity: .92 }}>
+            POS, QuickBooks-style books, inventory, tax and supplier links — all ready to use. {pack.readinessPct}% of your toolkit is live with data.
+          </p>
+        </div>
+        <div style={{ textAlign: 'center', minWidth: 96 }}>
+          <div className="mono" style={{ fontSize: 34, fontWeight: 800, lineHeight: 1 }}>{pack.readinessPct}%</div>
+          <div style={{ fontSize: 11, opacity: .85, marginTop: 3 }}>activated</div>
+        </div>
+      </div>
+
+      {/* Pre-packed toolkit checklist */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px,1fr))', gap: 8, marginTop: 14 }}>
+        {pack.tools.map((t) => (
+          <div key={t.id} style={{ display: 'flex', gap: 9, alignItems: 'flex-start', background: 'rgba(255,255,255,.09)', borderRadius: 10, padding: '9px 11px' }}>
+            <span aria-hidden style={{ fontSize: 14 }}>{t.active ? '✅' : '⬜'}</span>
+            <div>
+              <div style={{ fontSize: 12.5, fontWeight: 700 }}>{t.label}</div>
+              <div style={{ fontSize: 11, opacity: .8 }}>{t.detail}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Owner analytics metrics */}
+      <div style={{ background: 'var(--paper)', color: 'var(--ink)', borderRadius: 12, padding: 14, marginTop: 14 }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--forest-deep)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>Owner metrics</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px,1fr))', gap: 9 }}>
+          <KpiChip label="Revenue" value={kes(m.revenueCents)} />
+          <KpiChip label="Gross margin" value={`${m.grossMarginPct}%`} />
+          <KpiChip label="Net profit" value={kes(m.netProfitCents)} tone={m.netProfitCents >= 0 ? 'var(--good)' : 'var(--danger)'} />
+          <KpiChip label="Net margin" value={`${m.netMarginPct}%`} />
+          <KpiChip label="Avg sale" value={kes(m.averageSaleCents)} />
+          <KpiChip label="Expense ratio" value={`${m.expenseRatioPct}%`} />
+          <KpiChip label="Est. tax" value={kes(m.estimatedTaxCents)} />
+          <KpiChip label="Stock units" value={String(m.inventoryUnits)} />
+          <KpiChip label="To reorder" value={`${m.reorderCount}${m.criticalCount ? ` · ${m.criticalCount} crit` : ''}`} tone={m.criticalCount ? 'var(--danger)' : undefined} />
+        </div>
+      </div>
+
+      {/* Demand → supply links */}
+      {(pack.supplierLinks.length > 0 || pack.recommendedSuppliers.length > 0) && (
+        <div style={{ background: 'var(--paper)', color: 'var(--ink)', borderRadius: 12, padding: 14, marginTop: 12 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--forest-deep)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>Suppliers · demand → supply</div>
+          {pack.supplierLinks.length === 0 && <div style={{ fontSize: 12.5, color: 'var(--dim)' }}>No reorders needed right now — stock levels are healthy.</div>}
+          {pack.supplierLinks.map((s: SupplierLink) => (
+            <div key={s.itemId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
+              <span style={{ fontSize: 13 }}>
+                {s.critical && <span style={{ color: 'var(--danger)', fontWeight: 800 }}>⚠ </span>}
+                {s.itemName} — {s.quantity} left{s.supplierName ? ` · ${s.supplierName}` : ''}
+              </span>
+              {s.action.kind === 'order'
+                ? <a href={`tel:${s.action.supplierPhone}`} style={{ fontSize: 12, fontWeight: 700, color: 'var(--forest-deep)', background: 'var(--gold)', padding: '6px 12px', borderRadius: 9, textDecoration: 'none', whiteSpace: 'nowrap' }}>Order ↗</a>
+                : <a href={s.action.href} style={{ fontSize: 12, fontWeight: 700, color: 'var(--forest-deep)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: 9, textDecoration: 'none', whiteSpace: 'nowrap' }}>Find supplier ↗</a>}
+            </div>
+          ))}
+          {pack.recommendedSuppliers.length > 0 && (
+            <div style={{ marginTop: 10 }}>
+              <div style={{ fontSize: 11.5, color: 'var(--dim)', marginBottom: 6 }}>Matched supplier partners for your sector:</div>
+              <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+                {pack.recommendedSuppliers.map((v, i) => (
+                  <a key={i} href="/match" title={v.description} style={{ fontSize: 12, fontWeight: 600, color: 'var(--forest-deep)', background: 'var(--bone-2)', border: '1px solid var(--line)', padding: '5px 11px', borderRadius: 999, textDecoration: 'none' }}>{v.title}</a>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

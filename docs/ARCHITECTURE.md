@@ -149,7 +149,7 @@ stepping on each other:
 | Concern | Location |
 | --- | --- |
 | Shared business logic (all pillars) | `packages/core/src/*` (one export in `index.ts`) |
-| Cross-pillar bridges | `sacco-activation.ts`, `journey.ts` |
+| Cross-pillar bridges | `sacco-activation.ts` (P1→P4), `business-activation.ts` (P3 pack + P2 suppliers), `journey.ts` |
 | Data model, RLS, repo helpers | `packages/db` |
 | Web app + dashboard + cockpit | `apps/web/app` |
 | Mobile (Expo) parity | `apps/mobile` |
