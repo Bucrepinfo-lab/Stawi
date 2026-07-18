@@ -4,22 +4,22 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { FAILURE_GAPS } from '@stawi/core';
 
-type Lang = 'en' | 'sw' | 'fr';
+type Lang = 'en' | 'sw' | 'fr' | 'es' | 'pt' | 'ar';
 
 const T: Record<Lang, Record<string, string>> = {
   en: {
-    kicker: 'Save · Grow · Thrive · worldwide',
+    kicker: 'Save · Grow · Thrive · on every continent',
     h1a: 'Save together.', grow: 'Grow', h1b: 'together. Thrive.',
-    sub: 'One trusted platform for cooperative saving and enterprise — table banking, business matching, QuickBooks-grade accounting, and full SACCO savings & credit — localized to each country’s currency, tax and registration rules.',
-    open: 'Join any pillar directly — no need to start with a group. Chamas, traders and established businesses all welcome.',
+    sub: 'One trusted global platform for cooperative saving and enterprise — group savings, business matching, professional-grade accounting, and full savings & credit — localized to every country’s currency, language, tax and registration rules.',
+    open: 'Join any pillar directly — no need to start with a group. Savings circles, traders and established businesses on any continent, all welcome.',
     visionT: 'Our vision',
-    vision: 'A future where every saver, group and business can thrive — from the first shilling saved to a listed institution — with formal finance open to everyone.',
+    vision: 'A world where every saver, group and business — on every continent — can thrive: from the first coin saved to a listed institution, with formal finance open to everyone, everywhere.',
     missionT: 'Our mission',
-    mission: 'To give every chama, entrepreneur and enterprise one platform to save, borrow, trade and grow, with the records, guard-rails and credit that turn informal effort into fundable institutions.',
+    mission: 'To give every savings group, entrepreneur and enterprise one trusted global platform to save, borrow, trade and grow — localized to each country — with the records, guard-rails and credit that turn informal effort into fundable institutions.',
     valuesT: 'Our core values',
     nicheKicker: 'Our niche — built on the reasons others failed',
     nicheH: 'Eight reasons microfinance collapses. Eight guard-rails, built in.',
-    nicheP: 'We studied why savings groups never graduate into SACCOs, banks and listed institutions — and digitalized the cure for each one. That research is the product.',
+    nicheP: 'We studied why savings groups worldwide never graduate into cooperatives, banks and listed institutions — and digitalized the cure for each one. That research is the product.',
     seeEngine: 'See the full graduation engine →', pricing: 'Pricing',
   },
   sw: {
@@ -52,18 +52,69 @@ const T: Record<Lang, Record<string, string>> = {
     nicheP: 'Nous avons étudié pourquoi les groupes d’épargne n’évoluent jamais en SACCO, banques et sociétés cotées — et numérisé le remède à chacune. Cette recherche est le produit.',
     seeEngine: 'Voir le moteur de croissance →', pricing: 'Tarifs',
   },
+  es: {
+    kicker: 'Ahorra · Crece · Prospera · en todos los continentes',
+    h1a: 'Ahorren juntos.', grow: 'Crezcan', h1b: 'juntos. Prosperen.',
+    sub: 'Una plataforma global de confianza para el ahorro cooperativo y la empresa — ahorro grupal, conexión de negocios, contabilidad profesional y crédito completo — adaptada a la moneda, idioma, impuestos y normas de cada país.',
+    open: 'Únete a cualquier pilar directamente — sin empezar por un grupo. Círculos de ahorro, comerciantes y empresas establecidas de cualquier continente: todos bienvenidos.',
+    visionT: 'Nuestra visión',
+    vision: 'Un mundo donde cada ahorrador, grupo y empresa — en todos los continentes — pueda prosperar: desde la primera moneda ahorrada hasta una institución cotizada, con finanzas formales abiertas a todos.',
+    missionT: 'Nuestra misión',
+    mission: 'Dar a cada grupo de ahorro, emprendedor y empresa una plataforma global para ahorrar, pedir prestado, comerciar y crecer, con los registros, salvaguardas y crédito que convierten el esfuerzo informal en instituciones financiables.',
+    valuesT: 'Nuestros valores',
+    nicheKicker: 'Nuestro nicho — basado en las razones del fracaso de otros',
+    nicheH: 'Ocho razones de colapso. Ocho salvaguardas integradas.',
+    nicheP: 'Estudiamos por qué los grupos de ahorro del mundo nunca se convierten en cooperativas, bancos e instituciones cotizadas — y digitalizamos la cura de cada una. Esa investigación es el producto.',
+    seeEngine: 'Ver el motor de graduación →', pricing: 'Precios',
+  },
+  pt: {
+    kicker: 'Poupar · Crescer · Prosperar · em todos os continentes',
+    h1a: 'Poupem juntos.', grow: 'Cresçam', h1b: 'juntos. Prosperem.',
+    sub: 'Uma plataforma global de confiança para poupança cooperativa e empresas — poupança em grupo, conexão de negócios, contabilidade profissional e crédito completo — adaptada à moeda, idioma, impostos e regras de cada país.',
+    open: 'Adira a qualquer pilar diretamente — sem precisar de começar por um grupo. Círculos de poupança, comerciantes e empresas estabelecidas de qualquer continente: todos bem-vindos.',
+    visionT: 'A nossa visão',
+    vision: 'Um mundo onde cada poupador, grupo e empresa — em todos os continentes — possa prosperar: da primeira moeda poupada a uma instituição cotada, com finanças formais abertas a todos.',
+    missionT: 'A nossa missão',
+    mission: 'Dar a cada grupo de poupança, empreendedor e empresa uma plataforma global para poupar, pedir emprestado, negociar e crescer, com os registos, salvaguardas e crédito que transformam o esforço informal em instituições financiáveis.',
+    valuesT: 'Os nossos valores',
+    nicheKicker: 'O nosso nicho — construído sobre as razões do fracasso',
+    nicheH: 'Oito razões de colapso. Oito salvaguardas integradas.',
+    nicheP: 'Estudámos por que os grupos de poupança nunca se tornam cooperativas, bancos e instituições cotadas — e digitalizámos a cura de cada uma. Essa investigação é o produto.',
+    seeEngine: 'Ver o motor de graduação →', pricing: 'Preços',
+  },
+  ar: {
+    kicker: 'ادّخر · انمُ · ازدهر · في كل القارات',
+    h1a: 'ادّخروا معاً.', grow: 'انموا', h1b: 'معاً. وازدهروا.',
+    sub: 'منصة عالمية موثوقة للادخار التعاوني والأعمال — ادخار جماعي، وربط الأعمال، ومحاسبة احترافية، وادخار وائتمان كامل — مكيَّفة مع عملة كل بلد ولغته وضرائبه وقواعد تسجيله.',
+    open: 'انضم إلى أي ركيزة مباشرة — لا حاجة للبدء بمجموعة. دوائر الادخار والتجار والشركات الراسخة من أي قارة: الجميع مرحّب بهم.',
+    visionT: 'رؤيتنا',
+    vision: 'عالم يزدهر فيه كل مدّخر ومجموعة وشركة — في كل القارات: من أول عملة تُدّخر إلى مؤسسة مدرجة، مع تمويل رسمي مفتوح للجميع في كل مكان.',
+    missionT: 'رسالتنا',
+    mission: 'أن نمنح كل مجموعة ادخار ورائد أعمال وشركة منصة عالمية واحدة للادخار والاقتراض والتجارة والنمو — مكيّفة مع كل بلد — بسجلات وضوابط وائتمان يحوّل الجهد غير الرسمي إلى مؤسسات قابلة للتمويل.',
+    valuesT: 'قيمنا الأساسية',
+    nicheKicker: 'تميّزنا — مبني على أسباب فشل الآخرين',
+    nicheH: 'ثمانية أسباب للانهيار. ثمانية ضوابط مدمجة.',
+    nicheP: 'درسنا لماذا لا تتحول مجموعات الادخار حول العالم إلى تعاونيات وبنوك ومؤسسات مدرجة — ورقمنّا العلاج لكل سبب. هذا البحث هو المنتج.',
+    seeEngine: '← شاهد محرك النمو الكامل', pricing: 'الأسعار',
+  },
 };
 
 const PILLARS: Record<Lang, string[]> = {
   en: ['1 · Records & Table Banking', '2 · Business Matching', '3 · Accounting & Compliance', '4 · SACCO+ Savings & Credit'],
   sw: ['1 · Kumbukumbu & Table Banking', '2 · Kuunganisha Biashara', '3 · Uhasibu & Uzingatiaji', '4 · SACCO+ Akiba & Mikopo'],
   fr: ['1 · Registres & Tontine', '2 · Mise en relation', '3 · Comptabilité & Conformité', '4 · Épargne & Crédit SACCO+'],
+  es: ['1 · Registros & Ahorro grupal', '2 · Conexión de negocios', '3 · Contabilidad & Cumplimiento', '4 · Ahorro & Crédito SACCO+'],
+  pt: ['1 · Registos & Poupança em grupo', '2 · Conexão de negócios', '3 · Contabilidade & Conformidade', '4 · Poupança & Crédito SACCO+'],
+  ar: ['١ · السجلات والادخار الجماعي', '٢ · ربط الأعمال', '٣ · المحاسبة والامتثال', '٤ · الادخار والائتمان SACCO+'],
 };
 
 const VALUES: Record<Lang, string[]> = {
   en: ['Trust', 'Inclusion', 'Discipline', 'Growth', 'Simplicity'],
   sw: ['Uaminifu', 'Ujumuishaji', 'Nidhamu', 'Ukuaji', 'Urahisi'],
   fr: ['Confiance', 'Inclusion', 'Discipline', 'Croissance', 'Simplicité'],
+  es: ['Confianza', 'Inclusión', 'Disciplina', 'Crecimiento', 'Sencillez'],
+  pt: ['Confiança', 'Inclusão', 'Disciplina', 'Crescimento', 'Simplicidade'],
+  ar: ['الثقة', 'الشمول', 'الانضباط', 'النمو', 'البساطة'],
 };
 
 const navLink: React.CSSProperties = { fontWeight: 600, color: 'var(--ink-2)' };
@@ -95,13 +146,23 @@ export default function Home() {
   useEffect(() => {
     try {
       const l = localStorage.getItem('stawiLang') as Lang | null;
-      if (l && T[l]) setLang(l);
+      if (l && T[l]) {
+        setLang(l);
+        document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+        document.documentElement.lang = l;
+      }
       const th = localStorage.getItem('stawiTheme');
       if (th === 'dark') { setDark(true); document.documentElement.classList.add('dark'); }
     } catch {}
   }, []);
 
-  function changeLang(l: Lang) { setLang(l); try { localStorage.setItem('stawiLang', l); } catch {} }
+  function changeLang(l: Lang) {
+    setLang(l);
+    // Right-to-left for Arabic; LTR for everything else.
+    document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = l;
+    try { localStorage.setItem('stawiLang', l); } catch {}
+  }
   function toggleTheme() {
     const next = !dark; setDark(next);
     document.documentElement.classList.toggle('dark', next);
@@ -125,7 +186,12 @@ export default function Home() {
           <Link href="/sacco" style={navLink}>SACCO+</Link>
           <select value={lang} onChange={(e) => changeLang(e.target.value as Lang)} aria-label="Language"
             style={{ padding: '7px 10px', borderRadius: 9, border: '1px solid var(--line)', background: 'var(--paper)', color: 'var(--ink)', fontFamily: 'inherit', fontSize: 13 }}>
-            <option value="en">🇬🇧 EN</option><option value="sw">🇰🇪 SW</option><option value="fr">🇫🇷 FR</option>
+            <option value="en">🌐 English</option>
+            <option value="sw">🌍 Kiswahili</option>
+            <option value="fr">🌍 Français</option>
+            <option value="es">🌎 Español</option>
+            <option value="pt">🌎 Português</option>
+            <option value="ar">🌏 العربية</option>
           </select>
           <button onClick={toggleTheme} aria-label="Toggle theme"
             style={{ padding: '7px 12px', borderRadius: 9, border: '1px solid var(--line)', background: 'var(--paper)', color: 'var(--ink)', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>

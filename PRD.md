@@ -470,8 +470,7 @@ close-of-day **Z-report**). Surfaced in `/books`.
 values in `BRAND.md`; tagline **"Save · Grow · Thrive."** Reflected across the landing
 page, receipts and the standalone cockpit as a marketing surface.
 
-**Multinational UX.** Dark/light **theme switch** and an **EN / Kiswahili / Français
-language selector** on the landing (and full theme + language in
+**Multinational UX.** Dark/light **theme switch** and an **six-language selector (EN / Kiswahili / Français / Español / Português / العربية, with RTL)** on the landing (and full theme + language in
 `design/business-cockpit-demo.html`).
 
 **Quality.** `@stawi/core` = **242 Vitest tests**, strict `tsc --noEmit` clean.

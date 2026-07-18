@@ -10,26 +10,28 @@ shilling saved to a listed institution.
 
 ## Vision
 
-> A future where every African saver, group and business can thrive on their own
-> terms — where the first shilling put into a chama and the books of a growing
-> enterprise sit on the same trusted rails, and where formal finance is open to
-> everyone, not just the already-banked.
+> A world where every saver, group and business — on every continent — can thrive
+> on their own terms: where the first coin put into a savings circle and the books
+> of a growing enterprise sit on the same trusted rails, and where formal finance
+> is open to everyone, everywhere, not just the already-banked.
 
 ## Mission
 
-> To give every chama, entrepreneur and enterprise **one trusted platform to
-> save, borrow, trade and grow** — with the records, guard-rails and credit that
-> turn informal effort into formal, fundable institutions. No one has to start
-> small to be taken seriously, and no one is left behind by language, literacy or
-> a cheap phone.
+> To give every savings group, entrepreneur and enterprise **one trusted global
+> platform to save, borrow, trade and grow** — localized to each country's
+> currency, language, tax and registration rules — with the records, guard-rails
+> and credit that turn informal effort into formal, fundable institutions. No one
+> has to start small to be taken seriously, and no one is left behind by
+> language, literacy or a cheap phone.
 
 ## Core values
 
 1. **Trust** — Tamper-proof, audit-ready records by default. What Stawi shows a
    member, a bank or a regulator is the same truth.
-2. **Inclusion** — Phone-first, multilingual, works offline on an entry-level
-   device. Anyone can join **any pillar directly** — no gatekeeping, no need to
-   graduate from step one.
+2. **Inclusion** — Phone-first, multilingual (English, Kiswahili, Français,
+   Español, Português, العربية — and growing), works offline on an entry-level
+   device. Anyone, anywhere, can join **any pillar directly** — no gatekeeping,
+   no need to graduate from step one.
 3. **Discipline** — Built-in guard-rails against the well-researched ways savings
    groups and small businesses fail.
 4. **Growth** — A ladder, not a ceiling: table banking → business → formal books
