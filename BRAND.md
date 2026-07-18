@@ -10,15 +10,15 @@ shilling saved to a listed institution.
 
 ## Vision
 
-> A world where every saver, group and business — on every continent — can thrive
-> on their own terms: where the first coin put into a savings circle and the books
-> of a growing enterprise sit on the same trusted rails, and where formal finance
-> is open to everyone, everywhere, not just the already-banked.
+> A future where every saver, group and business can thrive on their own terms:
+> where the first coin put into a savings circle and the books of a growing
+> enterprise sit on the same trusted rails, and where formal finance is open to
+> everyone — not just the already-banked.
 
 ## Mission
 
-> To give every savings group, entrepreneur and enterprise **one trusted global
-> platform to save, borrow, trade and grow** — localized to each country's
+> To give every savings group, entrepreneur and enterprise **one trusted
+> platform to save, borrow, trade and grow** — adapted to each community's
 > currency, language, tax and registration rules — with the records, guard-rails
 > and credit that turn informal effort into formal, fundable institutions. No one
 > has to start small to be taken seriously, and no one is left behind by
@@ -30,8 +30,8 @@ shilling saved to a listed institution.
    member, a bank or a regulator is the same truth.
 2. **Inclusion** — Phone-first, multilingual (English, Kiswahili, Français,
    Español, Português, العربية — and growing), works offline on an entry-level
-   device. Anyone, anywhere, can join **any pillar directly** — no gatekeeping,
-   no need to graduate from step one.
+   device. Anyone can join **any pillar directly** — no gatekeeping, no need to
+   graduate from step one.
 3. **Discipline** — Built-in guard-rails against the well-researched ways savings
    groups and small businesses fail.
 4. **Growth** — A ladder, not a ceiling: table banking → business → formal books
