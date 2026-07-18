@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stawi — Save · Grow · Thrive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bone:#f6f1e7;--bone2:#efe8d9;--paper:#fffdf8;--ink:#16261f;--ink2:#2c4339;--forest:#1f4d3a;--forestD:#16382a;--gold:#e0a32e;--goldD:#b97e15;--dim:#6b7c73;--faint:#9aa79f;--line:#dcd3c2;
+    --shadow:0 1px 2px rgba(22,38,31,.06),0 8px 24px -12px rgba(22,38,31,.22);}
+  html.dark{--bone:#0f1613;--bone2:#17211c;--paper:#141d18;--ink:#eaf0ea;--ink2:#c2ccc4;--forest:#3f9d70;--forestD:#2f855a;--dim:#8a978d;--faint:#6f7d74;--line:#25302a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -14px rgba(0,0,0,.55);}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Hanken Grotesk',system-ui,sans-serif;background:var(--bone);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s;
+    background-image:radial-gradient(1100px 480px at 8% -8%, rgba(224,163,46,.13), transparent 60%),radial-gradient(900px 480px at 108% 0%, rgba(47,133,90,.13), transparent 55%);}
+  .display{font-family:'Fraunces',Georgia,serif}
+  main{max-width:1100px;margin:0 auto;padding:0 24px}
+  header{display:flex;align-items:center;justify-content:space-between;padding:18px 0;flex-wrap:wrap;gap:12px}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:24px;color:var(--forestD)}
+  .tagline{font-size:9.5px;font-weight:800;letter-spacing:2.5px;color:var(--dim);margin-top:2px;font-family:'Hanken Grotesk',sans-serif}
+  nav{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  nav a{font-weight:600;color:var(--ink2);text-decoration:none}
+  select,button.ctl{padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+  .cta{font-weight:700;color:var(--forestD);background:var(--gold);padding:10px 18px;border-radius:12px;text-decoration:none}
+  .kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--goldD);font-weight:700;margin-bottom:16px}
+  h1{font-weight:600;font-size:clamp(36px,6vw,64px);line-height:1.03}
+  h1 em{font-style:italic;color:var(--forest)}
+  .sub{margin-top:18px;font-size:18px;color:var(--ink2)}
+  .open{margin-top:20px;background:var(--paper);border:1px solid var(--gold);border-radius:14px;padding:12px 16px;display:flex;gap:10px;align-items:flex-start}
+  .chips{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap}
+  .chip{font-size:13px;font-weight:700;color:var(--forestD);background:var(--paper);border:1px solid var(--line);padding:8px 14px;border-radius:999px;text-decoration:none}
+  .vmv{padding:20px 0;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
+  .cardT{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--goldD);font-weight:800}
+  .cardP{margin-top:8px;font-size:15px;color:var(--ink2);line-height:1.6}
+  .vals{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .val{font-size:13px;font-weight:700;color:var(--forestD);background:var(--bone2);border:1px solid var(--line);padding:6px 12px;border-radius:999px}
+  .gaps{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:20px}
+  .gap{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .gap .n{font-size:11px;font-weight:800;color:var(--goldD)}
+  .gap h3{font-size:14.5px;margin:4px 0 6px}
+  .gap p{font-size:12.5px;color:var(--ink2)}
+  footer{margin-top:60px;padding:24px 0 60px;border-top:1px solid var(--line);color:var(--faint);font-size:13px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+  html[dir="rtl"] body{text-align:right}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="logo display">
+      <svg width="34" height="34" viewBox="0 0 96 96" aria-hidden>
+        <defs><linearGradient id="lf" x1="8" y1="8" x2="88" y2="88" gradientUnits="userSpaceOnUse"><stop stop-color="#2f855a"/><stop offset="1" stop-color="#14352a"/></linearGradient>
+        <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#f0c05a"/><stop offset="1" stop-color="#e0a32e"/></linearGradient></defs>
+        <rect x="4" y="4" width="88" height="88" rx="24" fill="url(#lf)"/>
+        <path d="M24 62 A24 24 0 1 1 68 44" stroke="#e0a32e" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.55"/>
+        <rect x="31" y="54" width="9" height="18" rx="4.5" fill="#f7f3ea"/><rect x="43.5" y="44" width="9" height="28" rx="4.5" fill="#f7f3ea"/>
+        <rect x="56" y="32" width="9" height="40" rx="4.5" fill="url(#lg)"/><circle cx="60.5" cy="24" r="8" fill="url(#lg)"/>
+      </svg>
+      <div style="line-height:1">Stawi<div class="tagline">SAVE · GROW · THRIVE</div></div>
+    </div>
+    <nav>
+      <select id="lang" onchange="setLang(this.value)" aria-label="Language">
+        <option value="en">English</option><option value="sw">Kiswahili</option><option value="fr">Français</option>
+        <option value="es">Español</option><option value="pt">Português</option><option value="ar">العربية</option>
+        <option value="zh">中文</option><option value="hi">हिन्दी</option><option value="de">Deutsch</option><option value="ru">Русский</option>
+      </select>
+      <button class="ctl" id="themeBtn" onclick="toggleTheme()">🌙</button>
+      <a class="cta" href="#" id="pricing">Pricing</a>
+    </nav>
+  </header>
+
+  <section style="padding:54px 0 30px;max-width:820px">
+    <p class="kicker" id="kicker"></p>
+    <h1 class="display"><span id="h1a"></span> <em id="grow"></em> <span id="h1b"></span></h1>
+    <p class="sub" id="sub"></p>
+    <div class="open"><span style="font-size:18px">🚪</span><p style="font-size:14.5px;font-weight:600" id="open"></p></div>
+    <div class="chips" id="chips"></div>
+  </section>
+
+  <section class="vmv">
+    <div class="card"><p class="cardT" id="visionT"></p><p class="cardP" id="vision"></p></div>
+    <div class="card"><p class="cardT" id="missionT"></p><p class="cardP" id="mission"></p></div>
+    <div class="card"><p class="cardT" id="valuesT"></p><div class="vals" id="vals"></div></div>
+  </section>
+
+  <section style="padding:30px 0 10px">
+    <p class="kicker" id="nicheKicker" style="margin-bottom:0"></p>
+    <h2 class="display" style="font-weight:600;font-size:clamp(24px,3.5vw,36px);margin-top:8px;max-width:720px" id="nicheH"></h2>
+    <p style="margin-top:10px;color:var(--ink2);max-width:680px;font-size:15px" id="nicheP"></p>
+    <div class="gaps" id="gaps"></div>
+    <a href="#" style="display:inline-block;margin-top:18px;font-weight:800;color:var(--forestD);text-decoration:none" id="seeEngine"></a>
+  </section>
+
+  <footer>
+    <span class="display" style="color:var(--forestD);font-weight:600">Stawi</span>
+    <span>Save · Grow · Thrive — multi-tenant SaaS</span>
+  </footer>
+</main>
+
+<script>
+const T = {
+  en: {
+    kicker: 'Save · Grow · Thrive',
+    h1a: 'Save together.', grow: 'Grow', h1b: 'together. Thrive.',
+    sub: 'One trusted platform for cooperative saving and enterprise — group savings, business matching, professional-grade accounting, and full savings & credit — adapted to your currency, language, tax and registration rules.',
+    open: 'Join any pillar directly — no need to start with a group. Savings circles, traders and established businesses, all welcome.',
+    visionT: 'Our vision',
+    vision: 'A future where every saver, group and business can thrive on their own terms — where the first coin put into a savings circle and the books of a growing enterprise sit on the same trusted rails, and where formal finance is open to everyone, not just the already-banked.',
+    missionT: 'Our mission',
+    mission: 'To give every savings group, entrepreneur and enterprise one trusted platform to save, borrow, trade and grow — with the records, guard-rails and credit that turn informal effort into formal, fundable institutions. No one has to start small to be taken seriously, and no one is left behind by language, literacy or a cheap phone.',
+    valuesT: 'Our core values',
+    nicheKicker: 'Our niche — built on the reasons others failed',
+    nicheH: 'Eight reasons microfinance collapses. Eight guard-rails, built in.',
+    nicheP: 'We studied why savings groups never graduate into cooperatives, banks and listed institutions — and digitalized the cure for each one. That research is the product.',
+    seeEngine: 'See the full graduation engine →', pricing: 'Pricing',
+  },
+  sw: {
+    kicker: 'Weka akiba · Kua · Stawi',
+    h1a: 'Wekeni akiba pamoja.', grow: 'Kueni', h1b: 'pamoja. Stawini.',
+    sub: 'Jukwaa moja la kuaminika kwa akiba ya vikundi na biashara — table banking, kuunganisha biashara, uhasibu wa kiwango cha juu, na akiba na mikopo ya SACCO — kwa sarafu, lugha, kodi na sheria zinazokufaa.',
+    open: 'Jiunge na nguzo yoyote moja kwa moja — huhitaji kuanza na kikundi. Vyama, wafanyabiashara na biashara zilizoimarika wote mnakaribishwa.',
+    visionT: 'Maono yetu',
+    vision: 'Wakati ujao ambapo kila mwekaji, kikundi na biashara wanaweza kustawi — kutoka shilingi ya kwanza hadi taasisi iliyoorodheshwa — huku fedha rasmi zikiwa wazi kwa kila mtu.',
+    missionT: 'Dhamira yetu',
+    mission: 'Kumpa kila chama, mjasiriamali na biashara jukwaa moja la kuweka akiba, kukopa, kufanya biashara na kukua, na kumbukumbu, ulinzi na mikopo inayobadilisha juhudi kuwa taasisi.',
+    valuesT: 'Maadili yetu',
+    nicheKicker: 'Nafasi yetu — kutokana na sababu zilizowaangusha wengine',
+    nicheH: 'Sababu nane za kuanguka. Ulinzi nane, uliojengwa ndani.',
+    nicheP: 'Tulisoma kwa nini vikundi vya akiba havifikii SACCO, benki na taasisi — na tukadijiti dawa ya kila sababu. Utafiti huo ndio bidhaa.',
+    seeEngine: 'Ona injini kamili ya ukuaji →', pricing: 'Bei',
+  },
+  fr: {
+    kicker: 'Épargner · Grandir · Prospérer',
+    h1a: 'Épargnez ensemble.', grow: 'Grandissez', h1b: 'ensemble. Prospérez.',
+    sub: 'Une plateforme de confiance pour l’épargne coopérative et l’entreprise — tontine, mise en relation d’affaires, comptabilité de niveau pro, épargne et crédit SACCO — adaptée à votre devise, votre langue, votre fiscalité et vos règles d’enregistrement.',
+    open: 'Rejoignez n’importe quel pilier directement — pas besoin de commencer par un groupe. Tontines, commerçants et entreprises établies : tous bienvenus.',
+    visionT: 'Notre vision',
+    vision: 'Un avenir où chaque épargnant, groupe et entreprise peut prospérer — du premier franc épargné à une institution cotée — avec une finance formelle ouverte à tous.',
+    missionT: 'Notre mission',
+    mission: 'Donner à chaque tontine, entrepreneur et entreprise une plateforme pour épargner, emprunter, échanger et grandir, avec les registres, les garde-fous et le crédit qui transforment l’effort en institutions finançables.',
+    valuesT: 'Nos valeurs',
+    nicheKicker: 'Notre niche — fondée sur les raisons des échecs',
+    nicheH: 'Huit raisons d’effondrement. Huit garde-fous intégrés.',
+    nicheP: 'Nous avons étudié pourquoi les groupes d’épargne n’évoluent jamais en SACCO, banques et sociétés cotées — et numérisé le remède à chacune. Cette recherche est le produit.',
+    seeEngine: 'Voir le moteur de croissance →', pricing: 'Tarifs',
+  },
+  es: {
+    kicker: 'Ahorra · Crece · Prospera',
+    h1a: 'Ahorren juntos.', grow: 'Crezcan', h1b: 'juntos. Prosperen.',
+    sub: 'Una plataforma de confianza para el ahorro cooperativo y la empresa — ahorro grupal, conexión de negocios, contabilidad profesional y crédito completo — adaptada a tu moneda, idioma, impuestos y normas de registro.',
+    open: 'Únete a cualquier pilar directamente — sin empezar por un grupo. Círculos de ahorro, comerciantes y empresas establecidas todos bienvenidos.',
+    visionT: 'Nuestra visión',
+    vision: 'Un futuro donde cada ahorrador, grupo y empresa pueda prosperar: desde la primera moneda ahorrada hasta una institución cotizada, con finanzas formales abiertas a todos.',
+    missionT: 'Nuestra misión',
+    mission: 'Dar a cada grupo de ahorro, emprendedor y empresa una plataforma para ahorrar, pedir prestado, comerciar y crecer, con los registros, salvaguardas y crédito que convierten el esfuerzo informal en instituciones financiables.',
+    valuesT: 'Nuestros valores',
+    nicheKicker: 'Nuestro nicho — basado en las razones del fracaso de otros',
+    nicheH: 'Ocho razones de colapso. Ocho salvaguardas integradas.',
+    nicheP: 'Estudiamos por qué los grupos de ahorro nunca se convierten en cooperativas, bancos e instituciones cotizadas — y digitalizamos la cura de cada una. Esa investigación es el producto.',
+    seeEngine: 'Ver el motor de graduación →', pricing: 'Precios',
+  },
+  pt: {
+    kicker: 'Poupar · Crescer · Prosperar',
+    h1a: 'Poupem juntos.', grow: 'Cresçam', h1b: 'juntos. Prosperem.',
+    sub: 'Uma plataforma de confiança para poupança cooperativa e empresas — poupança em grupo, conexão de negócios, contabilidade profissional e crédito completo — adaptada à sua moeda, idioma, impostos e regras de registo.',
+    open: 'Adira a qualquer pilar diretamente — sem precisar de começar por um grupo. Círculos de poupança, comerciantes e empresas estabelecidas todos bem-vindos.',
+    visionT: 'A nossa visão',
+    vision: 'Um futuro onde cada poupador, grupo e empresa possa prosperar: da primeira moeda poupada a uma instituição cotada, com finanças formais abertas a todos.',
+    missionT: 'A nossa missão',
+    mission: 'Dar a cada grupo de poupança, empreendedor e empresa uma plataforma para poupar, pedir emprestado, negociar e crescer, com os registos, salvaguardas e crédito que transformam o esforço informal em instituições financiáveis.',
+    valuesT: 'Os nossos valores',
+    nicheKicker: 'O nosso nicho — construído sobre as razões do fracasso',
+    nicheH: 'Oito razões de colapso. Oito salvaguardas integradas.',
+    nicheP: 'Estudámos por que os grupos de poupança nunca se tornam cooperativas, bancos e instituições cotadas — e digitalizámos a cura de cada uma. Essa investigação é o produto.',
+    seeEngine: 'Ver o motor de graduação →', pricing: 'Preços',
+  },
+  ar: {
+    kicker: 'ادّخر · انمُ · ازدهر',
+    h1a: 'ادّخروا معاً.', grow: 'انموا', h1b: 'معاً. وازدهروا.',
+    sub: 'منصة موثوقة للادخار التعاوني والأعمال — ادخار جماعي، وربط الأعمال، ومحاسبة احترافية، وادخار وائتمان كامل — مكيَّفة مع عملتك ولغتك وضرائبك وقواعد التسجيل لديك.',
+    open: 'انضم إلى أي ركيزة مباشرة — لا حاجة للبدء بمجموعة. دوائر الادخار والتجار والشركات الراسخة الجميع مرحّب بهم.',
+    visionT: 'رؤيتنا',
+    vision: 'مستقبل يزدهر فيه كل مدّخر ومجموعة وشركة: من أول عملة تُدّخر إلى مؤسسة مدرجة، مع تمويل رسمي مفتوح للجميع.',
+    missionT: 'رسالتنا',
+    mission: 'أن نمنح كل مجموعة ادخار ورائد أعمال وشركة منصة واحدة للادخار والاقتراض والتجارة والنمو — مكيّفة مع كل مجتمع — بسجلات وضوابط وائتمان يحوّل الجهد غير الرسمي إلى مؤسسات قابلة للتمويل.',
+    valuesT: 'قيمنا الأساسية',
+    nicheKicker: 'تميّزنا — مبني على أسباب فشل الآخرين',
+    nicheH: 'ثمانية أسباب للانهيار. ثمانية ضوابط مدمجة.',
+    nicheP: 'درسنا لماذا لا تتحول مجموعات الادخار إلى تعاونيات وبنوك ومؤسسات مدرجة — ورقمنّا العلاج لكل سبب. هذا البحث هو المنتج.',
+    seeEngine: '← شاهد محرك النمو الكامل', pricing: 'الأسعار',
+  },
+  zh: {
+    kicker: '储蓄 · 成长 · 兴旺',
+    h1a: '一起储蓄。', grow: '一起', h1b: '成长，共同兴旺。',
+    sub: '一个值得信赖的合作储蓄与企业平台——小组储蓄、商业撮合、专业级会计、完整的储蓄与信贷——适配您的货币、语言、税务与登记规则。',
+    open: '可直接加入任意支柱——无需从小组开始。储蓄互助会、商户与成熟企业都欢迎。',
+    visionT: '我们的愿景',
+    vision: '一个每位储户、每个小组和每家企业都能按自己的方式兴旺的未来——放进储蓄圈的第一枚硬币与成长企业的账簿运行在同一条可信轨道上，正规金融向所有人开放，而不只属于已有银行账户的人。',
+    missionT: '我们的使命',
+    mission: '为每个储蓄小组、创业者和企业提供一个值得信赖的平台来储蓄、借贷、交易与成长——以记录、护栏与信贷把非正式的努力变成可获融资的正规机构。没有人因为起点小而不被认真对待，也没有人因语言、识字水平或廉价手机而掉队。',
+    valuesT: '核心价值观',
+    nicheKicker: '我们的定位——建立在他人失败的原因之上',
+    nicheH: '普惠金融失败的八大原因，八道内置护栏。',
+    nicheP: '我们研究了储蓄小组为何始终无法成长为合作社、银行与上市机构——并将每一种解法数字化。这项研究就是产品本身。',
+    seeEngine: '查看完整成长引擎 →', pricing: '价格',
+  },
+  hi: {
+    kicker: 'बचत · विकास · समृद्धि',
+    h1a: 'मिलकर बचत करें।', grow: 'मिलकर', h1b: 'बढ़ें। समृद्ध हों।',
+    sub: 'सहकारी बचत और उद्यम के लिए एक भरोसेमंद मंच — समूह बचत, व्यापार मिलान, पेशेवर लेखांकन, और पूर्ण बचत व ऋण — आपकी मुद्रा, भाषा, कर और पंजीकरण नियमों के अनुसार।',
+    open: 'किसी भी स्तंभ से सीधे जुड़ें — समूह से शुरू करना ज़रूरी नहीं। बचत मंडलियाँ, व्यापारी और स्थापित व्यवसाय, सभी का स्वागत है।',
+    visionT: 'हमारी दृष्टि',
+    vision: 'एक ऐसा भविष्य जहाँ हर बचतकर्ता, समूह और व्यवसाय अपनी शर्तों पर समृद्ध हो सके — जहाँ बचत मंडली में डाला गया पहला सिक्का और बढ़ते उद्यम के बही-खाते एक ही भरोसेमंद पटरी पर चलें, और औपचारिक वित्त सबके लिए खुला हो, केवल बैंक-सुविधा वालों के लिए नहीं।',
+    missionT: 'हमारा मिशन',
+    mission: 'हर बचत समूह, उद्यमी और उद्यम को बचत, ऋण, व्यापार और विकास के लिए एक भरोसेमंद मंच देना — उन अभिलेखों, सुरक्षा-कवचों और ऋण के साथ जो अनौपचारिक मेहनत को औपचारिक, वित्त-योग्य संस्थाओं में बदलते हैं। छोटा शुरू करने से कोई कम गंभीर नहीं माना जाता, और भाषा, साक्षरता या सस्ते फोन के कारण कोई पीछे नहीं छूटता।',
+    valuesT: 'हमारे मूल मूल्य',
+    nicheKicker: 'हमारी विशेषता — दूसरों की विफलता के कारणों पर निर्मित',
+    nicheH: 'विफलता के आठ कारण। आठ अंतर्निहित सुरक्षा-कवच।',
+    nicheP: 'हमने अध्ययन किया कि बचत समूह सहकारी संस्थाओं, बैंकों और सूचीबद्ध संस्थानों तक क्यों नहीं पहुँच पाते — और हर कारण का समाधान डिजिटल किया। वही शोध हमारा उत्पाद है।',
+    seeEngine: 'पूरा विकास इंजन देखें →', pricing: 'मूल्य',
+  },
+  de: {
+    kicker: 'Sparen · Wachsen · Gedeihen',
+    h1a: 'Gemeinsam sparen.', grow: 'Gemeinsam', h1b: 'wachsen. Gedeihen.',
+    sub: 'Eine vertrauenswürdige Plattform für genossenschaftliches Sparen und Unternehmen — Gruppensparen, Geschäftsvermittlung, professionelle Buchhaltung und vollwertige Spar- und Kreditdienste — angepasst an Ihre Währung, Sprache, Steuern und Registrierungsregeln.',
+    open: 'Treten Sie jeder Säule direkt bei — kein Gruppenstart nötig. Sparkreise, Händler und etablierte Unternehmen: alle willkommen.',
+    visionT: 'Unsere Vision',
+    vision: 'Eine Zukunft, in der jede Sparerin, jede Gruppe und jedes Unternehmen zu eigenen Bedingungen gedeihen kann — in der die erste Münze im Sparkreis und die Bücher eines wachsenden Unternehmens auf denselben vertrauenswürdigen Schienen laufen und formale Finanzen allen offenstehen, nicht nur den bereits Bankierten.',
+    missionT: 'Unsere Mission',
+    mission: 'Jeder Spargruppe, jedem Unternehmer und jedem Unternehmen eine vertrauenswürdige Plattform zum Sparen, Leihen, Handeln und Wachsen zu geben — mit den Aufzeichnungen, Leitplanken und Krediten, die informelle Arbeit in formale, finanzierbare Institutionen verwandeln. Niemand muss klein anfangen, um ernst genommen zu werden, und niemand bleibt wegen Sprache, Alphabetisierung oder eines günstigen Telefons zurück.',
+    valuesT: 'Unsere Grundwerte',
+    nicheKicker: 'Unsere Nische — gebaut auf den Gründen des Scheiterns anderer',
+    nicheH: 'Acht Gründe für den Kollaps. Acht eingebaute Leitplanken.',
+    nicheP: 'Wir haben untersucht, warum Spargruppen nie zu Genossenschaften, Banken und börsennotierten Institutionen heranwachsen — und die Lösung für jeden Grund digitalisiert. Diese Forschung ist das Produkt.',
+    seeEngine: 'Den vollständigen Wachstumsmotor ansehen →', pricing: 'Preise',
+  },
+  ru: {
+    kicker: 'Копи · Расти · Процветай',
+    h1a: 'Копите вместе.', grow: 'Растите', h1b: 'вместе. Процветайте.',
+    sub: 'Надёжная платформа для кооперативных сбережений и бизнеса — групповые сбережения, подбор бизнеса, профессиональный учёт и полный цикл сбережений и кредита — с учётом вашей валюты, языка, налогов и правил регистрации.',
+    open: 'Присоединяйтесь к любому направлению напрямую — начинать с группы не обязательно. Сберегательные круги, торговцы и состоявшиеся компании — все желанны.',
+    visionT: 'Наше видение',
+    vision: 'Будущее, в котором каждый вкладчик, группа и бизнес процветают на своих условиях — где первая монета в сберегательном круге и бухгалтерия растущего предприятия идут по одним надёжным рельсам, а формальные финансы открыты каждому, а не только уже охваченным банками.',
+    missionT: 'Наша миссия',
+    mission: 'Дать каждой сберегательной группе, предпринимателю и предприятию надёжную платформу, чтобы копить, занимать, торговать и расти — с записями, защитными механизмами и кредитом, которые превращают неформальные усилия в формальные, пригодные для финансирования институты. Никому не нужно начинать с малого, чтобы к нему относились серьёзно, и никто не остаётся позади из-за языка, грамотности или дешёвого телефона.',
+    valuesT: 'Наши ценности',
+    nicheKicker: 'Наша ниша — построена на причинах чужих неудач',
+    nicheH: 'Восемь причин краха. Восемь встроенных защит.',
+    nicheP: 'Мы изучили, почему сберегательные группы не вырастают в кооперативы, банки и публичные институты — и оцифровали решение каждой причины. Это исследование и есть продукт.',
+    seeEngine: 'Полный механизм роста →', pricing: 'Цены',
+  },
+};
+const PILLARS = {
+  en: ['1 · Records & Table Banking', '2 · Business Matching', '3 · Accounting & Compliance', '4 · SACCO+ Savings & Credit'],
+  sw: ['1 · Kumbukumbu & Table Banking', '2 · Kuunganisha Biashara', '3 · Uhasibu & Uzingatiaji', '4 · SACCO+ Akiba & Mikopo'],
+  fr: ['1 · Registres & Tontine', '2 · Mise en relation', '3 · Comptabilité & Conformité', '4 · Épargne & Crédit SACCO+'],
+  es: ['1 · Registros & Ahorro grupal', '2 · Conexión de negocios', '3 · Contabilidad & Cumplimiento', '4 · Ahorro & Crédito SACCO+'],
+  pt: ['1 · Registos & Poupança em grupo', '2 · Conexão de negócios', '3 · Contabilidade & Conformidade', '4 · Poupança & Crédito SACCO+'],
+  ar: ['١ · السجلات والادخار الجماعي', '٢ · ربط الأعمال', '٣ · المحاسبة والامتثال', '٤ · الادخار والائتمان SACCO+'],
+};
+const VALUES = {
+  en: ['Trust', 'Inclusion', 'Discipline', 'Growth', 'Simplicity'],
+  sw: ['Uaminifu', 'Ujumuishaji', 'Nidhamu', 'Ukuaji', 'Urahisi'],
+  fr: ['Confiance', 'Inclusion', 'Discipline', 'Croissance', 'Simplicité'],
+  es: ['Confianza', 'Inclusión', 'Disciplina', 'Crecimiento', 'Sencillez'],
+  pt: ['Confiança', 'Inclusão', 'Disciplina', 'Crescimento', 'Simplicidade'],
+  ar: ['الثقة', 'الشمول', 'الانضباط', 'النمو', 'البساطة'],
+};
+const FAILURE_GAPS = [
+  {
+    id: 'governance',
+    gap: 'Governance failure & insider fraud',
+    why: 'Forensic audits (e.g. KUSCCO, Sh13.8B lost) show unchecked officials and weak boards precede almost every collapse.',
+    stawiSolution: 'Dual-approval on every disbursement, immutable audit trail, role-based permissions, and treasurer actions visible to all members in real time.',
+  },
+  {
+    id: 'liquidity',
+    gap: 'Liquidity breaches and runs',
+    why: 'DT-SACCOs must keep ≥15% of deposits liquid; failures cluster where nobody watched the ratio until withdrawals stalled.',
+    stawiSolution: 'Live liquidity meter with automatic alerts and a lending brake when the ratio approaches the 15% floor.',
+  },
+  {
+    id: 'capital',
+    gap: 'Thin core capital',
+    why: 'Institutions cannot absorb losses or meet licensing thresholds, so regulators refuse the next licence tier.',
+    stawiSolution: 'Share-capital tracking per member, retained-earnings view, and a capital-adequacy gauge against the next stage’s threshold.',
+  },
+  {
+    id: 'records',
+    gap: 'Poor books & unauditable records',
+    why: 'Paper ledgers and missing reconciliations make audited accounts (a graduation prerequisite) impossible.',
+    stawiSolution: 'Every shilling is double-entered digitally from day one (Pillar 1 + 3), so audited-ready statements export at any time.',
+  },
+  {
+    id: 'credit-risk',
+    gap: 'Opaque lending & high NPLs',
+    why: 'Committee-based, relationship-driven loans breed defaults; NPLs above ~5% sink the balance sheet.',
+    stawiSolution: 'Deterministic eligibility scoring with published determinants, savings-multiplier limits, and guarantor coverage enforced by the system.',
+  },
+  {
+    id: 'cost-base',
+    gap: 'Ballooning physical costs',
+    why: 'Branches, paper and sales wages force rate hikes and hidden charges; a digital account costs 80–95% less to serve.',
+    stawiSolution: 'Branchless by design: onboarding, deposits, loans, notifications and CRM are all digital; humans only where a country regulator demands them.',
+  },
+  {
+    id: 'education',
+    gap: 'Uninformed membership & low trust',
+    why: 'Members who cannot see or understand the numbers leave, and dormant members stall growth.',
+    stawiSolution: 'Member-visible capital ratios, plain-language statements, and in-app nudges that teach the ladder and each member’s next step.',
+  },
+  {
+    id: 'compliance',
+    gap: 'Regulatory non-compliance',
+    why: 'Dual/unclear regulation leaves thousands of small societies unsupervised until a licence application fails.',
+    stawiSolution: 'Country-aware compliance packs (Pillar 3) with T&Cs aligned to each regulator, filing reminders, and stage-gated checklists.',
+  },
+];
+
+function setLang(l){
+  const t = Object.assign({}, T.en, T[l]||{});
+  for (const k of ['kicker','h1a','grow','h1b','sub','open','visionT','vision','missionT','mission','valuesT','nicheKicker','nicheH','nicheP','seeEngine']){
+    const el=document.getElementById(k); if(el && t[k]) el.textContent=t[k];
+  }
+  document.getElementById('pricing').textContent = t.pricing||'Pricing';
+  document.getElementById('chips').innerHTML=(PILLARS[l]||PILLARS.en).map(p=>'<a class="chip" href="#">'+p+'</a>').join('');
+  document.getElementById('vals').innerHTML=(VALUES[l]||VALUES.en).map(v=>'<span class="val">'+v+'</span>').join('');
+  document.documentElement.dir = l==='ar' ? 'rtl' : 'ltr';
+  document.documentElement.lang = l;
+  document.getElementById('lang').value=l;
+  try{localStorage.setItem('stawiLang',l);}catch(e){}
+}
+function toggleTheme(){
+  const dark=document.documentElement.classList.toggle('dark');
+  document.getElementById('themeBtn').textContent=dark?'☀️':'🌙';
+  try{localStorage.setItem('stawiTheme',dark?'dark':'light');}catch(e){}
+}
+document.getElementById('gaps').innerHTML=FAILURE_GAPS.map((g,i)=>
+  '<div class="gap"><span class="n">'+String(i+1).padStart(2,'0')+'</span><h3>'+g.gap+'</h3><p>'+g.stawiSolution+'</p></div>').join('');
+(function(){
+  try{
+    if(localStorage.getItem('stawiTheme')==='dark') toggleTheme();
+    setLang(localStorage.getItem('stawiLang')||'en');
+  }catch(e){ setLang('en'); }
+})();
+</script>
+</body>
+</html>
