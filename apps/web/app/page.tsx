@@ -4,18 +4,18 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { FAILURE_GAPS } from '@stawi/core';
 
-type Lang = 'en' | 'sw' | 'fr' | 'es' | 'pt' | 'ar';
+type Lang = 'en' | 'sw' | 'fr' | 'es' | 'pt' | 'ar' | 'zh' | 'hi' | 'de' | 'ru';
 
-const T: Record<Lang, Record<string, string>> = {
+const T: Partial<Record<Lang, Record<string, string>>> & { en: Record<string, string> } = {
   en: {
     kicker: 'Save · Grow · Thrive',
     h1a: 'Save together.', grow: 'Grow', h1b: 'together. Thrive.',
     sub: 'One trusted platform for cooperative saving and enterprise — group savings, business matching, professional-grade accounting, and full savings & credit — adapted to your currency, language, tax and registration rules.',
     open: 'Join any pillar directly — no need to start with a group. Savings circles, traders and established businesses, all welcome.',
     visionT: 'Our vision',
-    vision: 'A future where every saver, group and business can thrive: from the first coin saved to a listed institution, with formal finance open to everyone.',
+    vision: 'A future where every saver, group and business can thrive on their own terms — where the first coin put into a savings circle and the books of a growing enterprise sit on the same trusted rails, and where formal finance is open to everyone, not just the already-banked.',
     missionT: 'Our mission',
-    mission: 'To give every savings group, entrepreneur and enterprise one trusted platform to save, borrow, trade and grow — adapted to each community — with the records, guard-rails and credit that turn informal effort into fundable institutions.',
+    mission: 'To give every savings group, entrepreneur and enterprise one trusted platform to save, borrow, trade and grow — with the records, guard-rails and credit that turn informal effort into formal, fundable institutions. No one has to start small to be taken seriously, and no one is left behind by language, literacy or a cheap phone.',
     valuesT: 'Our core values',
     nicheKicker: 'Our niche — built on the reasons others failed',
     nicheH: 'Eight reasons microfinance collapses. Eight guard-rails, built in.',
@@ -97,9 +97,69 @@ const T: Record<Lang, Record<string, string>> = {
     nicheP: 'درسنا لماذا لا تتحول مجموعات الادخار إلى تعاونيات وبنوك ومؤسسات مدرجة — ورقمنّا العلاج لكل سبب. هذا البحث هو المنتج.',
     seeEngine: '← شاهد محرك النمو الكامل', pricing: 'الأسعار',
   },
+  zh: {
+    kicker: '储蓄 · 成长 · 兴旺',
+    h1a: '一起储蓄。', grow: '一起', h1b: '成长，共同兴旺。',
+    sub: '一个值得信赖的合作储蓄与企业平台——小组储蓄、商业撮合、专业级会计、完整的储蓄与信贷——适配您的货币、语言、税务与登记规则。',
+    open: '可直接加入任意支柱——无需从小组开始。储蓄互助会、商户与成熟企业都欢迎。',
+    visionT: '我们的愿景',
+    vision: '一个每位储户、每个小组和每家企业都能按自己的方式兴旺的未来——放进储蓄圈的第一枚硬币与成长企业的账簿运行在同一条可信轨道上，正规金融向所有人开放，而不只属于已有银行账户的人。',
+    missionT: '我们的使命',
+    mission: '为每个储蓄小组、创业者和企业提供一个值得信赖的平台来储蓄、借贷、交易与成长——以记录、护栏与信贷把非正式的努力变成可获融资的正规机构。没有人因为起点小而不被认真对待，也没有人因语言、识字水平或廉价手机而掉队。',
+    valuesT: '核心价值观',
+    nicheKicker: '我们的定位——建立在他人失败的原因之上',
+    nicheH: '普惠金融失败的八大原因，八道内置护栏。',
+    nicheP: '我们研究了储蓄小组为何始终无法成长为合作社、银行与上市机构——并将每一种解法数字化。这项研究就是产品本身。',
+    seeEngine: '查看完整成长引擎 →', pricing: '价格',
+  },
+  hi: {
+    kicker: 'बचत · विकास · समृद्धि',
+    h1a: 'मिलकर बचत करें।', grow: 'मिलकर', h1b: 'बढ़ें। समृद्ध हों।',
+    sub: 'सहकारी बचत और उद्यम के लिए एक भरोसेमंद मंच — समूह बचत, व्यापार मिलान, पेशेवर लेखांकन, और पूर्ण बचत व ऋण — आपकी मुद्रा, भाषा, कर और पंजीकरण नियमों के अनुसार।',
+    open: 'किसी भी स्तंभ से सीधे जुड़ें — समूह से शुरू करना ज़रूरी नहीं। बचत मंडलियाँ, व्यापारी और स्थापित व्यवसाय, सभी का स्वागत है।',
+    visionT: 'हमारी दृष्टि',
+    vision: 'एक ऐसा भविष्य जहाँ हर बचतकर्ता, समूह और व्यवसाय अपनी शर्तों पर समृद्ध हो सके — जहाँ बचत मंडली में डाला गया पहला सिक्का और बढ़ते उद्यम के बही-खाते एक ही भरोसेमंद पटरी पर चलें, और औपचारिक वित्त सबके लिए खुला हो, केवल बैंक-सुविधा वालों के लिए नहीं।',
+    missionT: 'हमारा मिशन',
+    mission: 'हर बचत समूह, उद्यमी और उद्यम को बचत, ऋण, व्यापार और विकास के लिए एक भरोसेमंद मंच देना — उन अभिलेखों, सुरक्षा-कवचों और ऋण के साथ जो अनौपचारिक मेहनत को औपचारिक, वित्त-योग्य संस्थाओं में बदलते हैं। छोटा शुरू करने से कोई कम गंभीर नहीं माना जाता, और भाषा, साक्षरता या सस्ते फोन के कारण कोई पीछे नहीं छूटता।',
+    valuesT: 'हमारे मूल मूल्य',
+    nicheKicker: 'हमारी विशेषता — दूसरों की विफलता के कारणों पर निर्मित',
+    nicheH: 'विफलता के आठ कारण। आठ अंतर्निहित सुरक्षा-कवच।',
+    nicheP: 'हमने अध्ययन किया कि बचत समूह सहकारी संस्थाओं, बैंकों और सूचीबद्ध संस्थानों तक क्यों नहीं पहुँच पाते — और हर कारण का समाधान डिजिटल किया। वही शोध हमारा उत्पाद है।',
+    seeEngine: 'पूरा विकास इंजन देखें →', pricing: 'मूल्य',
+  },
+  de: {
+    kicker: 'Sparen · Wachsen · Gedeihen',
+    h1a: 'Gemeinsam sparen.', grow: 'Gemeinsam', h1b: 'wachsen. Gedeihen.',
+    sub: 'Eine vertrauenswürdige Plattform für genossenschaftliches Sparen und Unternehmen — Gruppensparen, Geschäftsvermittlung, professionelle Buchhaltung und vollwertige Spar- und Kreditdienste — angepasst an Ihre Währung, Sprache, Steuern und Registrierungsregeln.',
+    open: 'Treten Sie jeder Säule direkt bei — kein Gruppenstart nötig. Sparkreise, Händler und etablierte Unternehmen: alle willkommen.',
+    visionT: 'Unsere Vision',
+    vision: 'Eine Zukunft, in der jede Sparerin, jede Gruppe und jedes Unternehmen zu eigenen Bedingungen gedeihen kann — in der die erste Münze im Sparkreis und die Bücher eines wachsenden Unternehmens auf denselben vertrauenswürdigen Schienen laufen und formale Finanzen allen offenstehen, nicht nur den bereits Bankierten.',
+    missionT: 'Unsere Mission',
+    mission: 'Jeder Spargruppe, jedem Unternehmer und jedem Unternehmen eine vertrauenswürdige Plattform zum Sparen, Leihen, Handeln und Wachsen zu geben — mit den Aufzeichnungen, Leitplanken und Krediten, die informelle Arbeit in formale, finanzierbare Institutionen verwandeln. Niemand muss klein anfangen, um ernst genommen zu werden, und niemand bleibt wegen Sprache, Alphabetisierung oder eines günstigen Telefons zurück.',
+    valuesT: 'Unsere Grundwerte',
+    nicheKicker: 'Unsere Nische — gebaut auf den Gründen des Scheiterns anderer',
+    nicheH: 'Acht Gründe für den Kollaps. Acht eingebaute Leitplanken.',
+    nicheP: 'Wir haben untersucht, warum Spargruppen nie zu Genossenschaften, Banken und börsennotierten Institutionen heranwachsen — und die Lösung für jeden Grund digitalisiert. Diese Forschung ist das Produkt.',
+    seeEngine: 'Den vollständigen Wachstumsmotor ansehen →', pricing: 'Preise',
+  },
+  ru: {
+    kicker: 'Копи · Расти · Процветай',
+    h1a: 'Копите вместе.', grow: 'Растите', h1b: 'вместе. Процветайте.',
+    sub: 'Надёжная платформа для кооперативных сбережений и бизнеса — групповые сбережения, подбор бизнеса, профессиональный учёт и полный цикл сбережений и кредита — с учётом вашей валюты, языка, налогов и правил регистрации.',
+    open: 'Присоединяйтесь к любому направлению напрямую — начинать с группы не обязательно. Сберегательные круги, торговцы и состоявшиеся компании — все желанны.',
+    visionT: 'Наше видение',
+    vision: 'Будущее, в котором каждый вкладчик, группа и бизнес процветают на своих условиях — где первая монета в сберегательном круге и бухгалтерия растущего предприятия идут по одним надёжным рельсам, а формальные финансы открыты каждому, а не только уже охваченным банками.',
+    missionT: 'Наша миссия',
+    mission: 'Дать каждой сберегательной группе, предпринимателю и предприятию надёжную платформу, чтобы копить, занимать, торговать и расти — с записями, защитными механизмами и кредитом, которые превращают неформальные усилия в формальные, пригодные для финансирования институты. Никому не нужно начинать с малого, чтобы к нему относились серьёзно, и никто не остаётся позади из-за языка, грамотности или дешёвого телефона.',
+    valuesT: 'Наши ценности',
+    nicheKicker: 'Наша ниша — построена на причинах чужих неудач',
+    nicheH: 'Восемь причин краха. Восемь встроенных защит.',
+    nicheP: 'Мы изучили, почему сберегательные группы не вырастают в кооперативы, банки и публичные институты — и оцифровали решение каждой причины. Это исследование и есть продукт.',
+    seeEngine: 'Полный механизм роста →', pricing: 'Цены',
+  },
 };
 
-const PILLARS: Record<Lang, string[]> = {
+const PILLARS: Partial<Record<Lang, string[]>> & { en: string[] } = {
   en: ['1 · Records & Table Banking', '2 · Business Matching', '3 · Accounting & Compliance', '4 · SACCO+ Savings & Credit'],
   sw: ['1 · Kumbukumbu & Table Banking', '2 · Kuunganisha Biashara', '3 · Uhasibu & Uzingatiaji', '4 · SACCO+ Akiba & Mikopo'],
   fr: ['1 · Registres & Tontine', '2 · Mise en relation', '3 · Comptabilité & Conformité', '4 · Épargne & Crédit SACCO+'],
@@ -108,7 +168,7 @@ const PILLARS: Record<Lang, string[]> = {
   ar: ['١ · السجلات والادخار الجماعي', '٢ · ربط الأعمال', '٣ · المحاسبة والامتثال', '٤ · الادخار والائتمان SACCO+'],
 };
 
-const VALUES: Record<Lang, string[]> = {
+const VALUES: Partial<Record<Lang, string[]>> & { en: string[] } = {
   en: ['Trust', 'Inclusion', 'Discipline', 'Growth', 'Simplicity'],
   sw: ['Uaminifu', 'Ujumuishaji', 'Nidhamu', 'Ukuaji', 'Urahisi'],
   fr: ['Confiance', 'Inclusion', 'Discipline', 'Croissance', 'Simplicité'],
@@ -141,7 +201,7 @@ function LogoMark() {
 export default function Home() {
   const [lang, setLang] = useState<Lang>('en');
   const [dark, setDark] = useState(false);
-  const t = T[lang];
+  const t = { ...T.en, ...(T[lang] ?? {}) };
 
   useEffect(() => {
     try {
@@ -186,12 +246,16 @@ export default function Home() {
           <Link href="/sacco" style={navLink}>SACCO+</Link>
           <select value={lang} onChange={(e) => changeLang(e.target.value as Lang)} aria-label="Language"
             style={{ padding: '7px 10px', borderRadius: 9, border: '1px solid var(--line)', background: 'var(--paper)', color: 'var(--ink)', fontFamily: 'inherit', fontSize: 13 }}>
-            <option value="en">🌐 English</option>
-            <option value="sw">🌍 Kiswahili</option>
-            <option value="fr">🌍 Français</option>
-            <option value="es">🌎 Español</option>
-            <option value="pt">🌎 Português</option>
-            <option value="ar">🌏 العربية</option>
+            <option value="en">English</option>
+            <option value="sw">Kiswahili</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+            <option value="pt">Português</option>
+            <option value="ar">العربية</option>
+            <option value="zh">中文</option>
+            <option value="hi">हिन्दी</option>
+            <option value="de">Deutsch</option>
+            <option value="ru">Русский</option>
           </select>
           <button onClick={toggleTheme} aria-label="Toggle theme"
             style={{ padding: '7px 12px', borderRadius: 9, border: '1px solid var(--line)', background: 'var(--paper)', color: 'var(--ink)', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
@@ -214,7 +278,7 @@ export default function Home() {
         </div>
 
         <div style={{ display: 'flex', gap: 12, marginTop: 22, flexWrap: 'wrap' }}>
-          {PILLARS[lang].map((label, i) => {
+          {(PILLARS[lang] ?? PILLARS.en).map((label, i) => {
             const routes = ['/dashboard', '/match', '/books', '/sacco'] as const;
             const href = routes[i] ?? '/dashboard';
             return (
@@ -239,7 +303,7 @@ export default function Home() {
         <div style={{ background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 16, padding: 20 }}>
           <p style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 800 }}>{t.valuesT}</p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-            {VALUES[lang].map((v) => (
+            {(VALUES[lang] ?? VALUES.en).map((v) => (
               <span key={v} style={{ fontSize: 13, fontWeight: 700, color: 'var(--forest-deep)', background: 'var(--bone-2)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: 999 }}>{v}</span>
             ))}
           </div>

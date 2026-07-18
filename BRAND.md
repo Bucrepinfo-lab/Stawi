@@ -28,10 +28,11 @@ shilling saved to a listed institution.
 
 1. **Trust** — Tamper-proof, audit-ready records by default. What Stawi shows a
    member, a bank or a regulator is the same truth.
-2. **Inclusion** — Phone-first, multilingual (English, Kiswahili, Français,
-   Español, Português, العربية — and growing), works offline on an entry-level
-   device. Anyone can join **any pillar directly** — no gatekeeping, no need to
-   graduate from step one.
+2. **Inclusion** — Phone-first, multilingual — English, Kiswahili, Français,
+   Español, Português, العربية, 中文, हिन्दी, Deutsch, Русский (and growing; any
+   language can be added) — works offline on an entry-level device. Anyone can
+   join **any pillar directly** — no gatekeeping, no need to graduate from step
+   one.
 3. **Discipline** — Built-in guard-rails against the well-researched ways savings
    groups and small businesses fail.
 4. **Growth** — A ladder, not a ceiling: table banking → business → formal books
