@@ -12,6 +12,7 @@ const isPublic = createRouteMatcher([
   '/api/mpesa/callback',
   '/api/billing/webhook',
   '/api/webhooks/clerk',
+  '/api/mobile(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

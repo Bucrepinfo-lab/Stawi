@@ -62,6 +62,33 @@ The charter roster + capital feed Pillar 2 (matching); officials + registration
 intent feed Pillar 3 (accounting/compliance/admin); the constitution + roster feed
 Pillar 4 (SACCO+). One point of entry, reused everywhere.
 
+## SACCO+ opt-in activation (added 2026-07-18)
+
+Many groups subscribe for the Pillar-1 cockpit alone (charter, minutes,
+statements, identity, notes intake) and are not initially interested in Stawi's
+savings & credit services. Because they are *already enrolled* through Pillar 1,
+joining Stawi SACCO+ later is a one-tap **activation**, never a re-registration.
+
+`@stawi/core/sacco-activation.ts` (pure, tested) builds a `SaccoActivationPacket`
+from the group's captured record:
+
+- **Signatories** auto-filled from the charter officials (Chair / Secretary / Treasurer).
+- **Member savings history** — cumulative deposits, months active and saving
+  streak — distilled from the reconciled month-end statements.
+- **Lender-evidence checklist** — the exact documents a bank / DT-SACCO asks for
+  before extending credit (registration certificate, officials list, constitution,
+  board resolution, recent minutes, financial statements, member KYC), each marked
+  satisfied straight from Pillar 1, with a `readinessPct` and a `missing[]` list.
+- **Pre-qualified credit** — `activationCreditPreview` runs each member's deposits
+  through the real `credit.ts` engine so the group sees loan headroom before they commit.
+
+Surfaced in the dashboard as the **SACCO+ tab** in the group cockpit
+(`apps/web/app/groups/[id]/GroupCockpit.tsx`) with a "Join Stawi SACCO now" button,
+wired to `activateSaccoFromPillar1Action` — which opens the group's SACCO+ account
+and seeds it with the proven pooled savings (no-op success in seed mode). Modules:
+`buildSaccoActivation`, `activationEvidence`, `memberSavingsProfiles`,
+`activationCreditPreview`, `isActivationReady`; tests in `test/sacco-activation.test.ts`.
+
 ## Phone-first identity (added 2026-07-13)
 
 Phone number is the primary auth credential — many members have no email. The
@@ -98,3 +125,60 @@ Full React Native screens for the cockpit, phone-first end to end:
 - `apps/mobile/data/seed.ts` — self-contained charter + meetings + directories.
 - `App.tsx` — navigator: **login → groups → group** (Records / Table banking / SACCO+),
   reusing the same `@stawi/core` engines as web. No new dependencies.
+
+## Mobile ⇄ live data (added 2026-07-13)
+
+React Native can't call Next.js server actions, so the app talks to JSON routes:
+
+- **API (web):** `apps/web/app/api/mobile/*` — `GET groups?phone=`, `GET cockpit?groupId=`,
+  `POST charter`, `POST meeting`, `POST post-meeting`. CORS + optional shared-key
+  auth (`MOBILE_API_KEY` ⇄ `x-stawi-mobile-key`); reuse the same repo + core logic;
+  seed responses when no `DATABASE_URL`. Public in `middleware.ts`.
+- **Client (mobile):** `apps/mobile/lib/api.ts` — base URL from `EXPO_PUBLIC_API_BASE`
+  (+ `EXPO_PUBLIC_API_KEY`). Every call falls back to `null` on error, so screens use
+  the bundled seed and the app is always usable offline. A **Live / Offline** pill in
+  the header shows which is active.
+- **Wiring:** `App.tsx` loads groups-by-phone and the cockpit from the API (seed
+  fallback); the Minutes flow **Save draft** and **Post** persist via the API.
+- **Production:** put Clerk mobile session verification in front of the write routes;
+  the shared key is a stop-gap for pilots.
+
+## Persistence + Clerk mobile auth (added 2026-07-13)
+
+- **Postgres:** `docker-compose.yml` (local), `packages/db` `push`/`generate`/`seed`
+  scripts, and `DB-SETUP.md` (local + DigitalOcean paths). Seed now creates the
+  Umoja **charter + two meetings** and **phone-numbered memberships**, so DB-mode
+  phone login and the cockpit have real data. Set `DATABASE_URL` and writes persist.
+- **Clerk mobile auth (optional):** set `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` and the
+  app uses Clerk phone-OTP (`ClerkPhoneLogin`, `@clerk/clerk-expo` +
+  `expo-secure-store` token cache); the API client sends the Clerk session token as
+  a bearer. The web API `guard()` verifies it with `@clerk/backend` + `CLERK_SECRET_KEY`.
+  Without the key, the app keeps the self-contained demo login — nothing breaks.
+- **Auth precedence on `/api/mobile/*`:** Clerk bearer token → shared `MOBILE_API_KEY`
+  → open (only when neither is configured). Configure Phone number as the primary
+  Clerk identifier + SMS code in the dashboard.
+
+## Import written notes + customizable phone length (added 2026-07-14)
+
+Many groups already keep minutes on paper or in a file. Two ways in, both feeding
+the same paraphraser:
+- **Photo** — snap/scan the written minutes; best-effort OCR (Tesseract.js on web +
+  prototype; camera/library via `expo-image-picker` on mobile) fills a review box.
+- **File** — upload PDF / Word / text; text files read inline, others attach for
+  server-side extraction in production.
+Then `parseImportedNotes` (core `intake.ts`) makes a structured guess — attendance
+(Present/Absent/Apologies), agenda titles, resolutions, dates, KES amounts — and
+pre-fills the minutes form. The official reviews and generates as normal. Uploads
+are validated by `validateUpload` (type + 15 MB cap). Web: `NotesImport` in the
+minutes form. Mobile: `NotesImport` in `CockpitScreen`. Prototype: "Import written
+notes" on the Minutes screen.
+
+**Customizable phone length:** `PHONE_RULES` (core `identity.ts`) holds per-country
+dial code, flag, national digit count and input max length (KE, UG, TZ, RW, NG, GH,
+ZA — extend freely). `phoneRule()` / `isValidPhoneLength()` drive `maxLength` and
+validation on every phone input (charter roster, mobile + Clerk login, prototype
+login with a country picker). The typed limit now adapts to the country.
+
+**Production upload/OCR:** wire `MinutesImport` uploads to DigitalOcean Spaces and a
+server OCR/text-extraction step (e.g. Tesseract server or a cloud OCR) — the client
+degrades to manual entry when unavailable, so nothing is blocked.

@@ -5,7 +5,7 @@
  */
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { findMemberGroups, type MemberGroupLink } from '@stawi/core';
+import { findMemberGroups, phoneRule, type MemberGroupLink } from '@stawi/core';
 import { DIRECTORIES } from '../data/seed';
 import { colors, radius, spacing } from '../theme/tokens';
 
@@ -18,6 +18,7 @@ const DEMO = [
 
 export function PhoneLoginScreen({ onLogin }: { onLogin: (phone: string, links: MemberGroupLink[]) => void }) {
   const [phone, setPhone] = useState('');
+  const rule = phoneRule('KE');
 
   function go(p: string) {
     const v = (p ?? phone).trim();
@@ -32,9 +33,10 @@ export function PhoneLoginScreen({ onLogin }: { onLogin: (phone: string, links: 
 
       <Text style={s.label}>Phone number</Text>
       <View style={s.phoneRow}>
-        <View style={s.cc}><Text style={s.ccTxt}>🇰🇪 +254</Text></View>
-        <TextInput style={s.input} value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="0712 345 678" placeholderTextColor={colors.faint} />
+        <View style={s.cc}><Text style={s.ccTxt}>{rule.flag} +{rule.dial}</Text></View>
+        <TextInput style={s.input} value={phone} onChangeText={(t) => setPhone(t.replace(/[^0-9]/g, ''))} keyboardType="number-pad" maxLength={rule.localMaxDigits} placeholder={rule.placeholder} placeholderTextColor={colors.faint} />
       </View>
+      <Text style={s.note}>Enter your {rule.nationalDigits}-digit number.</Text>
       <TouchableOpacity style={s.cta} onPress={() => go(phone)}>
         <Text style={s.ctaTxt}>Send code &amp; continue →</Text>
       </TouchableOpacity>

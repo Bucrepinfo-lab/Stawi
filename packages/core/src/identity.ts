@@ -91,3 +91,48 @@ export function isOfficialInGroup(phone: string, dir: GroupDirectory): boolean {
   const hit = dir.members.find((m) => phoneMatches(m.phone, phone));
   return !!hit?.designation && isOfficial(hit.designation);
 }
+
+// ── Per-country phone rules (customisable input limits) ───────────────────
+
+export interface PhoneRule {
+  countryCode: string;
+  /** International dialling code, e.g. '254'. */
+  dial: string;
+  /** Flag emoji for the picker. */
+  flag: string;
+  /** Digits in the national number AFTER the dial code (e.g. Kenya: 9 → 712345678). */
+  nationalDigits: number;
+  /** Max digits to allow in the local input (national + optional leading 0). */
+  localMaxDigits: number;
+  /** A placeholder in local form. */
+  placeholder: string;
+}
+
+/** Editable registry — extend per market. Kenya is the default. */
+export const PHONE_RULES: Record<string, PhoneRule> = {
+  KE: { countryCode: 'KE', dial: '254', flag: '🇰🇪', nationalDigits: 9, localMaxDigits: 10, placeholder: '0712 345 678' },
+  UG: { countryCode: 'UG', dial: '256', flag: '🇺🇬', nationalDigits: 9, localMaxDigits: 10, placeholder: '0712 345 678' },
+  TZ: { countryCode: 'TZ', dial: '255', flag: '🇹🇿', nationalDigits: 9, localMaxDigits: 10, placeholder: '0712 345 678' },
+  RW: { countryCode: 'RW', dial: '250', flag: '🇷🇼', nationalDigits: 9, localMaxDigits: 10, placeholder: '0712 345 678' },
+  NG: { countryCode: 'NG', dial: '234', flag: '🇳🇬', nationalDigits: 10, localMaxDigits: 11, placeholder: '0801 234 5678' },
+  GH: { countryCode: 'GH', dial: '233', flag: '🇬🇭', nationalDigits: 9, localMaxDigits: 10, placeholder: '024 123 4567' },
+  ZA: { countryCode: 'ZA', dial: '27', flag: '🇿🇦', nationalDigits: 9, localMaxDigits: 10, placeholder: '071 234 5678' },
+};
+
+export function phoneRule(countryCode = 'KE'): PhoneRule {
+  return PHONE_RULES[countryCode] ?? PHONE_RULES.KE!;
+}
+
+/** The national significant digits for a number in a given country (dial + leading 0 stripped). */
+export function nationalDigits(raw: string, countryCode = 'KE'): string {
+  const rule = phoneRule(countryCode);
+  let d = (raw || '').replace(/\D/g, '');
+  if (d.startsWith('00')) d = d.slice(2);
+  if (d.startsWith(rule.dial)) d = d.slice(rule.dial.length);
+  return d.replace(/^0+/, '');
+}
+
+/** Does a typed number have the expected national digit count for its country? */
+export function isValidPhoneLength(raw: string, countryCode = 'KE'): boolean {
+  return nationalDigits(raw, countryCode).length === phoneRule(countryCode).nationalDigits;
+}

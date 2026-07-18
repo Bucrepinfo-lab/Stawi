@@ -417,6 +417,19 @@ reconciliation → downloadable statement).
   to confirm; wire the optional AI-polish hook in `minutes-prose`; mobile parity
   for the cockpit (Expo); receipts/statements → PDF via DO Spaces.
 
+### 🔒 LOCKED — v1.9, ready for DigitalOcean deployment (2026-07-14)
+
+Pillar 1 is complete end to end and the tree is locked pending go-live:
+- **Cockpit** (charter · self-directing minutes · paraphrasing OS · month-end statement) — web + full **Expo mobile** parity.
+- **Import written notes** — photo (OCR) or file → parsed → pre-filled minutes. **Customizable per-country phone length** (`PHONE_RULES`).
+- **Phone-first identity** — phone number is the primary credential; roster numbers are the join key; optional **Clerk** phone-OTP on mobile, verified server-side.
+- **Live data** — mobile ⇄ web JSON API (`/api/mobile/*`), tenant-scoped repo, RLS.
+- **Persistence** — `GroupCharter`/`Meeting`/`MonthlyStatement` + phone-keyed memberships; local Postgres via `docker-compose.yml`; `DB-SETUP.md`. **Production requires `DATABASE_URL`** — no silent seed fall-back (mobile API returns 503).
+
+**History:** GitHub base `46bf634` → `1018ea0` → `419625b` → `f10851e` → `9ed18fe` → `b00c231` → (this commit). Working tree clean.
+
+**NEXT SESSION = DigitalOcean deployment only.** Resume from `PRE-DEPLOY-CHECKLIST.md` (steps 1–15) + `DEPLOYMENT-RUNBOOK.md`. First question: DigitalOcean account status. No further feature work until deployed.
+
 ## 13. Skills & Tools Used
 
 - **`frontend-design`** (Anthropic skill) — drove the "warm savanna fintech" design

@@ -32,6 +32,9 @@ services:
       - key: CLERK_WEBHOOK_SECRET
         scope: RUN_TIME
         type: SECRET
+      - key: MOBILE_API_KEY
+        scope: RUN_TIME
+        type: SECRET
       - key: MPESA_CONSUMER_KEY
         scope: RUN_TIME
         type: SECRET

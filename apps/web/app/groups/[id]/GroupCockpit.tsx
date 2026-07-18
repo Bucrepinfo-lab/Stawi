@@ -15,6 +15,10 @@ import {
   formatKes,
   OFFICIAL_DESIGNATIONS,
   WEEK_DAYS,
+  phoneRule,
+  parseImportedNotes,
+  buildSaccoActivation,
+  activationCreditPreview,
   type GroupCharter,
   type CharterMember,
   type OfficialDesignation,
@@ -23,16 +27,19 @@ import {
   type AgendaItem,
   type ProfessionalMinutes,
   type MonthEndStatement,
+  type SaccoActivationPacket,
+  type MemberCreditPreview,
 } from '@stawi/core';
 import {
   saveCharterAction,
   saveMeetingAction,
   postMeetingAction,
   saveStatementAction,
+  activateSaccoFromPillar1Action,
 } from '@/app/actions';
 import type { Cockpit } from '@/lib/cockpit';
 
-type Tab = 'charter' | 'minutes' | 'documents' | 'statement';
+type Tab = 'charter' | 'minutes' | 'documents' | 'statement' | 'sacco';
 
 const card: React.CSSProperties = { background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 'var(--radius)', padding: 22, boxShadow: 'var(--shadow)' };
 const label: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: 'var(--dim)', marginBottom: 6 };
@@ -72,6 +79,7 @@ export function GroupCockpit({ cockpit, canEdit }: { cockpit: Cockpit; canEdit: 
     { key: 'minutes', label: 'Minutes', icon: '📝' },
     { key: 'documents', label: 'Documents', icon: '📄' },
     { key: 'statement', label: 'Month-End', icon: '📊' },
+    { key: 'sacco', label: 'SACCO+', icon: '🏦' },
   ];
 
   return (
@@ -98,6 +106,146 @@ export function GroupCockpit({ cockpit, canEdit }: { cockpit: Cockpit; canEdit: 
         {tab === 'minutes' && <MinutesTab charter={charter} meetings={meetings} setMeetings={setMeetings} canEdit={canEdit} groupId={cockpit.groupId} />}
         {tab === 'documents' && <DocumentsTab charter={charter} meetings={meetings} />}
         {tab === 'statement' && <StatementTab charter={charter} meetings={meetings} canEdit={canEdit} groupId={cockpit.groupId} />}
+        {tab === 'sacco' && <SaccoActivationTab charter={charter} meetings={meetings} canEdit={canEdit} groupId={cockpit.groupId} />}
+      </div>
+    </div>
+  );
+}
+
+// ───────────────────────── SACCO+ activation tab ─────────────────────────
+// The opt-in bridge: a group enrolled through Pillar 1 can join Stawi SACCO+
+// in one tap, with its charter, minutes and month-end statements reflected as
+// the exact evidence a lender asks for before extending credit.
+
+function SaccoActivationTab({ charter, meetings, canEdit, groupId }: { charter: GroupCharter; meetings: Meeting[]; canEdit: boolean; groupId: string }) {
+  const [state, setState] = useState<'idle' | 'working' | 'done'>('idle');
+  const [note, setNote] = useState<string>('');
+
+  // Reconcile every month that has dated meetings into a statement, then feed
+  // the whole Pillar-1 record into the activation bridge.
+  const packet: SaccoActivationPacket = useMemo(() => {
+    const months = Array.from(new Set(meetings.filter((m) => m.date).map((m) => m.date.slice(0, 7)))).sort();
+    const statements: MonthEndStatement[] = months.map((p) => {
+      const [y, mo] = p.split('-').map(Number);
+      return reconcileMonth(meetings, charter, { year: y!, month: mo! });
+    });
+    return buildSaccoActivation(charter, statements);
+  }, [charter, meetings]);
+
+  const credit: MemberCreditPreview[] = useMemo(() => activationCreditPreview(packet), [packet]);
+  const qualified = credit.filter((c) => c.best);
+  const ready = packet.readinessPct === 100;
+
+  async function activate() {
+    setState('working');
+    const r = await activateSaccoFromPillar1Action({
+      groupId,
+      displayName: packet.displayName,
+      countryCode: packet.countryCode,
+      openingDepositCents: packet.openingState.balanceCents,
+    });
+    if (r.ok) {
+      setState('done');
+      setNote(r.persisted
+        ? `SACCO+ account opened${r.seededCents ? ` and seeded with ${formatKes(r.seededCents)} from your pooled savings` : ''}.`
+        : 'Activation staged. Your account opens the moment live services are switched on — no re-entry needed.');
+    } else {
+      setState('idle');
+      setNote(r.error ?? 'Could not activate right now. Please try again.');
+    }
+  }
+
+  return (
+    <div style={{ display: 'grid', gap: 14 }}>
+      {/* Hero / value proposition */}
+      <div style={{ ...card, background: 'linear-gradient(135deg, var(--forest-deep), var(--forest))', color: 'var(--bone)', border: 'none' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ maxWidth: 560 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', opacity: .8 }}>Savings & Credit Services</div>
+            <h3 className="display" style={{ fontSize: 24, fontWeight: 600, margin: '6px 0 8px' }}>Join Stawi SACCO+</h3>
+            <p style={{ fontSize: 14, lineHeight: 1.6, opacity: .92 }}>
+              You are already enrolled with Stawi through Pillar 1. Activate SACCO+ and everything you have captured —
+              your charter, officials, minutes and month-end statements — becomes the <b>credit evidence a bank asks for</b>,
+              with no forms to re-fill.
+            </p>
+          </div>
+          <div style={{ textAlign: 'center', minWidth: 120 }}>
+            <div className="mono" style={{ fontSize: 40, fontWeight: 800, lineHeight: 1 }}>{packet.readinessPct}%</div>
+            <div style={{ fontSize: 11.5, opacity: .85, marginTop: 4 }}>lender-ready from Pillar 1</div>
+          </div>
+        </div>
+        <div style={{ marginTop: 16 }}>
+          {state === 'done'
+            ? <div style={{ background: 'rgba(255,255,255,.14)', borderRadius: 11, padding: '12px 15px', fontWeight: 700, fontSize: 14 }}>✓ {note}</div>
+            : (
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  onClick={activate}
+                  disabled={!canEdit || state === 'working'}
+                  style={{ ...btnGold, opacity: (!canEdit || state === 'working') ? .6 : 1, cursor: (!canEdit || state === 'working') ? 'not-allowed' : 'pointer', fontSize: 15, padding: '13px 26px' }}>
+                  {state === 'working' ? 'Activating…' : '🏦 Join Stawi SACCO now'}
+                </button>
+                {!canEdit && <span style={{ fontSize: 12.5, opacity: .85 }}>Only group officials can activate SACCO+.</span>}
+                {note && state === 'idle' && <span style={{ fontSize: 12.5, color: 'var(--gold)' }}>{note}</span>}
+              </div>
+            )}
+        </div>
+      </div>
+
+      {/* Evidence checklist — what a bank asks for, reflected from Pillar 1 */}
+      <div style={card}>
+        <h4 style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--forest-deep)', margin: '0 0 4px' }}>What a lender asks for — already on file</h4>
+        <p style={{ fontSize: 12.5, color: 'var(--dim)', margin: '0 0 12px' }}>Every item below is pulled straight from your Pillar 1 records.</p>
+        <div style={{ marginBottom: 14 }}><ProgressBar pct={packet.readinessPct} /></div>
+        <div style={{ display: 'grid', gap: 8 }}>
+          {packet.evidence.map((e) => (
+            <div key={e.id} style={{ display: 'flex', gap: 11, alignItems: 'flex-start', padding: '10px 12px', borderRadius: 10, background: e.satisfied ? 'rgba(47,133,90,.08)' : 'var(--bone-2)', border: `1px solid ${e.satisfied ? 'rgba(47,133,90,.3)' : 'var(--line)'}` }}>
+              <span aria-hidden style={{ fontSize: 16, lineHeight: 1.3 }}>{e.satisfied ? '✅' : '⬜'}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--ink)' }}>{e.label}</div>
+                <div style={{ fontSize: 12, color: 'var(--dim)', marginTop: 2 }}>{e.source}{e.detail ? ` — ${e.detail}` : ''}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        {!ready && <Hint text={`Complete ${packet.missing.length} item${packet.missing.length === 1 ? '' : 's'} above to be fully lender-ready — you can still activate now and finish later.`} />}
+      </div>
+
+      {/* Savings reflected + pre-qualified credit */}
+      <div style={card}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
+          <h4 style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--forest-deep)', margin: 0 }}>Your members' savings, reflected as credit</h4>
+          <span style={{ fontSize: 12.5, color: 'var(--dim)' }}>{packet.monthsOfHistory} month{packet.monthsOfHistory === 1 ? '' : 's'} of history · pooled {formatKes(packet.openingState.balanceCents)}</span>
+        </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, fontSize: 12.5 }}>
+          <thead><tr style={{ borderBottom: '2px solid var(--forest-deep)', textAlign: 'left' }}>
+            <th style={{ padding: '6px 4px' }}>Member</th>
+            <th style={{ padding: '6px 4px', textAlign: 'center' }}>Streak</th>
+            <th style={{ padding: '6px 4px', textAlign: 'right' }}>Saved</th>
+            <th style={{ padding: '6px 4px', textAlign: 'right' }}>Pre-qualified loan</th>
+          </tr></thead>
+          <tbody>
+            {packet.members.map((m) => {
+              const c = credit.find((x) => x.memberId === m.memberId);
+              return (
+                <tr key={m.memberId} style={{ borderBottom: '1px solid var(--line)' }}>
+                  <td style={{ padding: '7px 4px' }}>
+                    {m.name}{m.isOfficial && <span style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 800, color: 'var(--forest)', background: 'rgba(47,133,90,.12)', padding: '1px 6px', borderRadius: 6 }}>{m.designation}</span>}
+                  </td>
+                  <td style={{ padding: '7px 4px', textAlign: 'center' }} className="mono">{m.savingStreakMonths}m</td>
+                  <td style={{ padding: '7px 4px', textAlign: 'right' }} className="mono">{formatKes(m.depositsCents)}</td>
+                  <td style={{ padding: '7px 4px', textAlign: 'right' }} className="mono">
+                    {c?.best ? <b style={{ color: 'var(--forest-deep)' }}>{formatKes(c.best.result.maxLoanCents)}</b> : <span style={{ color: 'var(--dim)' }}>—</span>}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <p style={{ fontSize: 12, color: 'var(--dim)', marginTop: 10 }}>
+          {qualified.length} of {packet.members.length} members already pre-qualify for credit based on their saved deposits.
+          Loans use reducing-balance interest and are earned by consistent saving — the same guard-rail that keeps chamas from failing.
+        </p>
       </div>
     </div>
   );
@@ -201,7 +349,7 @@ function CharterTab({ charter, setCharter, canEdit, groupId }: { charter: GroupC
       {/* Roster */}
       <div style={card}>
         <SectionTitle n={3} title="Members & officials" />
-        <RosterEditor members={charter.members} disabled={disabled} onChange={(members) => set({ members })} />
+        <RosterEditor members={charter.members} disabled={disabled} country={charter.countryCode} onChange={(members) => set({ members })} />
       </div>
 
       {/* Governance docs */}
@@ -254,7 +402,8 @@ function SectionTitle({ n, title }: { n: number; title: string }) {
   );
 }
 
-function RosterEditor({ members, disabled, onChange }: { members: CharterMember[]; disabled: boolean; onChange: (m: CharterMember[]) => void }) {
+function RosterEditor({ members, disabled, country, onChange }: { members: CharterMember[]; disabled: boolean; country?: string; onChange: (m: CharterMember[]) => void }) {
+  const maxLen = phoneRule(country).localMaxDigits;
   const update = (id: string, patch: Partial<CharterMember>) => onChange(members.map((m) => (m.id === id ? { ...m, ...patch } : m)));
   return (
     <div>
@@ -266,7 +415,7 @@ function RosterEditor({ members, disabled, onChange }: { members: CharterMember[
             <select style={{ ...input, padding: '9px 11px' }} value={m.designation} disabled={disabled} onChange={(e) => update(m.id, { designation: e.target.value as OfficialDesignation })}>
               {OFFICIAL_DESIGNATIONS.map((d) => <option key={d}>{d}</option>)}
             </select>
-            <input style={{ ...input, padding: '9px 11px' }} value={m.phone} disabled={disabled} placeholder="Phone" onChange={(e) => update(m.id, { phone: e.target.value })} />
+            <input style={{ ...input, padding: '9px 11px' }} inputMode="numeric" maxLength={maxLen} value={m.phone} disabled={disabled} placeholder="Phone" onChange={(e) => update(m.id, { phone: e.target.value.replace(/[^0-9]/g, '') })} />
             {!disabled && <button aria-label="Remove" onClick={() => onChange(removeMember(members, m.id))} style={{ border: 'none', background: 'transparent', color: 'var(--danger)', cursor: 'pointer', fontSize: 18 }}>×</button>}
           </div>
         ))}
@@ -373,6 +522,15 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
   const set = (patch: Partial<Meeting>) => setM({ ...m, ...patch });
   const setTB = (patch: Partial<Meeting['tableBanking']>) => set({ tableBanking: { ...m.tableBanking, ...patch } });
 
+  function applyParsed(p: ReturnType<typeof parseImportedNotes>) {
+    const norm = (x: string) => x.toLowerCase();
+    const inList = (list: string[], name: string) => list.some((n) => { const a = norm(n), b = norm(name); return !!a && (b.includes(a) || a.includes(b.split(' ')[0]!)); });
+    const attendance = m.attendance.map((a) => ({ ...a, status: (inList(p.apology, a.name) ? 'apology' : inList(p.absent, a.name) ? 'absent' : 'present') as typeof a.status }));
+    let agendas = m.agendas;
+    p.agendas.forEach((pa) => { agendas = addAgenda(agendas, { title: pa.title, resolution: pa.resolution }); });
+    set({ attendance, agendas, date: p.date || m.date });
+  }
+
   const roster = charter.members.filter((x) => x.fullName.trim());
 
   function cycleAttendance(memberId: string) {
@@ -437,6 +595,8 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
         <h3 className="display" style={{ fontSize: 21, fontWeight: 600 }}>Meeting No. {m.meetingNo}</h3>
         <button style={btnGhost} onClick={onCancel}>← All meetings</button>
       </div>
+
+      <NotesImport onApply={applyParsed} />
 
       <div style={card}>
         <SectionTitle n={1} title="Meeting details" />
@@ -614,6 +774,79 @@ function DocHeader({ charter, subtitle }: { charter: GroupCharter; subtitle: str
         {charter.motto && <div style={{ fontSize: 12.5, fontStyle: 'italic', color: 'var(--dim)' }}>&ldquo;{charter.motto}&rdquo;</div>}
       </div>
       <div style={{ textAlign: 'right', fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--gold-deep)' }}>{subtitle}</div>
+    </div>
+  );
+}
+
+function loadTesseract(): Promise<any> {
+  const w = window as any;
+  if (w.Tesseract) return Promise.resolve(w.Tesseract);
+  return new Promise((resolve, reject) => {
+    const el = document.createElement('script');
+    el.src = 'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js';
+    el.onload = () => resolve((window as any).Tesseract);
+    el.onerror = () => reject(new Error('offline'));
+    document.head.appendChild(el);
+  });
+}
+
+function NotesImport({ onApply }: { onApply: (p: ReturnType<typeof parseImportedNotes>) => void }) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState('');
+  const [fileName, setFileName] = useState<string>();
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string>();
+
+  async function onPick(file: File | undefined, kind: 'photo' | 'file') {
+    if (!file) return;
+    setFileName(file.name); setMsg(undefined);
+    if (file.type === 'text/plain') { setText(await file.text()); return; }
+    if (kind === 'photo' || file.type.startsWith('image/')) {
+      setBusy(true);
+      try {
+        const T = await loadTesseract();
+        const res = await T.recognize(file, 'eng');
+        setText(((res?.data?.text as string) ?? '').trim());
+        setMsg('Read from photo — please check the words below.');
+      } catch {
+        setMsg('Could not read the photo automatically. Type the key points below.');
+      } finally { setBusy(false); }
+      return;
+    }
+    setMsg('File attached. Type the key points below (PDF/Word text extraction runs server-side in production).');
+  }
+
+  if (!open) {
+    return (
+      <button className="no-print" style={{ ...btnGhost, textAlign: 'left' }} onClick={() => setOpen(true)}>
+        📷 Import written notes (photo or file)
+      </button>
+    );
+  }
+
+  return (
+    <div className="no-print" style={card}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <strong style={{ fontSize: 15 }}>Import written notes</strong>
+        <button style={{ ...btnGhost, padding: '4px 10px', fontSize: 12 }} onClick={() => setOpen(false)}>Close</button>
+      </div>
+      <p style={{ color: 'var(--dim)', fontSize: 13, marginBottom: 12 }}>Snap a photo of your paper minutes or upload a file. Stawi reads them and pre-fills the form below — you review, then generate.</p>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <label style={{ ...btn, cursor: 'pointer' }}>📷 Photo
+          <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(e) => onPick(e.target.files?.[0], 'photo')} />
+        </label>
+        <label style={{ ...btnGhost, cursor: 'pointer' }}>📎 File (PDF/Word/text)
+          <input type="file" accept=".pdf,.doc,.docx,.txt,image/*" style={{ display: 'none' }} onChange={(e) => onPick(e.target.files?.[0], 'file')} />
+        </label>
+        {fileName && <span style={{ fontSize: 12, color: 'var(--dim)', alignSelf: 'center' }}>📄 {fileName}</span>}
+      </div>
+      {busy && <p style={{ fontSize: 12.5, color: 'var(--dim)', marginTop: 10 }}>Reading your notes… (first run downloads the reader)</p>}
+      {msg && <p style={{ fontSize: 12.5, color: 'var(--dim)', marginTop: 10 }}>{msg}</p>}
+      <textarea style={{ ...input, minHeight: 130, resize: 'vertical', marginTop: 12, fontFamily: 'var(--font-mono)', fontSize: 12.5 }} value={text} onChange={(e) => setText(e.target.value)}
+        placeholder={'Present: Amina, Grace, Faith\nApologies: David\nAgenda 1: Purchase of chairs\nResolved that we buy 20 chairs'} />
+      <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+        <button style={btnGold} onClick={() => { onApply(parseImportedNotes(text)); setOpen(false); }}>Use these notes →</button>
+      </div>
     </div>
   );
 }

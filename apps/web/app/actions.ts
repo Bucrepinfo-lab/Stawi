@@ -119,6 +119,56 @@ export async function openSaccoAccountAction(input: {
   }
 }
 
+/**
+ * One-tap SACCO+ activation for a group already enrolled through Pillar 1.
+ * Opens the group's Stawi SACCO+ account (KYC fast-tracked from the charter)
+ * and seeds it with the group's proven pooled savings so credit eligibility is
+ * live immediately. Degrades to a no-op success in seed mode (no DATABASE_URL).
+ */
+export async function activateSaccoFromPillar1Action(input: {
+  groupId: string;
+  displayName: string;
+  countryCode?: string;
+  openingDepositCents?: number;
+}): Promise<{ ok: boolean; persisted: boolean; accountId?: string; seededCents?: number; error?: string }> {
+  const clean = assertClean(input.displayName, 'sacco_account');
+  if (!clean.ok) return { ok: false, persisted: false, error: clean.reason };
+  if (!dbEnabled()) return { ok: true, persisted: false, seededCents: input.openingDepositCents ?? 0 };
+  try {
+    const { prisma, openSaccoAccount, postSaccoTxn } = await import('@stawi/db');
+    const { auth } = await import('@clerk/nextjs/server');
+    const { userId } = await auth();
+    const tid = await tenantId();
+    if (!userId || !tid) return { ok: false, persisted: false, error: 'Not signed in to a tenant' };
+    const acct = await openSaccoAccount(prisma, {
+      tenantId: tid,
+      entityType: 'REGISTERED_GROUP',
+      displayName: input.displayName,
+      countryCode: input.countryCode,
+      ownerGroupId: input.groupId,
+    });
+    let seededCents = 0;
+    if (input.openingDepositCents && input.openingDepositCents > 0) {
+      try {
+        await postSaccoTxn(prisma, {
+          tenantId: tid,
+          accountId: acct.id,
+          type: 'DEPOSIT',
+          amountCents: input.openingDepositCents,
+          reference: 'Pillar 1 pooled savings (activation)',
+        });
+        seededCents = input.openingDepositCents;
+      } catch {
+        // Account is open even if the seeding deposit needs a manual retry.
+      }
+    }
+    publishEvent({ type: 'sacco_txn', channel: tid });
+    return { ok: true, persisted: true, accountId: acct.id, seededCents };
+  } catch (e) {
+    return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Write failed' };
+  }
+}
+
 export async function saccoTxnAction(input: {
   accountId: string;
   type: 'DEPOSIT' | 'WITHDRAWAL' | 'SHARE_PURCHASE' | 'REMITTANCE_OUT' | 'REMITTANCE_IN';

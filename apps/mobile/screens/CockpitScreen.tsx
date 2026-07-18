@@ -17,7 +17,10 @@ import {
   type Meeting,
   type AttendanceStatus,
   type ProfessionalMinutes,
+  parseImportedNotes,
 } from '@stawi/core';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import { colors, radius, spacing } from '../theme/tokens';
 
 type Tab = 'charter' | 'minutes' | 'documents' | 'statement';
@@ -25,7 +28,7 @@ const money = (c: number) => formatKes(c);
 const toCents = (v: string) => { const n = parseFloat((v || '').replace(/[^0-9.]/g, '')); return isNaN(n) ? 0 : Math.round(n * 100); };
 const fromCents = (c: number) => (c ? String(Math.round(c) / 100) : '');
 
-export function CockpitScreen({ charter, meetings, canEdit }: { charter: GroupCharter; meetings: Meeting[]; canEdit: boolean }) {
+export function CockpitScreen({ charter, meetings, canEdit, onSaveMeeting, onPostMeeting }: { charter: GroupCharter; meetings: Meeting[]; canEdit: boolean; onSaveMeeting?: (m: Meeting) => void; onPostMeeting?: (m: Meeting, generatedDoc: string) => void }) {
   const [tab, setTab] = useState<Tab>('charter');
   const [list, setList] = useState<Meeting[]>(meetings);
   const tabs: [Tab, string][] = [['charter', '📋 Charter'], ['minutes', '📝 Minutes'], ['documents', '📄 Docs'], ['statement', '📊 Month-End']];
@@ -40,7 +43,7 @@ export function CockpitScreen({ charter, meetings, canEdit }: { charter: GroupCh
         ))}
       </View>
       {tab === 'charter' && <CharterTab charter={charter} canEdit={canEdit} />}
-      {tab === 'minutes' && <MinutesTab charter={charter} list={list} setList={setList} canEdit={canEdit} />}
+      {tab === 'minutes' && <MinutesTab charter={charter} list={list} setList={setList} canEdit={canEdit} onSaveMeeting={onSaveMeeting} onPostMeeting={onPostMeeting} />}
       {tab === 'documents' && <DocumentsTab charter={charter} list={list} />}
       {tab === 'statement' && <StatementTab charter={charter} list={list} />}
     </View>
@@ -99,13 +102,13 @@ function CharterTab({ charter, canEdit }: { charter: GroupCharter; canEdit: bool
 }
 
 // ── Minutes ──────────────────────────────────────────────────────────────
-function MinutesTab({ charter, list, setList, canEdit }: { charter: GroupCharter; list: Meeting[]; setList: (m: Meeting[]) => void; canEdit: boolean }) {
+function MinutesTab({ charter, list, setList, canEdit, onSaveMeeting, onPostMeeting }: { charter: GroupCharter; list: Meeting[]; setList: (m: Meeting[]) => void; canEdit: boolean; onSaveMeeting?: (m: Meeting) => void; onPostMeeting?: (m: Meeting, doc: string) => void }) {
   const [editing, setEditing] = useState<Meeting | null>(null);
   if (!canEdit) {
     return <ScrollView contentContainerStyle={{ padding: spacing.lg }}><View style={g.card}><Text style={g.meta}>You are a member of this group. Only officials (Chairperson, Secretary, Treasurer) can record and post minutes.</Text></View></ScrollView>;
   }
   if (editing) {
-    return <MinutesForm charter={charter} meeting={editing} onCancel={() => setEditing(null)} onCommit={(m) => { setList([m, ...list.filter((x) => x.id !== m.id)].sort((a, b) => b.meetingNo - a.meetingNo)); setEditing(null); }} />;
+    return <MinutesForm charter={charter} meeting={editing} onSaveMeeting={onSaveMeeting} onPostMeeting={onPostMeeting} onCancel={() => setEditing(null)} onCommit={(m) => { setList([m, ...list.filter((x) => x.id !== m.id)].sort((a, b) => b.meetingNo - a.meetingNo)); setEditing(null); }} />;
   }
   return (
     <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
@@ -126,12 +129,20 @@ function MinutesTab({ charter, list, setList, canEdit }: { charter: GroupCharter
   );
 }
 
-function MinutesForm({ charter, meeting, onCancel, onCommit }: { charter: GroupCharter; meeting: Meeting; onCancel: () => void; onCommit: (m: Meeting) => void }) {
+function MinutesForm({ charter, meeting, onCancel, onCommit, onSaveMeeting, onPostMeeting }: { charter: GroupCharter; meeting: Meeting; onCancel: () => void; onCommit: (m: Meeting) => void; onSaveMeeting?: (m: Meeting) => void; onPostMeeting?: (m: Meeting, doc: string) => void }) {
   const [m, setM] = useState<Meeting>(meeting);
   const [preview, setPreview] = useState<{ doc: ProfessionalMinutes; text: string } | null>(null);
   const comp = useMemo(() => meetingCompleteness(m), [m]);
   const fin = useMemo(() => tableBankingSummary(m.tableBanking), [m.tableBanking]);
   const setTB = (patch: Partial<Meeting['tableBanking']>) => setM({ ...m, tableBanking: { ...m.tableBanking, ...patch } });
+
+  function applyParsed(pp: ReturnType<typeof parseImportedNotes>) {
+    const norm = (x: string) => x.toLowerCase();
+    const inList = (list: string[], name: string) => list.some((n) => { const a = norm(n), b = norm(name); return !!a && (b.includes(a) || a.includes(b.split(' ')[0]!)); });
+    const attendance = m.attendance.map((a) => ({ ...a, status: (inList(pp.apology, a.name) ? 'apology' : inList(pp.absent, a.name) ? 'absent' : 'present') as typeof a.status }));
+    const agendas = pp.agendas.length ? pp.agendas.map((pa, i) => ({ id: 'imp' + i, order: i + 1, title: pa.title, discussion: '', proposedBy: '', secondedBy: '', resolution: pa.resolution })) : m.agendas;
+    setM({ ...m, attendance, agendas, date: pp.date || m.date });
+  }
 
   function cycle(id: string) {
     const order: AttendanceStatus[] = ['present', 'apology', 'absent'];
@@ -147,7 +158,7 @@ function MinutesForm({ charter, meeting, onCancel, onCommit }: { charter: GroupC
         <View style={g.card}>
           <Text style={g.label}>✎ Fine-tune wording (official edit)</Text>
           <TextInput style={g.mlInput} multiline value={preview.text} onChangeText={(t) => setPreview({ ...preview, text: t })} />
-          <TouchableOpacity style={g.cta} onPress={() => onCommit({ ...m, status: 'POSTED' })}><Text style={g.ctaTxt}>✓ Post minutes to group</Text></TouchableOpacity>
+          <TouchableOpacity style={g.cta} onPress={() => { const posted = { ...m, status: 'POSTED' as const }; onPostMeeting?.(posted, preview.text); onCommit(posted); }}><Text style={g.ctaTxt}>✓ Post minutes to group</Text></TouchableOpacity>
         </View>
       </ScrollView>
     );
@@ -156,6 +167,7 @@ function MinutesForm({ charter, meeting, onCancel, onCommit }: { charter: GroupC
   return (
     <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
       <View style={g.rowBetween}><Text style={g.h3}>Meeting No. {m.meetingNo}</Text><TouchableOpacity onPress={onCancel}><Text style={g.link}>← All</Text></TouchableOpacity></View>
+      <NotesImport onApply={applyParsed} />
 
       <View style={g.card}>
         <Text style={g.cardTitle}>Attendance</Text>
@@ -202,7 +214,59 @@ function MinutesForm({ charter, meeting, onCancel, onCommit }: { charter: GroupC
       <TouchableOpacity style={[g.cta, !comp.readyForDocument && { opacity: 0.5 }]} disabled={!comp.readyForDocument} onPress={() => { const doc = paraphraseMinutes(m, charter); setPreview({ doc, text: doc.plainText }); }}>
         <Text style={g.ctaTxt}>⚙ Generate professional minutes</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={g.ghost} onPress={() => { onSaveMeeting?.(m); onCommit(m); }}>
+        <Text style={g.ghostTxt}>Save draft</Text>
+      </TouchableOpacity>
     </ScrollView>
+  );
+}
+
+function NotesImport({ onApply }: { onApply: (p: ReturnType<typeof parseImportedNotes>) => void }) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState('');
+  const [fileName, setFileName] = useState<string>();
+  const [msg, setMsg] = useState<string>();
+
+  async function pickPhoto() {
+    try {
+      const r = await ImagePicker.launchCameraAsync({ quality: 0.6 }).catch(() => ImagePicker.launchImageLibraryAsync({ quality: 0.6 }));
+      const a = (r as any)?.assets?.[0];
+      if (a) { setFileName(a.fileName ?? 'photo.jpg'); setMsg('Photo attached. Type the key points below — on-device text reading runs server-side in production.'); }
+    } catch { setMsg('Could not open the camera.'); }
+  }
+  async function pickFile() {
+    try {
+      const r: any = await DocumentPicker.getDocumentAsync({ type: ['application/pdf', 'text/plain', 'image/*'] });
+      const a = r?.assets?.[0];
+      if (a) {
+        setFileName(a.name);
+        if (a.mimeType === 'text/plain' && a.uri) { try { const res = await fetch(a.uri); setText(await res.text()); return; } catch { /* ignore */ } }
+        setMsg('File attached. Type the key points below.');
+      }
+    } catch { setMsg('Could not open the file picker.'); }
+  }
+
+  if (!open) {
+    return (
+      <TouchableOpacity style={g.ghost} onPress={() => setOpen(true)}>
+        <Text style={g.ghostTxt}>Import written notes (photo or file)</Text>
+      </TouchableOpacity>
+    );
+  }
+  return (
+    <View style={g.card}>
+      <View style={g.rowBetween}><Text style={g.cardTitle}>Import written notes</Text><TouchableOpacity onPress={() => setOpen(false)}><Text style={g.link}>Close</Text></TouchableOpacity></View>
+      <Text style={[g.meta, { marginTop: 4, marginBottom: 10 }]}>Snap your paper minutes or upload a file. Review the text, then it pre-fills the form.</Text>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <TouchableOpacity style={[g.cta, { flex: 1, marginTop: 0 }]} onPress={pickPhoto}><Text style={g.ctaTxt}>Photo</Text></TouchableOpacity>
+        <TouchableOpacity style={[g.ghost, { flex: 1, marginTop: 0 }]} onPress={pickFile}><Text style={g.ghostTxt}>File</Text></TouchableOpacity>
+      </View>
+      {!!fileName && <Text style={[g.meta, { marginTop: 8 }]}>{fileName}</Text>}
+      {!!msg && <Text style={[g.meta, { marginTop: 6 }]}>{msg}</Text>}
+      <TextInput style={[g.input, { minHeight: 120, textAlignVertical: 'top', marginTop: 10, fontSize: 12.5 }]} multiline value={text} onChangeText={setText}
+        placeholder={'Present: Amina, Grace\nApologies: David\nAgenda 1: Buy chairs\nResolved that we buy 20 chairs'} placeholderTextColor={colors.faint} />
+      <TouchableOpacity style={g.cta} onPress={() => { onApply(parseImportedNotes(text)); setOpen(false); }}><Text style={g.ctaTxt}>Use these notes</Text></TouchableOpacity>
+    </View>
   );
 }
 

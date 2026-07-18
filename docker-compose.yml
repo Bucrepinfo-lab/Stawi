@@ -1,0 +1,23 @@
+# Local Postgres for Stawi development.
+#   docker compose up -d
+#   DATABASE_URL="postgresql://stawi:stawi@localhost:5432/stawi?schema=public"
+services:
+  postgres:
+    image: postgres:16
+    container_name: stawi-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: stawi
+      POSTGRES_PASSWORD: stawi
+      POSTGRES_DB: stawi
+    ports:
+      - "5432:5432"
+    volumes:
+      - stawi_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stawi -d stawi"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  stawi_pgdata:

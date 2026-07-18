@@ -29,10 +29,10 @@ async function main() {
       clerkOrgId: 'org_umoja', tenantId: tenant.id, name: 'Umoja Women Group', type: 'CHAMA',
       members: {
         create: [
-          { clerkUserId: AMINA, fullName: 'Amina Wanjiru', role: 'TREASURER', rotationOrder: 0 },
-          { clerkUserId: 'user_joseph', fullName: 'Joseph Kamau', role: 'CHAIRMAN', rotationOrder: 1 },
-          { clerkUserId: 'user_grace', fullName: 'Grace Otieno', role: 'SECRETARY', rotationOrder: 2 },
-          { clerkUserId: 'user_david', fullName: 'David Mwangi', role: 'MEMBER', rotationOrder: 3 },
+          { clerkUserId: AMINA, fullName: 'Amina Wanjiru', phone: '0712345678', role: 'TREASURER', rotationOrder: 0 },
+          { clerkUserId: 'user_joseph', fullName: 'Joseph Kamau', phone: '0700111222', role: 'CHAIRMAN', rotationOrder: 1 },
+          { clerkUserId: 'user_grace', fullName: 'Grace Otieno', phone: '0722000111', role: 'SECRETARY', rotationOrder: 2 },
+          { clerkUserId: 'user_david', fullName: 'David Mwangi', phone: '0701222333', role: 'MEMBER', rotationOrder: 3 },
         ],
       },
     },
@@ -42,6 +42,38 @@ async function main() {
   for (const m of umoja.members) {
     await prisma.contribution.create({ data: { groupId: umoja.id, membershipId: m.id, amountCents: amounts[m.fullName] ?? 0, channel: 'MPESA_STK', status: 'CONFIRMED' } });
   }
+
+  // ── Pillar 1: data-entry cockpit (charter + minutes) ──────────────────────
+  const desig: Record<string, string> = { CHAIRMAN: 'Chairperson', SECRETARY: 'Secretary', TREASURER: 'Treasurer', SIGNATORY: 'Signatory', MEMBER: 'Member' };
+  const rosterJson = umoja.members.map((m, i) => ({ id: m.id, serial: i + 1, fullName: m.fullName, designation: desig[m.role] ?? 'Member', phone: m.phone ?? '' }));
+  await prisma.groupCharter.create({
+    data: {
+      groupId: umoja.id, tenantId: tenant.id, name: 'Umoja Women Group',
+      schedule: { venue: 'At Zawadi Hotel, Kayole', days: ['Friday'], startTime: '4:00 PM', endTime: '6:00 PM', frequency: 'Weekly' },
+      members: rosterJson,
+      constitution: 'The group shall be known as UMOJA WOMEN GROUP. Membership is open to women of good standing resident within Kayole ward. Each member shall contribute a minimum of KES 500 weekly. Officials shall be elected every two years. A member absent for three consecutive meetings without apology shall be fined.',
+      motto: 'Together we rise', mission: 'To pool our savings, support one another, and grow member businesses.', vision: 'A financially independent, united community of women.',
+      coreValues: ['Integrity', 'Unity', 'Diligence', 'Accountability'], countryCode: 'KE',
+    },
+  });
+  const att = (over: Record<string, 'present' | 'absent' | 'apology'> = {}) => umoja.members.map((m) => ({ memberId: m.id, name: m.fullName, designation: desig[m.role] ?? 'Member', status: over[m.fullName] ?? 'present' }));
+  const contribAll = umoja.members.map((m) => ({ memberId: m.id, name: m.fullName, amountCents: 50000 }));
+  await prisma.meeting.create({
+    data: {
+      groupId: umoja.id, tenantId: tenant.id, meetingNo: 1, date: '2026-06-05', day: 'Friday', venue: 'At Zawadi Hotel, Kayole',
+      startTime: '4:00 PM', endTime: '6:00 PM', adjournmentTime: '6:05 PM', chairpersonName: 'Joseph Kamau', secretaryName: 'Grace Otieno', nextMeetingDate: '2026-06-12', status: 'POSTED',
+      attendance: att(), agendas: [{ id: 'ag0', order: 1, title: 'Opening of the group account', discussion: 'we should open a bank account for the group', proposedBy: 'Grace Otieno', secondedBy: 'Amina Wanjiru', resolution: 'open a group bank account at the nearest bank' }], aobs: [],
+      tableBanking: { openingBalanceCents: 0, contributions: contribAll, fines: [], payoutRecipient: 'Amina Wanjiru', payoutCents: 200000, otherIn: [], otherOut: [] },
+    },
+  });
+  await prisma.meeting.create({
+    data: {
+      groupId: umoja.id, tenantId: tenant.id, meetingNo: 2, date: '2026-06-12', day: 'Friday', venue: 'At Zawadi Hotel, Kayole',
+      startTime: '4:00 PM', endTime: '6:00 PM', adjournmentTime: '6:10 PM', chairpersonName: 'Joseph Kamau', secretaryName: 'Grace Otieno', nextMeetingDate: '2026-06-19', status: 'DRAFT',
+      attendance: att({ 'David Mwangi': 'absent' }), agendas: [{ id: 'ag1', order: 1, title: 'Purchase of meeting chairs', discussion: 'we need our own chairs for meetings', proposedBy: 'Grace Otieno', secondedBy: 'Amina Wanjiru', resolution: 'buy 20 plastic chairs before the next meeting' }], aobs: [],
+      tableBanking: { openingBalanceCents: 200000, contributions: contribAll.filter((c) => c.name !== 'David Mwangi'), fines: [{ memberId: umoja.members.find((m) => m.fullName === 'David Mwangi')!.id, name: 'David Mwangi', reason: 'absence without apology', amountCents: 10000 }], payoutRecipient: 'Joseph Kamau', payoutCents: 200000, otherIn: [], otherOut: [] },
+    },
+  });
   await prisma.business.create({
     data: {
       groupId: umoja.id, name: 'Umoja Liquid Soap', vatRegistered: false, tourismSector: false,

@@ -50,6 +50,17 @@ Follow `DEPLOYMENT-RUNBOOK.md`. In short:
 13. **Paystack / Flutterwave** (optional, per market): `PAYSTACK_SECRET_KEY`,
     `FLW_SECRET_KEY` — concrete init/verify clients go live on key.
 
+14. **Database schema + demo data**: after `DATABASE_URL` is set, run
+    `npm run -w @stawi/db generate` then `npm run -w @stawi/db push` (or
+    `migrate:dev --name pillar1_cockpit` for versioned migrations), then
+    `psql "$DATABASE_URL" -f packages/db/prisma/rls.sql`, and optionally
+    `npm run -w @stawi/db seed`. See `DB-SETUP.md`. In production the app **requires**
+    `DATABASE_URL` — the mobile API returns 503 rather than serving demo data.
+15. **Mobile API auth**: set `MOBILE_API_KEY` (shared-key fallback) and/or rely on
+    Clerk session tokens (verified via `CLERK_SECRET_KEY`). The Expo app sets
+    `EXPO_PUBLIC_API_BASE`, `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`, and either
+    `EXPO_PUBLIC_API_KEY` or Clerk auth — see `apps/mobile/.env.example`.
+
 ## Post-deploy hardening (recommended)
 - Activate RLS enforcement by `SET app.tenant_id` at the start of each
   tenant-scoped DB transaction (policies already in `rls.sql`).

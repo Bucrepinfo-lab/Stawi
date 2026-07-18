@@ -78,6 +78,7 @@
   .try{display:inline-block;background:var(--forest-deep);color:var(--bone);font-family:var(--font-mono);font-size:12px;padding:2px 8px;border-radius:6px;cursor:pointer}
   a{color:var(--forest)}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -206,7 +207,9 @@ function seedMeetings(){
 }
 
 /* ---------- app state + router ---------- */
-const S={phone:'',links:[],groupId:null,tab:'charter',meetings:seedMeetings(),draft:null,gen:null};
+const S={phone:'',country:'KE',links:[],groupId:null,tab:'charter',meetings:seedMeetings(),draft:null,gen:null,imp:null};
+const PHONE_RULES={KE:{dial:'254',flag:'🇰🇪',nat:9,max:10,ph:'0712 345 678'},UG:{dial:'256',flag:'🇺🇬',nat:9,max:10,ph:'0712 345 678'},TZ:{dial:'255',flag:'🇹🇿',nat:9,max:10,ph:'0712 345 678'},NG:{dial:'234',flag:'🇳🇬',nat:10,max:11,ph:'0801 234 5678'},GH:{dial:'233',flag:'🇬🇭',nat:9,max:10,ph:'024 123 4567'},ZA:{dial:'27',flag:'🇿🇦',nat:9,max:10,ph:'071 234 5678'}};
+const RULE=()=>PHONE_RULES[S.country]||PHONE_RULES.KE;
 const app=()=>document.getElementById('app');
 const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -219,10 +222,11 @@ function login(){ app().innerHTML=`
     <div style="margin-top:20px">
       <label class="lb">Phone number</label>
       <div style="display:flex;gap:8px">
-        <div style="display:grid;place-items:center;padding:0 12px;border:1px solid var(--line);border-radius:11px;background:#fff;font-weight:700;font-size:14px">🇰🇪 +254</div>
-        <input id="ph" inputmode="tel" placeholder="0712 345 678" value="${esc(S.phone)}" />
+        <select id="cc" onchange="S.country=this.value;login()" style="padding:0 8px;border:1px solid var(--line);border-radius:11px;background:#fff;font-weight:700;font-size:13px;font-family:inherit">${Object.keys(PHONE_RULES).map(k=>`<option value="${k}" ${k===S.country?'selected':''}>${PHONE_RULES[k].flag} +${PHONE_RULES[k].dial}</option>`).join('')}</select>
+        <input id="ph" inputmode="numeric" maxlength="${RULE().max}" placeholder="${RULE().ph}" value="${esc(S.phone)}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
       </div>
-      <button class="btn btn-gold btn-block" style="margin-top:14px" onclick="doLogin()">Send code & continue →</button>
+      <p class="muted" style="margin-top:6px">Enter your ${RULE().nat}-digit number. The limit adapts to the country you pick.</p>
+      <button class="btn btn-gold btn-block" style="margin-top:12px" onclick="doLogin()">Send code & continue →</button>
       <p class="muted" style="text-align:center;margin-top:12px">We’ll text a one-time code. (Prototype: continues instantly.)</p>
     </div>
   </div>`;
@@ -314,7 +318,8 @@ function charterView(c,canEdit){
 function minutesView(c,canEdit){
   if(!canEdit) return `<div class="card" style="padding:16px"><p class="muted">You are a member of this group. Only officials (Chairperson, Secretary, Treasurer) can record and post minutes. Ask your secretary to add the meeting.</p></div>`;
   const rows=S.meetings.map(m=>{const t=tally(m.attendance);return `<div class="card" style="padding:13px;margin-bottom:9px"><div class="row"><b>Meeting No. ${m.meetingNo}</b><span class="badge ${m.status==='POSTED'?'b-posted':'b-draft'}">${m.status}</span></div><div class="muted" style="margin-top:3px">${esc(m.date)} · ${t.present}/${t.total} present · ${(m.agendas||[]).length} agenda</div><button class="btn btn-ghost btn-block" style="margin-top:9px" onclick="editMeeting('${m.id}')">${m.status==='POSTED'?'View →':'Continue →'}</button></div>`;}).join('');
-  return `<button class="btn btn-gold btn-block" style="margin-bottom:12px" onclick="editMeeting('m2')">＋ Record / open a meeting</button>${rows}`;
+  return `<button class="btn btn-gold btn-block" style="margin-bottom:8px" onclick="editMeeting('m2')">＋ Record / open a meeting</button>`+
+    `<button class="btn btn-ghost btn-block" style="margin-bottom:12px" onclick="openImport()">📷 Import written notes (photo or file)</button>${rows}`;
 }
 window.editMeeting=function(id){ S.draft=JSON.parse(JSON.stringify(S.meetings.find(m=>m.id===id))); S.gen=null; meetingForm(); };
 function meetingForm(){
@@ -406,6 +411,72 @@ function statementView(c,canEdit){
 }
 
 document.addEventListener('click',e=>{const t=e.target.closest('.try[data-phone]');if(t){document.getElementById('ph')&&(document.getElementById('ph').value=t.dataset.phone);S.phone=t.dataset.phone;}});
+/* ---------- import written notes (photo / file → structured minutes) ---------- */
+function parseNotes(raw){
+  const text=(raw||'').replace(/\r/g,'').replace(/[ \t]+/g,' ').trim();
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const out={present:[],absent:[],apology:[],agendas:[],amountsCents:[],date:null,rawText:text,confidence:'none'}; let hits=0;
+  const namesFrom=line=>line.replace(/^[^:]*:/,'').split(/[,;]|\band\b|\d+\.|•|-\s/gi).map(s=>s.trim()).filter(s=>s.length>=2&&/[a-z]/i.test(s)).map(s=>s.replace(/\s+/g,' '));
+  for(const line of lines){ const low=line.toLowerCase();
+    if(/^present\b|^members present\b/.test(low)){out.present=namesFrom(line);hits++;continue;}
+    if(/^absent\b/.test(low)){out.absent=namesFrom(line);hits++;continue;}
+    if(/^apolog/.test(low)){out.apology=namesFrom(line);hits++;continue;}
+    if(/^(agenda\s*\d*|aob)\b/i.test(line)){const t=line.replace(/^(agenda\s*\d*[:.)\-]*|aob[:.)\-]*)/i,'').trim();out.agendas.push({title:t||'Agenda item',resolution:''});hits++;continue;}
+    if(/^(resolved|agreed|resolution)\b/i.test(line)){const r=line.replace(/^(resolved that|resolved|agreed that|agreed|resolution[:\-]?)/i,'').trim();if(out.agendas.length)out.agendas[out.agendas.length-1].resolution=r;else out.agendas.push({title:'Resolution',resolution:r});hits++;continue;}
+    if(!out.date){const d=line.match(/\b(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b/)||line.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](20\d{2})\b/);if(d){out.date=d[1].length===4?(d[1]+'-'+String(d[2]).padStart(2,'0')+'-'+String(d[3]).padStart(2,'0')):(d[3]+'-'+String(d[2]).padStart(2,'0')+'-'+String(d[1]).padStart(2,'0'));hits++;}}
+    for(const tok of (line.match(/(?:kes|ksh|kshs|sh)\s*[\d,]+(?:\.\d{1,2})?/gi)||[])){const v=parseFloat(tok.replace(/[^\d.]/g,''));if(!isNaN(v)){out.amountsCents.push(Math.round(v*100));hits++;}}
+  }
+  out.confidence=hits>=4?'high':hits>=1?'some':'none'; return out;
+}
+function openImport(){ S.imp={file:null,text:'',busy:false,msg:''}; importView(); }
+window.openImport=openImport;
+function importView(){
+  const i=S.imp; const body=document.getElementById('tabbody');
+  body.innerHTML=`
+  <div class="row" style="margin-bottom:8px"><b class="display" style="font-size:18px">Import written notes</b><span class="try" onclick="setTab('minutes')">← All</span></div>
+  <p class="muted" style="margin:0 0 12px">Already wrote your minutes on paper or a file? Bring them in — Stawi reads them, pre-fills the form, then paraphrases into a clean document.</p>
+  <div class="card" style="padding:14px;display:grid;gap:8px">
+    <label class="btn btn-forest btn-block" style="display:block;text-align:center;cursor:pointer">📷 Take / choose a photo
+      <input type="file" accept="image/*" capture="environment" style="display:none" onchange="onPick(this,'photo')"></label>
+    <label class="btn btn-ghost btn-block" style="display:block;text-align:center;cursor:pointer">📎 Upload a file (PDF, Word, text)
+      <input type="file" accept=".pdf,.doc,.docx,.txt,image/*" style="display:none" onchange="onPick(this,'file')"></label>
+    ${i.file?`<div class="chip" style="background:var(--bone-2)">📄 ${esc(i.file)}</div>`:''}
+    ${i.busy?`<p class="muted">Reading your notes… (first run downloads the reader)</p>`:''}
+    ${i.msg?`<p class="muted">${esc(i.msg)}</p>`:''}
+  </div>
+  <div class="card" style="padding:14px;margin-top:10px">
+    <label class="lb">Recognised text — read &amp; fix any words</label>
+    <textarea id="imptext" rows="7" style="font-size:12.5px;line-height:1.5" oninput="S.imp.text=this.value" placeholder="Present: Amina, Grace, Faith&#10;Apologies: David&#10;Agenda 1: Purchase of chairs&#10;Resolved that we buy 20 chairs&#10;Contributions KES 2,500">${esc(i.text)}</textarea>
+    <button class="btn btn-gold btn-block" style="margin-top:10px" onclick="useNotes()">Use these notes →</button>
+  </div>`;
+}
+window.onPick=function(input,kind){ const f=input.files&&input.files[0]; if(!f) return;
+  S.imp.file=f.name; S.imp.msg='';
+  if(f.type==='text/plain'){ const r=new FileReader(); r.onload=()=>{S.imp.text=String(r.result||'');importView();}; r.readAsText(f); return; }
+  if(kind==='photo'||/^image\//.test(f.type)){
+    if(typeof Tesseract==='undefined'){ S.imp.msg='Photo attached. Type the key points below (auto-reader needs internet).'; importView(); return; }
+    S.imp.busy=true; importView();
+    Tesseract.recognize(f,'eng').then(res=>{ S.imp.text=((res&&res.data&&res.data.text)||'').trim(); S.imp.busy=false; S.imp.msg='Read from photo — please check the words.'; importView(); })
+      .catch(()=>{ S.imp.busy=false; S.imp.msg='Could not read the photo automatically. Type the key points below.'; importView(); });
+    return;
+  }
+  S.imp.msg='File attached. Type the key points below (PDF/Word text extraction runs on the server in the full app).'; importView();
+};
+window.useNotes=function(){
+  const p=parseNotes(S.imp.text||''); const c=CHARTERS[S.groupId]||CHARTERS.umoja;
+  const nextNo=(S.meetings.reduce((mx,m)=>Math.max(mx,m.meetingNo),0))+1;
+  const roster=c.members.map(m=>({memberId:m.id,name:m.fullName,designation:m.designation}));
+  const norm=x=>x.toLowerCase();
+  const inList=(list,name)=>list.some(n=>{const a=norm(n),b=norm(name);return a&&(b.includes(a)||a.includes(b.split(' ')[0]));});
+  const att=roster.map(r=>({memberId:r.memberId,name:r.name,designation:r.designation,status: inList(p.apology,r.name)?'apology': inList(p.absent,r.name)?'absent':'present'}));
+  const chair=c.members.find(x=>x.designation==='Chairperson')||{}; const sec=c.members.find(x=>x.designation==='Secretary')||{};
+  const draft={id:'imp'+nextNo,meetingNo:nextNo,date:p.date||'',day:'',venue:c.schedule.venue,startTime:c.schedule.startTime,endTime:c.schedule.endTime,adjournmentTime:c.schedule.endTime,
+    chairpersonName:chair.fullName||'',secretaryName:sec.fullName||'',nextMeetingDate:'',status:'DRAFT',
+    attendance:att, agendas:(p.agendas.length?p.agendas:[{title:'',resolution:''}]).map(a=>({title:a.title,discussion:'',proposedBy:'',secondedBy:'',resolution:a.resolution})),
+    aobs:[], tableBanking:{openingBalanceCents:0,contributions:roster.map(r=>({memberId:r.memberId,name:r.name,amountCents:0})),fines:[],payoutRecipient:'',payoutCents:0}};
+  S.meetings=[draft,...S.meetings]; S.draft=JSON.parse(JSON.stringify(draft)); S.gen=null; meetingForm();
+};
+
 login();
 </script>
 </body>

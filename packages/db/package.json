@@ -12,7 +12,8 @@
     "seed": "tsx prisma/seed.ts",
     "studio": "prisma studio",
     "typecheck": "tsc --noEmit",
-    "lint": "echo \"(lint: db)\""
+    "lint": "echo \"(lint: db)\"",
+    "push": "prisma db push"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
