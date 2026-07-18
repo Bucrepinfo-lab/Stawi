@@ -10,6 +10,13 @@ import {
   outstandingAlerts,
   ackFor,
   feedbackLabel,
+  generateBarcode,
+  isValidEan13,
+  ean13CheckDigit,
+  normalizeBarcode,
+  buildPaymentPrompt,
+  changeDue,
+  settlePayment,
 } from '../src/pos';
 import type { LedgerEntry } from '../src/accounting';
 
@@ -96,5 +103,61 @@ describe('critical stock alerts + acknowledgement', () => {
       acknowledgeAlert('s1', 'RESTOCKED', '2026-07-10T15:00:00Z'),
     ];
     expect(ackFor('s1', acks)!.feedback).toBe('RESTOCKED');
+  });
+});
+
+describe('barcodes', () => {
+  it('generates a valid EAN-13 and validates it', () => {
+    const code = generateBarcode('Sugar 2kg');
+    expect(code).toHaveLength(13);
+    expect(isValidEan13(code)).toBe(true);
+    // deterministic
+    expect(generateBarcode('Sugar 2kg')).toBe(code);
+  });
+
+  it('computes a correct check digit and rejects bad codes', () => {
+    expect(ean13CheckDigit('400638133393')).toBe(1); // known EAN-13 4006381333931
+    expect(isValidEan13('4006381333931')).toBe(true);
+    expect(isValidEan13('4006381333930')).toBe(false);
+    expect(normalizeBarcode('40 06-381')).toBe('4006381');
+  });
+
+  it('carries the item barcode onto the receipt line', () => {
+    const r = buildPosReceipt({
+      businessName: 'B', saleId: 's', dateISO: '2026-07-10',
+      items: [{ name: 'Sugar', qty: 1, unitPriceCents: 25000, barcode: '4006381333931' }],
+    });
+    expect(r.lines[0].barcode).toBe('4006381333931');
+  });
+});
+
+describe('payment prompts', () => {
+  it('builds an M-Pesa STK prompt asking for the phone', () => {
+    const p = buildPaymentPrompt('MPESA', 120000);
+    expect(p.title).toMatch(/M-Pesa/);
+    expect(p.fields[0].id).toBe('phone');
+    expect(p.cta).toContain('KES');
+  });
+
+  it('cash payment computes change and blocks short cash', () => {
+    expect(changeDue(100000, 150000)).toBe(50000);
+    const ok = settlePayment('CASH', 100000, { tenderedCents: 150000 });
+    expect(ok.ok).toBe(true);
+    expect(ok.changeCents).toBe(50000);
+    const short = settlePayment('CASH', 100000, { tenderedCents: 80000 });
+    expect(short.ok).toBe(false);
+  });
+
+  it('M-Pesa needs a valid phone, then sends an STK push', () => {
+    expect(settlePayment('MPESA', 100000, { phone: '123' }).ok).toBe(false);
+    const sent = settlePayment('MPESA', 100000, { phone: '0712345678' });
+    expect(sent.ok).toBe(true);
+    expect(sent.message).toMatch(/STK push sent/);
+    expect(sent.reference).toMatch(/^STK-/);
+  });
+
+  it('card/bank require a reference', () => {
+    expect(settlePayment('CARD', 100000, {}).ok).toBe(false);
+    expect(settlePayment('BANK', 100000, { reference: 'TRX99' }).ok).toBe(true);
   });
 });

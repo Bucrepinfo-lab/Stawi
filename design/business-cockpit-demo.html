@@ -9,17 +9,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --forest-deep:#14352a; --forest:#2f855a; --gold:#e0a32e; --gold-deep:#b7791f;
-    --bone:#f7f3ea; --bone-2:#efe8d8; --paper:#fffdf8; --ink:#1c2620; --ink-2:#48544c;
-    --dim:#8a938b; --line:#e3dbc9; --good:#2f855a; --danger:#c4452f; --warn:#b7791f;
-    --radius:16px; --shadow:0 12px 34px -20px rgba(20,53,42,.5);
+    --forest-deep:#14352a;--forest:#2f855a;--gold:#e0a32e;--gold-deep:#b7791f;
+    --bone:#f7f3ea;--bone-2:#efe8d8;--paper:#fffdf8;--ink:#1c2620;--ink-2:#48544c;
+    --dim:#8a938b;--line:#e3dbc9;--good:#2f855a;--danger:#c4452f;--warn:#b7791f;
+    --radius:16px;--shadow:0 12px 34px -20px rgba(20,53,42,.5);
   }
   *{box-sizing:border-box}
   body{margin:0;background:
       radial-gradient(1200px 500px at 10% -10%, rgba(224,163,46,.14), transparent 60%),
-      radial-gradient(900px 500px at 110% 0%, rgba(47,133,90,.14), transparent 55%),
-      var(--bone);
-    color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+      radial-gradient(900px 500px at 110% 0%, rgba(47,133,90,.14), transparent 55%),var(--bone);
+    color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
   .display{font-family:'Fraunces',Georgia,serif}
   .mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
   .wrap{max-width:1080px;margin:0 auto;padding:26px 20px 90px}
@@ -32,6 +31,7 @@
   .btn.gold{background:var(--gold);color:var(--forest-deep)}
   .btn.ghost{background:transparent;color:var(--forest-deep);border:1px solid var(--line)}
   .btn.sm{padding:7px 12px;font-size:12.5px;border-radius:9px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
   input,select{font-family:inherit;font-size:14px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);width:100%}
   label{display:block}
   .lab{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
@@ -59,34 +59,38 @@
   .alert.low{background:rgba(183,121,31,.08);border-color:rgba(183,121,31,.35)}
   .alert.ok{background:rgba(47,133,90,.08);border-color:rgba(47,133,90,.35)}
   .ack{font-size:12px;font-weight:800;color:var(--forest-deep);background:rgba(47,133,90,.14);padding:3px 9px;border-radius:8px}
+  /* barcode */
+  .barcode{display:flex;align-items:flex-end;gap:1px;height:34px}
+  .barcode i{display:block;background:#111;height:100%}
+  .barcode.sm{height:22px}
+  .bc-num{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:2px;text-align:center;margin-top:2px}
+  /* toast + modal */
   .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(30px);background:var(--forest-deep);color:var(--bone);
-    padding:12px 18px;border-radius:12px;font-weight:700;font-size:13.5px;box-shadow:var(--shadow);opacity:0;transition:.3s;pointer-events:none;z-index:50}
+    padding:12px 18px;border-radius:12px;font-weight:700;font-size:13.5px;box-shadow:var(--shadow);opacity:0;transition:.3s;pointer-events:none;z-index:60;max-width:90vw;text-align:center}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  /* Receipt (print) */
+  .backdrop{position:fixed;inset:0;background:rgba(20,53,42,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:18px}
+  .backdrop.show{display:flex}
+  .modal{background:var(--paper);border-radius:18px;box-shadow:var(--shadow);max-width:420px;width:100%;padding:22px}
+  /* receipt print */
   #print-area{display:none}
   .receipt{max-width:360px;margin:0 auto;font-family:'IBM Plex Mono',monospace;color:#111}
   .receipt .r-h{text-align:center;border-bottom:2px dashed #999;padding-bottom:10px}
   .receipt .r-row{display:flex;justify-content:space-between;padding:3px 0;font-size:12.5px}
   .receipt .r-tot{border-top:2px dashed #999;margin-top:8px;padding-top:8px;font-weight:700}
-  @media print{
-    body{background:#fff}
-    body.printing .app{display:none}
-    body.printing #print-area{display:block;padding:20px}
-  }
+  @media print{ body{background:#fff} body.printing .app{display:none} body.printing #print-area{display:block;padding:20px} }
 </style>
 </head>
 <body>
 <div class="app wrap">
 
-  <!-- Hero -->
   <div class="card hero">
     <div class="between">
       <div>
         <div class="brand"><span class="dot"></span> Stawi · Pillar 3</div>
         <h1 class="display" style="font-size:26px;margin-top:8px">Zawadi Retail — Business Cockpit</h1>
         <p style="opacity:.9;font-size:13.5px;margin:6px 0 0;max-width:560px">
-          A real running shop: ring up sales &amp; print receipts, download your books, and act on
-          critical stock alerts. Everything below is live in your browser.
+          A real running shop: scan a barcode, take payment (M-Pesa / cash / card), print the receipt,
+          download your books, and act on critical stock alerts.
         </p>
       </div>
       <div style="text-align:center;min-width:110px">
@@ -98,36 +102,40 @@
       <button class="btn gold sm" onclick="downloadLedger()">⬇ Ledger CSV</button>
       <button class="btn gold sm" onclick="downloadStock()">⬇ Stock CSV</button>
       <button class="btn gold sm" onclick="downloadTax()">⬇ Tax report CSV</button>
-      <button class="btn ghost sm" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="window.print()">🖨 Print this page</button>
+      <button class="btn ghost sm" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="window.print()">🖨 Print page</button>
     </div>
   </div>
 
-  <!-- KPIs -->
   <div class="card stack" style="margin-top:14px">
     <div class="between"><h2 class="display" style="font-size:18px">Owner metrics</h2><span class="muted" id="stamp"></span></div>
     <div class="kpis" id="kpis"></div>
   </div>
 
   <div class="grid2" style="margin-top:14px">
-    <!-- POS -->
     <div class="card">
       <h2 class="display" style="font-size:18px">Point of sale</h2>
-      <p class="muted" style="margin:6px 0 12px">Ring up a sale — a receipt is generated you can print or reprint.</p>
+      <p class="muted" style="margin:6px 0 12px">Scan or type a barcode to load the item, then take payment.</p>
       <div class="row">
-        <label style="flex:1 1 150px"><span class="lab">Item</span><input id="p-item" placeholder="e.g. Sugar 2kg" value="Sugar 2kg"></label>
-        <label style="flex:0 0 84px"><span class="lab">Qty</span><input id="p-qty" class="mono" inputmode="numeric" value="1"></label>
-        <label style="flex:0 0 120px"><span class="lab">Unit (KES)</span><input id="p-price" class="mono" inputmode="numeric" value="250"></label>
-        <label style="flex:0 0 130px"><span class="lab">Pay</span>
-          <select id="p-pay"><option>CASH</option><option>MPESA</option><option>CARD</option><option>BANK</option></select></label>
+        <label style="flex:1 1 190px"><span class="lab">Barcode / SKU (scan or type)</span>
+          <input id="p-code" class="mono" placeholder="e.g. 4006381333931" onkeydown="if(event.key==='Enter')scan()"></label>
+        <label style="flex:0 0 96px" style="align-self:flex-end"><span class="lab">&nbsp;</span>
+          <button class="btn" style="width:100%" onclick="scan()">Scan</button></label>
       </div>
+      <div class="row" style="margin-top:10px">
+        <label style="flex:1 1 150px"><span class="lab">Item</span><input id="p-item" placeholder="Item name"></label>
+        <label style="flex:0 0 80px"><span class="lab">Qty</span><input id="p-qty" class="mono" inputmode="numeric" value="1"></label>
+        <label style="flex:0 0 116px"><span class="lab">Unit (KES)</span><input id="p-price" class="mono" inputmode="numeric"></label>
+        <label style="flex:0 0 120px"><span class="lab">Pay</span>
+          <select id="p-pay"><option value="MPESA">M-Pesa</option><option value="CASH">Cash</option><option value="CARD">Card</option><option value="BANK">Bank</option></select></label>
+      </div>
+      <div id="p-barcode" style="margin-top:12px"></div>
       <div class="row" style="margin-top:12px">
-        <button class="btn" onclick="recordSale()">＋ Record sale</button>
+        <button class="btn gold" onclick="charge()">💳 Charge &amp; take payment</button>
         <button class="btn ghost" id="reprint" onclick="printLast()" disabled>🖨 Print last receipt</button>
       </div>
       <div id="last-receipt" style="margin-top:14px"></div>
     </div>
 
-    <!-- Recent ledger -->
     <div class="card">
       <h2 class="display" style="font-size:18px">Recent entries</h2>
       <table style="margin-top:10px"><thead><tr><th>When</th><th>Item</th><th style="text-align:right">Amount</th></tr></thead>
@@ -135,7 +143,6 @@
     </div>
   </div>
 
-  <!-- Stock + critical alerts -->
   <div class="card stack" style="margin-top:14px">
     <div class="between">
       <h2 class="display" style="font-size:18px">Stock &amp; critical alerts</h2>
@@ -143,111 +150,157 @@
     </div>
     <div id="alerts" class="stack" style="margin-top:0"></div>
     <table style="margin-top:6px">
-      <thead><tr><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Sold/wk</th><th>Movement</th><th>Status</th></tr></thead>
+      <thead><tr><th>Item</th><th>Barcode</th><th style="text-align:right">Qty</th><th style="text-align:right">Sold/wk</th><th>Status</th></tr></thead>
       <tbody id="stock-body"></tbody>
     </table>
   </div>
 
   <p class="muted" style="margin-top:18px;text-align:center">
-    Self-contained demo of the Stawi business layer — mirrors <span class="mono">@stawi/core/pos.ts</span> &amp; <span class="mono">business-activation.ts</span>. No external libraries.
+    Self-contained demo of the Stawi business layer — mirrors <span class="mono">@stawi/core/pos.ts</span>. No external libraries.
   </p>
+</div>
+
+<!-- payment modal -->
+<div class="backdrop" id="pay-backdrop">
+  <div class="modal">
+    <div class="between"><h3 class="display" style="font-size:19px" id="pay-title">Payment</h3>
+      <button class="btn ghost sm" onclick="closePay()">✕</button></div>
+    <p class="muted" id="pay-instr" style="margin:8px 0 12px"></p>
+    <div id="pay-fields"></div>
+    <div id="pay-msg" style="margin-top:10px;font-size:13px;font-weight:700"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn gold" id="pay-cta" onclick="settle()">Confirm</button>
+      <button class="btn ghost" onclick="closePay()">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <div id="print-area"></div>
 <div class="toast" id="toast"></div>
 
 <script>
-// ---------- state ----------
-const BUSINESS = 'Zawadi Retail';
-const VAT_RATE = 0.16; // KRA VAT (VAT-registered demo)
-let ledger = [
-  { id:'e1', type:'SALE', desc:'Opening sales', cents: 480000, at: Date.now()-3600e3*5 },
-  { id:'e2', type:'PURCHASE', desc:'Stock purchase', cents: 300000, at: Date.now()-3600e3*4 },
-  { id:'e3', type:'EXPENSE', desc:'Rent', cents: 100000, at: Date.now()-3600e3*3 },
+const BUSINESS='Zawadi Retail', VAT_RATE=0.16;
+let ledger=[
+  {id:'e1',type:'SALE',desc:'Opening sales',cents:480000,at:Date.now()-18e6},
+  {id:'e2',type:'PURCHASE',desc:'Stock purchase',cents:300000,at:Date.now()-14e6},
+  {id:'e3',type:'EXPENSE',desc:'Rent',cents:100000,at:Date.now()-11e6},
 ];
-let stock = [
-  { id:'s1', name:'Sugar 2kg', qty:2, reorder:10, sold:60, supplier:'Kabras', phone:'254700111222' },
-  { id:'s2', name:'Cooking oil 1L', qty:8, reorder:10, sold:22, supplier:'Bidco', phone:'254700333444' },
-  { id:'s3', name:'Soap', qty:40, reorder:10, sold:5, supplier:'', phone:'' },
-  { id:'s4', name:'Old calendars', qty:30, reorder:5, sold:0, supplier:'', phone:'' },
+// each product carries ONE barcode used for purchase, stock & sale
+let stock=[
+  {id:'s1',name:'Sugar 2kg',code:'',qty:2,reorder:10,sold:60,price:25000,supplier:'Kabras',phone:'254700111222'},
+  {id:'s2',name:'Cooking oil 1L',code:'',qty:8,reorder:10,sold:22,price:38000,supplier:'Bidco',phone:'254700333444'},
+  {id:'s3',name:'Soap',code:'',qty:40,reorder:10,sold:5,price:12000,supplier:'',phone:''},
+  {id:'s4',name:'Old calendars',code:'',qty:30,reorder:5,sold:0,price:5000,supplier:'',phone:''},
 ];
-let acks = {};           // itemId -> {feedback, at}
-let lastReceipt = null;
-let saleSeq = 100;
+let acks={}, lastReceipt=null, saleSeq=100, pending=null;
 
-// ---------- helpers ----------
-const kes = c => 'KES ' + (c/100).toLocaleString('en-KE',{minimumFractionDigits:0});
-const money = c => (c/100).toLocaleString('en-KE',{minimumFractionDigits:0});
-function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2600); }
-function receiptNo(id){ let h=0; for(const ch of id){ h=(h*31+ch.charCodeAt(0))>>>0; } return 'STW-'+h.toString(36).toUpperCase().padStart(6,'0').slice(0,6); }
+// ---------- core helpers (mirror @stawi/core/pos.ts) ----------
+const kes=c=>'KES '+(c/100).toLocaleString('en-KE',{minimumFractionDigits:0});
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2800);}
+function receiptNo(id){let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))>>>0;return 'STW-'+h.toString(36).toUpperCase().padStart(6,'0').slice(0,6);}
+function ean13cd(twelve){const d=String(twelve).replace(/\D/g,'').slice(0,12).padStart(12,'0').split('').map(Number);const s=d.reduce((a,n,i)=>a+n*(i%2===0?1:3),0);return (10-(s%10))%10;}
+function genBarcode(seed){let h=2166136261;for(let i=0;i<seed.length;i++){h^=seed.charCodeAt(i);h=Math.imul(h,16777619);}const b=String(h>>>0).padStart(12,'0').slice(0,12);return b+ean13cd(b);}
+stock.forEach(s=>s.code=genBarcode(s.id+s.name));
 
-function movementOf(s){ if(s.sold===0) return 'dead'; if(s.sold>=50) return 'fast'; if(s.sold<=10) return 'slow'; return 'fast'; }
-function classify(){ return stock.map(s=>({ ...s, movement:movementOf(s), needsReorder: s.qty<=s.reorder, critical: s.qty<=Math.floor(s.reorder/2) })); }
+function movementOf(s){if(s.sold===0)return 'dead';if(s.sold>=50)return 'fast';if(s.sold<=10)return 'slow';return 'fast';}
+function classify(){return stock.map(s=>({...s,movement:movementOf(s),needsReorder:s.qty<=s.reorder,critical:s.qty<=Math.floor(s.reorder/2)}));}
+function pnl(){let sales=0,cogs=0,exp=0;for(const e of ledger){if(e.type==='SALE')sales+=e.cents;else if(e.type==='PURCHASE')cogs+=e.cents;else exp+=e.cents;}const g=sales-cogs,n=g-exp;return{sales,cogs,exp,gross:g,net:n,grossPct:sales?Math.round(g/sales*1000)/10:0,netPct:sales?Math.round(n/sales*1000)/10:0,expPct:sales?Math.round(exp/sales*1000)/10:0};}
+function vatCents(){return Math.round(pnl().sales*VAT_RATE/(1+VAT_RATE));}
 
-function pnl(){
-  let sales=0,cogs=0,exp=0;
-  for(const e of ledger){ if(e.type==='SALE')sales+=e.cents; else if(e.type==='PURCHASE')cogs+=e.cents; else exp+=e.cents; }
-  const gross=sales-cogs, net=gross-exp;
-  return { sales, cogs, exp, gross, net,
-    grossPct: sales? Math.round(gross/sales*1000)/10 : 0,
-    netPct: sales? Math.round(net/sales*1000)/10 : 0,
-    expPct: sales? Math.round(exp/sales*1000)/10 : 0 };
-}
-function vatCents(){ const p=pnl(); return Math.round(p.sales*VAT_RATE/(1+VAT_RATE)); }
+// barcode graphic from digits
+function barcodeHTML(code,cls){let bars='';for(const ch of String(code)){const w=1+(Number(ch)%4);const black=Number(ch)%2? 'background:#111':'background:#111;opacity:.85';bars+=`<i style="width:${w}px;${Number(ch)%3?'':'margin-right:1px'}"></i><i style="width:1px;background:transparent"></i>`;}
+  return `<div class="barcode ${cls||''}">${bars}</div><div class="bc-num">${code}</div>`;}
 
 // ---------- CSV download ----------
-function csv(rows){ return rows.map(r=>r.map(c=>{const s=String(c??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}).join(',')).join('\r\n'); }
-function download(name, text){
-  try{
-    const blob=new Blob([text],{type:'text/csv;charset=utf-8'});
-    const url=URL.createObjectURL(blob); const a=document.createElement('a');
-    a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),1500); toast('Downloaded '+name);
-  }catch(e){ toast('Download blocked here — open the file in a browser tab.'); }
-}
-function downloadLedger(){ download('stawi-ledger.csv', csv([['Date','Type','Description','Amount (KES)'],
-  ...ledger.map(e=>[new Date(e.at).toISOString().slice(0,10),e.type,e.desc,(e.cents/100).toFixed(2)])])); }
-function downloadStock(){ download('stawi-stock.csv', csv([['Item','Qty','Reorder level','Sold/wk','Movement','Status','Supplier','Phone'],
-  ...classify().map(s=>[s.name,s.qty,s.reorder,s.sold,s.movement,s.critical?'Critical':s.needsReorder?'Low':'OK',s.supplier,s.phone])])); }
-function downloadTax(){ const v=vatCents(); download('stawi-tax.csv', csv([['Code','Label','Amount (KES)','Remit to','Due by'],
-  ['VAT','VAT (16%)',(v/100).toFixed(2),'KRA · iTax / eTIMS','20th of following month']])); }
+function csv(rows){return rows.map(r=>r.map(c=>{const s=String(c??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}).join(',')).join('\r\n');}
+function download(name,text){try{const b=new Blob([text],{type:'text/csv;charset=utf-8'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);toast('Downloaded '+name);}catch(e){toast('Download blocked here — open the .html in a browser tab.');}}
+function downloadLedger(){download('stawi-ledger.csv',csv([['Date','Type','Description','Amount (KES)'],...ledger.map(e=>[new Date(e.at).toISOString().slice(0,10),e.type,e.desc,(e.cents/100).toFixed(2)])]));}
+function downloadStock(){download('stawi-stock.csv',csv([['Item','Barcode','Qty','Reorder','Sold/wk','Movement','Status','Supplier','Phone'],...classify().map(s=>[s.name,s.code,s.qty,s.reorder,s.sold,s.movement,s.critical?'Critical':s.needsReorder?'Low':'OK',s.supplier,s.phone])]));}
+function downloadTax(){const v=vatCents();download('stawi-tax.csv',csv([['Code','Label','Amount (KES)','Remit to','Due by'],['VAT','VAT (16%)',(v/100).toFixed(2),'KRA · iTax / eTIMS','20th of following month']]));}
 
-// ---------- POS ----------
-function recordSale(){
+// ---------- POS: scan + charge + pay ----------
+function scan(){
+  const code=document.getElementById('p-code').value.replace(/\D/g,'');
+  const hit=stock.find(s=>s.code===code);
+  if(hit){ document.getElementById('p-item').value=hit.name; document.getElementById('p-price').value=(hit.price/100); renderPosBarcode(hit.code); toast('Loaded '+hit.name); }
+  else if(code){ renderPosBarcode(code); toast('New barcode — enter item & price'); }
+}
+function renderPosBarcode(code){ document.getElementById('p-barcode').innerHTML = code? `<div style="background:var(--bone);border:1px dashed var(--line);border-radius:10px;padding:10px;width:max-content">${barcodeHTML(code)}</div>`:''; }
+function currentSale(){
   const item=document.getElementById('p-item').value.trim()||'Sale';
-  const qty=Math.max(1, parseInt(document.getElementById('p-qty').value)||1);
+  const qty=Math.max(1,parseInt(document.getElementById('p-qty').value)||1);
   const unit=Math.round((parseFloat(document.getElementById('p-price').value)||0)*100);
-  const pay=document.getElementById('p-pay').value;
-  if(unit<=0){ toast('Enter a unit price.'); return; }
-  const subtotal=qty*unit;
-  const tax=Math.round(subtotal*VAT_RATE/(1+VAT_RATE));
+  let code=document.getElementById('p-code').value.replace(/\D/g,'');
+  const known=stock.find(s=>s.name.toLowerCase()===item.toLowerCase());
+  if(!code && known) code=known.code;
+  if(!code) code=genBarcode(item);
+  const subtotal=qty*unit, tax=Math.round(subtotal*VAT_RATE/(1+VAT_RATE));
+  return {item,qty,unit,code,subtotal,tax,total:subtotal+tax,pay:document.getElementById('p-pay').value,known};
+}
+function charge(){
+  const s=currentSale();
+  if(s.unit<=0){ toast('Enter a unit price (or scan an item).'); return; }
+  pending=s;
+  const p=buildPrompt(s.pay,s.total);
+  document.getElementById('pay-title').textContent=p.title;
+  document.getElementById('pay-instr').textContent=p.instruction;
+  document.getElementById('pay-fields').innerHTML=p.fields.map(f=>
+    `<label style="margin-top:8px"><span class="lab">${f.label}</span><input id="pf-${f.id}" class="${f.kind==='money'||f.kind==='phone'?'mono':''}" placeholder="${f.placeholder||''}"></label>`).join('');
+  document.getElementById('pay-cta').textContent=p.cta;
+  document.getElementById('pay-msg').textContent='';
+  document.getElementById('pay-backdrop').classList.add('show');
+  setTimeout(()=>{const f=document.querySelector('#pay-fields input');f&&f.focus();},50);
+}
+function buildPrompt(method,total){
+  const due=kes(total);
+  if(method==='MPESA')return{title:'M-Pesa STK Push',instruction:`A payment request for ${due} will be sent to the customer's phone. Ask them to enter their M-Pesa PIN.`,fields:[{id:'phone',label:'Customer phone',kind:'phone',placeholder:'07XX XXX XXX'}],cta:`Send prompt · ${due}`};
+  if(method==='CASH')return{title:'Cash payment',instruction:`Amount due ${due}. Enter cash received to compute change.`,fields:[{id:'tendered',label:'Cash received (KES)',kind:'money',placeholder:'KES'}],cta:'Confirm cash'};
+  if(method==='CARD')return{title:'Card payment',instruction:`Insert or tap the card on the terminal for ${due}.`,fields:[{id:'reference',label:'Terminal reference',kind:'text',placeholder:'Auth code'}],cta:`Charge ${due}`};
+  return{title:'Bank transfer',instruction:`Confirm the transfer of ${due} and enter the reference.`,fields:[{id:'reference',label:'Transfer reference',kind:'text',placeholder:'Bank ref'}],cta:'Confirm transfer'};
+}
+function settle(){
+  const s=pending; if(!s) return;
+  const method=s.pay;
+  const val=id=>{const el=document.getElementById('pf-'+id);return el?el.value.trim():'';};
+  let result;
+  if(method==='CASH'){ const t=Math.round((parseFloat(val('tendered'))||0)*100);
+    if(t<s.total){ payMsg('Insufficient cash — short by '+kes(s.total-t),true); return; }
+    result={ok:true,message:t-s.total>0?'Give change '+kes(t-s.total):'Exact cash — no change',change:t-s.total}; }
+  else if(method==='MPESA'){ const ph=val('phone').replace(/[^\d+]/g,'');
+    if(ph.replace(/\D/g,'').length<9){ payMsg('Enter a valid phone number',true); return; }
+    result={ok:true,message:'STK push sent to '+ph+' for '+kes(s.total)+'. Awaiting PIN…',ref:'STK-'+receiptNo(ph+s.total).slice(4)}; }
+  else { const ref=val('reference'); if(!ref){ payMsg('Enter the payment reference',true); return; }
+    result={ok:true,message:(method==='CARD'?'Card':'Transfer')+' confirmed ('+ref+')',ref}; }
+  payMsg('✓ '+result.message,false);
+  setTimeout(()=>{ finalize(s,result); closePay(); toast('✓ Paid · '+result.message); },600);
+}
+function payMsg(m,err){const el=document.getElementById('pay-msg');el.textContent=m;el.style.color=err?'var(--danger)':'var(--forest-deep)';}
+function closePay(){document.getElementById('pay-backdrop').classList.remove('show');}
+function finalize(s,result){
   const id='sale-'+(saleSeq++);
-  ledger.unshift({ id, type:'SALE', desc:`${qty}× ${item}`, cents:subtotal, at:Date.now() });
-  // decrement stock if it matches a known item
-  const st=stock.find(s=>s.name.toLowerCase()===item.toLowerCase());
-  if(st){ st.qty=Math.max(0, st.qty-qty); st.sold+=qty; }
-  lastReceipt={ no:receiptNo(id), item, qty, unit, subtotal, tax, total:subtotal+tax, pay, at:Date.now() };
+  ledger.unshift({id,type:'SALE',desc:`${s.qty}× ${s.item}`,cents:s.subtotal,at:Date.now()});
+  if(s.known){ s.known.qty=Math.max(0,s.known.qty-s.qty); s.known.sold+=s.qty; }
+  lastReceipt={no:receiptNo(id),item:s.item,code:s.code,qty:s.qty,unit:s.unit,subtotal:s.subtotal,tax:s.tax,total:s.total,pay:s.pay,at:Date.now(),
+    change:result.change||0,ref:result.ref||''};
   document.getElementById('reprint').disabled=false;
   renderReceipt(); renderAll();
-  toast('Sale recorded · receipt '+lastReceipt.no);
 }
 function renderReceipt(){
-  if(!lastReceipt){ document.getElementById('last-receipt').innerHTML=''; return; }
+  if(!lastReceipt){document.getElementById('last-receipt').innerHTML='';return;}
   const r=lastReceipt;
-  document.getElementById('last-receipt').innerHTML =
+  document.getElementById('last-receipt').innerHTML=
    `<div style="background:var(--bone);border:1px dashed var(--line);border-radius:12px;padding:14px">
       <div class="between"><b class="mono">Receipt ${r.no}</b><button class="btn gold sm" onclick="printLast()">🖨 Print</button></div>
-      <div class="between" style="margin-top:8px">
-        <span class="muted">${r.qty}× ${r.item} @ ${kes(r.unit)}</span><b class="mono">${kes(r.subtotal)}</b></div>
+      <div class="between" style="margin-top:8px"><span class="muted">${r.qty}× ${r.item} @ ${kes(r.unit)}</span><b class="mono">${kes(r.subtotal)}</b></div>
       <div class="between"><span class="muted">VAT (16%)</span><span class="mono">${kes(r.tax)}</span></div>
       <div class="between"><b>Total</b><b class="mono" style="color:var(--forest-deep)">${kes(r.total)}</b></div>
-      <div class="muted" style="margin-top:4px">Paid by ${r.pay}</div>
+      <div class="muted" style="margin-top:4px">Paid by ${r.pay}${r.change?(' · change '+kes(r.change)):''}${r.ref?(' · '+r.ref):''}</div>
+      <div style="margin-top:8px">${barcodeHTML(r.code,'sm')}</div>
     </div>`;
 }
 function printLast(){
-  if(!lastReceipt){ return; }
-  const r=lastReceipt;
-  document.getElementById('print-area').innerHTML =
+  if(!lastReceipt)return; const r=lastReceipt;
+  document.getElementById('print-area').innerHTML=
    `<div class="receipt">
       <div class="r-h"><div style="font-weight:700;font-size:16px">${BUSINESS}</div>
         <div style="font-size:11px">Sales Receipt · ${r.no}</div>
@@ -256,91 +309,57 @@ function printLast(){
         <div class="r-row"><span>${r.qty} × ${r.item}</span><span>${kes(r.subtotal)}</span></div>
         <div class="r-row"><span>VAT (16%)</span><span>${kes(r.tax)}</span></div>
         <div class="r-row r-tot"><span>TOTAL</span><span>${kes(r.total)}</span></div>
-        <div class="r-row"><span>Payment</span><span>${r.pay}</span></div>
+        <div class="r-row"><span>Payment</span><span>${r.pay}${r.ref?(' · '+r.ref):''}</span></div>
+        ${r.change?`<div class="r-row"><span>Change</span><span>${kes(r.change)}</span></div>`:''}
       </div>
-      <div style="text-align:center;margin-top:12px;font-size:11px">Asante sana — powered by Stawi</div>
+      <div style="margin-top:12px;display:flex;justify-content:center">${barcodeHTML(r.code)}</div>
+      <div style="text-align:center;margin-top:10px;font-size:11px">Asante sana — powered by Stawi</div>
     </div>`;
-  document.body.classList.add('printing');
-  window.print();
+  document.body.classList.add('printing'); window.print();
   setTimeout(()=>document.body.classList.remove('printing'),300);
 }
 
-// ---------- alerts + acknowledgement ----------
-function acknowledge(id){
-  const fb=document.getElementById('fb-'+id).value;
-  acks[id]={ feedback:fb, at:Date.now() };
-  const st=stock.find(s=>s.id===id);
-  toast('Acknowledged: '+st.name+' — '+fbLabel(fb));
-  renderAll();
-}
-function fbLabel(f){ return ({REORDERED:'Reordered',ORDERING_TODAY:'Ordering today',RESTOCKED:'Restocked',DISMISSED:'Dismissed'})[f]||f; }
+// ---------- alerts ----------
+function acknowledge(id){const fb=document.getElementById('fb-'+id).value;acks[id]={feedback:fb,at:Date.now()};toast('Acknowledged: '+stock.find(s=>s.id===id).name+' — '+fbLabel(fb));renderAll();}
+function fbLabel(f){return ({REORDERED:'Reordered',ORDERING_TODAY:'Ordering today',RESTOCKED:'Restocked',DISMISSED:'Dismissed'})[f]||f;}
 
 // ---------- render ----------
 function renderKpis(){
-  const p=pnl();
-  const cls=classify();
-  const reorder=cls.filter(s=>s.needsReorder).length, crit=cls.filter(s=>s.critical).length;
-  const items=[
-    ['Revenue', kes(p.sales)],
-    ['Gross margin', p.grossPct+'%'],
-    ['Net profit', kes(p.net), p.net>=0?'var(--good)':'var(--danger)'],
-    ['Net margin', p.netPct+'%'],
-    ['Expense ratio', p.expPct+'%'],
-    ['Est. VAT', kes(vatCents())],
-    ['To reorder', reorder+(crit?` · ${crit} crit`:''), crit?'var(--danger)':null],
-    ['Stock units', String(cls.reduce((a,s)=>a+s.qty,0))],
-  ];
-  document.getElementById('kpis').innerHTML = items.map(([k,v,c])=>
-    `<div class="kpi"><div class="k">${k}</div><div class="v mono" style="color:${c||'var(--forest-deep)'}">${v}</div></div>`).join('');
-  document.getElementById('hero-rev').textContent = kes(p.sales);
-  document.getElementById('stamp').textContent = 'as of ' + new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});
+  const p=pnl(),cls=classify(),reorder=cls.filter(s=>s.needsReorder).length,crit=cls.filter(s=>s.critical).length;
+  const items=[['Revenue',kes(p.sales)],['Gross margin',p.grossPct+'%'],['Net profit',kes(p.net),p.net>=0?'var(--good)':'var(--danger)'],
+    ['Net margin',p.netPct+'%'],['Expense ratio',p.expPct+'%'],['Est. VAT',kes(vatCents())],
+    ['To reorder',reorder+(crit?` · ${crit} crit`:''),crit?'var(--danger)':null],['Stock units',String(cls.reduce((a,s)=>a+s.qty,0))]];
+  document.getElementById('kpis').innerHTML=items.map(([k,v,c])=>`<div class="kpi"><div class="k">${k}</div><div class="v mono" style="color:${c||'var(--forest-deep)'}">${v}</div></div>`).join('');
+  document.getElementById('hero-rev').textContent=kes(p.sales);
+  document.getElementById('stamp').textContent='as of '+new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});
 }
-function renderLedger(){
-  document.getElementById('ledger-body').innerHTML = ledger.slice(0,8).map(e=>
-    `<tr><td class="muted">${new Date(e.at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'})}</td>
-      <td>${e.desc}<span class="pill ${e.type==='SALE'?'tag-fast':'tag-slow'}" style="margin-left:6px">${e.type}</span></td>
-      <td class="mono" style="text-align:right;color:${e.type==='SALE'?'var(--good)':'var(--ink-2)'}">${kes(e.cents)}</td></tr>`).join('');
-}
-function renderStock(){
-  const cls=classify();
-  document.getElementById('stock-body').innerHTML = cls.map(s=>{
-    const status = s.critical?'<b style="color:var(--danger)">⚠ Critical</b>':s.needsReorder?'<span style="color:var(--warn)">Low</span>':'<span style="color:var(--good)">OK</span>';
-    return `<tr><td>${s.name}</td><td class="mono" style="text-align:right">${s.qty}</td>
-      <td class="mono" style="text-align:right">${s.sold}</td>
-      <td><span class="pill tag-${s.movement}">${s.movement}</span></td><td>${status}</td></tr>`;
-  }).join('');
-}
+function renderLedger(){document.getElementById('ledger-body').innerHTML=ledger.slice(0,8).map(e=>
+  `<tr><td class="muted">${new Date(e.at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'})}</td>
+    <td>${e.desc}<span class="pill ${e.type==='SALE'?'tag-fast':'tag-slow'}" style="margin-left:6px">${e.type}</span></td>
+    <td class="mono" style="text-align:right;color:${e.type==='SALE'?'var(--good)':'var(--ink-2)'}">${kes(e.cents)}</td></tr>`).join('');}
+function renderStock(){document.getElementById('stock-body').innerHTML=classify().map(s=>{
+  const status=s.critical?'<b style="color:var(--danger)">⚠ Critical</b>':s.needsReorder?'<span style="color:var(--warn)">Low</span>':'<span style="color:var(--good)">OK</span>';
+  return `<tr><td>${s.name}</td><td>${barcodeHTML(s.code,'sm')}</td><td class="mono" style="text-align:right">${s.qty}</td>
+    <td class="mono" style="text-align:right">${s.sold}</td><td>${status}</td></tr>`;}).join('');}
 function renderAlerts(){
   const cls=classify().filter(s=>s.needsReorder).sort((a,b)=>Number(b.critical)-Number(a.critical)||a.qty-b.qty);
   let outstanding=0;
-  document.getElementById('alerts').innerHTML = cls.map(s=>{
-    const ack=acks[s.id];
-    if(!ack) outstanding++;
-    const supplier = s.supplier ? `${s.supplier} · ${s.phone}` : 'No supplier on file';
-    const actionBtn = s.supplier
-      ? `<a class="btn gold sm" style="text-decoration:none" href="tel:${s.phone}">Order ↗</a>`
-      : `<button class="btn ghost sm" onclick="toast('Opens Pillar 2 supplier match')">Find supplier ↗</button>`;
-    if(ack){
-      return `<div class="alert ok">
-        <div><b>${s.name}</b> — ${s.qty} left · <span class="muted">${supplier}</span>
-          <div style="margin-top:6px"><span class="ack">✓ ${fbLabel(ack.feedback)}</span>
-          <span class="muted" style="margin-left:8px">acknowledged ${new Date(ack.at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'})}</span></div></div>
-        <button class="btn ghost sm" onclick="delete acks['${s.id}'];renderAll()">Undo</button></div>`;
-    }
-    return `<div class="alert ${s.critical?'crit':'low'}">
-      <div><b>${s.critical?'⚠ Critical — ':''}${s.name}</b> — ${s.qty} left (level ${s.reorder}) · <span class="muted">${supplier}</span></div>
+  document.getElementById('alerts').innerHTML=cls.map(s=>{
+    const ack=acks[s.id]; if(!ack)outstanding++;
+    const sup=s.supplier?`${s.supplier} · ${s.phone}`:'No supplier on file';
+    const act=s.supplier?`<a class="btn gold sm" style="text-decoration:none" href="tel:${s.phone}">Order ↗</a>`:`<button class="btn ghost sm" onclick="toast('Opens Pillar 2 supplier match')">Find supplier ↗</button>`;
+    if(ack)return `<div class="alert ok"><div><b>${s.name}</b> — ${s.qty} left · <span class="muted">${sup}</span>
+      <div style="margin-top:6px"><span class="ack">✓ ${fbLabel(ack.feedback)}</span><span class="muted" style="margin-left:8px">acknowledged ${new Date(ack.at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'})}</span></div></div>
+      <button class="btn ghost sm" onclick="delete acks['${s.id}'];renderAll()">Undo</button></div>`;
+    return `<div class="alert ${s.critical?'crit':'low'}"><div><b>${s.critical?'⚠ Critical — ':''}${s.name}</b> — ${s.qty} left (level ${s.reorder}) · <span class="muted">${sup}</span></div>
       <div class="row" style="align-items:center">
-        <select id="fb-${s.id}" style="width:auto">
-          <option value="REORDERED">Reordered</option><option value="ORDERING_TODAY">Ordering today</option>
-          <option value="RESTOCKED">Restocked</option><option value="DISMISSED">Dismiss for now</option></select>
-        <button class="btn sm" onclick="acknowledge('${s.id}')">Acknowledge</button>
-        ${actionBtn}
-      </div></div>`;
-  }).join('') || '<div class="alert ok"><b>All stock healthy</b> — no reorders needed right now.</div>';
-  document.getElementById('out-count').textContent = outstanding;
+        <select id="fb-${s.id}" style="width:auto"><option value="REORDERED">Reordered</option><option value="ORDERING_TODAY">Ordering today</option><option value="RESTOCKED">Restocked</option><option value="DISMISSED">Dismiss for now</option></select>
+        <button class="btn sm" onclick="acknowledge('${s.id}')">Acknowledge</button>${act}</div></div>`;
+  }).join('')||'<div class="alert ok"><b>All stock healthy</b> — no reorders needed right now.</div>';
+  document.getElementById('out-count').textContent=outstanding;
 }
-function renderAll(){ renderKpis(); renderLedger(); renderStock(); renderAlerts(); }
-renderReceipt(); renderAll();
+function renderAll(){renderKpis();renderLedger();renderStock();renderAlerts();}
+renderAll();
 </script>
 </body>
 </html>
