@@ -25,4 +25,5 @@ export * from './identity';
 export * from './intake';
 export * from './sacco-activation';
 export * from './business-activation';
+export * from './pos';
 export * from './journey';
