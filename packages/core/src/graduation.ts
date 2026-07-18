@@ -228,7 +228,7 @@ export function assessGraduation(input: GraduationInput): GraduationAssessment {
   }
 
   const idx = STAGE_ORDER.indexOf(currentStage);
-  const nextStage = idx + 1 < STAGE_ORDER.length ? STAGE_ORDER[idx + 1] : null;
+  const nextStage = idx + 1 < STAGE_ORDER.length ? STAGE_ORDER[idx + 1] ?? null : null;
   const checks = nextStage ? checksFor(nextStage, input) : [];
   const met = checks.filter((c) => c.met).length;
 

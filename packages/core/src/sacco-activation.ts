@@ -116,7 +116,7 @@ export function memberSavingsProfiles(
 
     let savingStreakMonths = 0;
     for (let i = perMonth.length - 1; i >= 0; i--) {
-      if (perMonth[i].contributed > 0) savingStreakMonths++;
+      if ((perMonth[i]?.contributed ?? 0) > 0) savingStreakMonths++;
       else break;
     }
 
@@ -272,7 +272,7 @@ export function buildSaccoActivation(
   }));
 
   const totalContributionsCents = members.reduce((a, m) => a + m.depositsCents, 0);
-  const latestClosingCents = sorted.length ? sorted[sorted.length - 1].finance.closingCents : 0;
+  const latestClosingCents = sorted.length ? sorted[sorted.length - 1]!.finance.closingCents : 0;
 
   const evidence = activationEvidence(charter, statements);
   const satisfied = evidence.filter((e) => e.satisfied).length;

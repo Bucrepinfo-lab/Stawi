@@ -27,3 +27,8 @@ export * from './sacco-activation';
 export * from './business-activation';
 export * from './pos';
 export * from './journey';
+
+// `CountryCode` is declared in both ./tax ('KE') and ./compliance (multi-country).
+// Expose the broader compliance definition explicitly to resolve the star-export
+// ambiguity; tax's narrower 'KE' remains available via direct import from './tax'.
+export type { CountryCode } from './compliance';

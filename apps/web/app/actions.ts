@@ -96,8 +96,11 @@ export async function openSaccoAccountAction(input: {
   countryCode?: string;
   ownerGroupId?: string;
 }): Promise<{ ok: boolean; persisted: boolean; id?: string; error?: string }> {
-  const clean = assertClean(input.displayName, 'sacco_account');
-  if (!clean.ok) return { ok: false, persisted: false, error: clean.reason };
+  try {
+    assertClean(input.displayName);
+  } catch (e) {
+    return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Content blocked' };
+  }
   if (!dbEnabled()) return { ok: true, persisted: false };
   try {
     const { prisma, openSaccoAccount } = await import('@stawi/db');
@@ -131,8 +134,11 @@ export async function activateSaccoFromPillar1Action(input: {
   countryCode?: string;
   openingDepositCents?: number;
 }): Promise<{ ok: boolean; persisted: boolean; accountId?: string; seededCents?: number; error?: string }> {
-  const clean = assertClean(input.displayName, 'sacco_account');
-  if (!clean.ok) return { ok: false, persisted: false, error: clean.reason };
+  try {
+    assertClean(input.displayName);
+  } catch (e) {
+    return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Content blocked' };
+  }
   if (!dbEnabled()) return { ok: true, persisted: false, seededCents: input.openingDepositCents ?? 0 };
   try {
     const { prisma, openSaccoAccount, postSaccoTxn } = await import('@stawi/db');
