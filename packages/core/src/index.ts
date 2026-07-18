@@ -24,3 +24,4 @@ export * from './statement';
 export * from './identity';
 export * from './intake';
 export * from './sacco-activation';
+export * from './journey';

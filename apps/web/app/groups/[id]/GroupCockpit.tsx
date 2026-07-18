@@ -19,6 +19,10 @@ import {
   parseImportedNotes,
   buildSaccoActivation,
   activationCreditPreview,
+  computeJourney,
+  type GroupJourney,
+  type PillarProgress,
+  type JourneyTarget,
   type GroupCharter,
   type CharterMember,
   type OfficialDesignation,
@@ -73,6 +77,7 @@ export function GroupCockpit({ cockpit, canEdit }: { cockpit: Cockpit; canEdit: 
   const [tab, setTab] = useState<Tab>('charter');
   const [charter, setCharter] = useState<GroupCharter>(cockpit.charter);
   const [meetings, setMeetings] = useState<Meeting[]>(cockpit.meetings);
+  const [saccoActive, setSaccoActive] = useState(false);
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
     { key: 'charter', label: 'Charter', icon: '📋' },
@@ -82,11 +87,37 @@ export function GroupCockpit({ cockpit, canEdit }: { cockpit: Cockpit; canEdit: 
     { key: 'sacco', label: 'SACCO+', icon: '🏦' },
   ];
 
+  // The self-directing spine: turn this group's live state into a whole-app
+  // journey with a single "do this next" step spanning all four pillars.
+  const journey: GroupJourney = useMemo(() => {
+    const posted = meetings.filter((m) => m.status === 'POSTED');
+    const months = Array.from(new Set(posted.filter((m) => m.date).map((m) => m.date.slice(0, 7)))).sort();
+    const statements: MonthEndStatement[] = months.map((p) => {
+      const [y, mo] = p.split('-').map(Number);
+      return reconcileMonth(meetings, charter, { year: y!, month: mo! });
+    });
+    const packet = buildSaccoActivation(charter, statements);
+    return computeJourney({
+      charterPct: charterCompleteness(charter).pct,
+      postedRecords: posted.length,
+      registered: !!(charter.registeredNumber && charter.registeredNumber.trim()),
+      saccoReadinessPct: packet.readinessPct,
+      saccoActive,
+    });
+  }, [charter, meetings, saccoActive]);
+
+  function goTo(target: JourneyTarget) {
+    if (target.kind === 'tab') setTab(target.tab as Tab);
+    else if (typeof window !== 'undefined') window.location.href = target.href;
+  }
+
   return (
     <div>
       <style>{`@media print { .no-print { display: none !important; } body { background:#fff; } .print-doc { box-shadow:none !important; border:none !important; } }`}</style>
 
-      <div className="no-print" style={{ display: 'flex', gap: 6, background: 'var(--bone-2)', padding: 6, borderRadius: 14, width: 'fit-content', flexWrap: 'wrap' }}>
+      <PillarJourney journey={journey} activeTab={tab} onGo={goTo} />
+
+      <div className="no-print" style={{ display: 'flex', gap: 6, background: 'var(--bone-2)', padding: 6, borderRadius: 14, width: 'fit-content', flexWrap: 'wrap', marginTop: 16 }}>
         {tabs.map((t) => (
           <button key={t.key} onClick={() => setTab(t.key)}
             style={{ padding: '9px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, background: tab === t.key ? 'var(--forest-deep)' : 'transparent', color: tab === t.key ? 'var(--bone)' : 'var(--ink-2)' }}>
@@ -106,7 +137,70 @@ export function GroupCockpit({ cockpit, canEdit }: { cockpit: Cockpit; canEdit: 
         {tab === 'minutes' && <MinutesTab charter={charter} meetings={meetings} setMeetings={setMeetings} canEdit={canEdit} groupId={cockpit.groupId} />}
         {tab === 'documents' && <DocumentsTab charter={charter} meetings={meetings} />}
         {tab === 'statement' && <StatementTab charter={charter} meetings={meetings} canEdit={canEdit} groupId={cockpit.groupId} />}
-        {tab === 'sacco' && <SaccoActivationTab charter={charter} meetings={meetings} canEdit={canEdit} groupId={cockpit.groupId} />}
+        {tab === 'sacco' && <SaccoActivationTab charter={charter} meetings={meetings} canEdit={canEdit} groupId={cockpit.groupId} onActivated={() => setSaccoActive(true)} />}
+      </div>
+    </div>
+  );
+}
+
+// ───────────────────── Cross-pillar journey strip (self-directing) ─────────────────────
+// Always-visible guidance: the four pillars as one path, plus the single next
+// step. Users never have to understand the pillar model — the app tells them
+// what to do now.
+
+function PillarJourney({ journey, activeTab, onGo }: { journey: GroupJourney; activeTab: Tab; onGo: (t: JourneyTarget) => void }) {
+  const statusColor: Record<PillarProgress['status'], string> = {
+    locked: 'var(--dim)',
+    available: 'var(--forest)',
+    in_progress: 'var(--gold)',
+    ready: 'var(--gold)',
+    active: 'var(--forest-deep)',
+    done: 'var(--forest-deep)',
+  };
+  const icon: Record<PillarProgress['key'], string> = { records: '📋', matching: '🤝', accounting: '📚', sacco: '🏦' };
+
+  return (
+    <div className="no-print" style={{ ...card, padding: 16, background: 'var(--paper)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--dim)' }}>
+          Your Stawi journey · {journey.overallPct}% overall
+        </div>
+        <button onClick={() => onGo(journey.focus.target)} style={{ ...btnGold, padding: '9px 16px', fontSize: 13 }}>
+          👉 Next: {journey.focus.label}
+        </button>
+      </div>
+      <div style={{ marginTop: 6, fontSize: 12.5, color: 'var(--ink-2)' }}>{journey.focus.why}</div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginTop: 14 }}>
+        {journey.pillars.map((p, i) => {
+          const isFocus = p.id === journey.focus.pillarId;
+          const isHere = (p.key === 'records' && ['charter', 'minutes', 'documents', 'statement'].includes(activeTab)) || (p.key === 'sacco' && activeTab === 'sacco');
+          return (
+            <button
+              key={p.id}
+              onClick={() => p.nextAction && onGo(p.nextAction.target)}
+              disabled={!p.nextAction}
+              title={p.summary}
+              style={{
+                textAlign: 'left', cursor: p.nextAction ? 'pointer' : 'default', fontFamily: 'inherit',
+                background: isHere ? 'var(--bone-2)' : '#fff',
+                border: `1.5px solid ${isFocus ? 'var(--gold)' : 'var(--line)'}`,
+                borderRadius: 12, padding: '11px 13px', opacity: p.status === 'locked' ? 0.62 : 1,
+              }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <span aria-hidden>{icon[p.key]}</span>
+                <span style={{ fontSize: 10.5, fontWeight: 800, color: 'var(--dim)' }}>PILLAR {p.id}</span>
+                {p.status === 'ready' && <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 800, color: 'var(--forest-deep)', background: 'rgba(224,163,46,.22)', padding: '1px 6px', borderRadius: 6 }}>READY</span>}
+                {(p.status === 'active' || p.status === 'done') && <span aria-hidden style={{ marginLeft: 'auto', color: 'var(--forest-deep)' }}>✓</span>}
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginTop: 5 }}>{p.title}</div>
+              <div style={{ marginTop: 7, height: 6, borderRadius: 6, background: 'var(--bone-2)', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${p.pct}%`, background: statusColor[p.status], transition: 'width .4s ease' }} />
+              </div>
+              <div style={{ fontSize: 11.5, color: 'var(--ink-2)', marginTop: 6, lineHeight: 1.35 }}>{p.summary}</div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -117,7 +211,7 @@ export function GroupCockpit({ cockpit, canEdit }: { cockpit: Cockpit; canEdit: 
 // in one tap, with its charter, minutes and month-end statements reflected as
 // the exact evidence a lender asks for before extending credit.
 
-function SaccoActivationTab({ charter, meetings, canEdit, groupId }: { charter: GroupCharter; meetings: Meeting[]; canEdit: boolean; groupId: string }) {
+function SaccoActivationTab({ charter, meetings, canEdit, groupId, onActivated }: { charter: GroupCharter; meetings: Meeting[]; canEdit: boolean; groupId: string; onActivated?: () => void }) {
   const [state, setState] = useState<'idle' | 'working' | 'done'>('idle');
   const [note, setNote] = useState<string>('');
 
@@ -146,6 +240,7 @@ function SaccoActivationTab({ charter, meetings, canEdit, groupId }: { charter: 
     });
     if (r.ok) {
       setState('done');
+      onActivated?.();
       setNote(r.persisted
         ? `SACCO+ account opened${r.seededCents ? ` and seeded with ${formatKes(r.seededCents)} from your pooled savings` : ''}.`
         : 'Activation staged. Your account opens the moment live services are switched on — no re-entry needed.');
