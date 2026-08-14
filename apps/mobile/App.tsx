@@ -1,52 +1,64 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { ClerkProvider, useAuth, useUser } from '@clerk/clerk-expo';
-import { findMemberGroups, type GroupCharter, type Meeting, type MemberGroupLink } from '@stawi/core';
+import type { Session as SupabaseSession } from '@supabase/supabase-js';
+import { findMemberGroups, toE164, type GroupCharter, type Meeting, type MemberGroupLink } from '@stawi/core';
 import { colors, radius, spacing } from './theme/tokens';
 import { PhoneLoginScreen } from './screens/PhoneLoginScreen';
-import { ClerkPhoneLogin } from './screens/ClerkPhoneLogin';
+import { SupabasePhoneLogin } from './screens/SupabasePhoneLogin';
 import { GroupsHomeScreen } from './screens/GroupsHomeScreen';
 import { CockpitScreen } from './screens/CockpitScreen';
 import { TableBankingScreen } from './screens/TableBankingScreen';
 import { SaccoScreen } from './SaccoScreen';
 import { CHARTER, MEETINGS, DIRECTORIES } from './data/seed';
 import { api, setAuthTokenProvider } from './lib/api';
-import { tokenCache } from './lib/tokenCache';
+import { supabase } from './lib/supabase';
 
-const CLERK_PK = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 
 interface Session { phone: string; getToken: () => Promise<string | null>; signOut: () => void; }
 
-// Root: use Clerk auth when configured, else the self-contained demo flow.
+// Root: use Supabase phone-OTP auth when configured, else the self-contained demo flow.
 export default function App() {
-  if (CLERK_PK) {
-    return (
-      <ClerkProvider publishableKey={CLERK_PK} tokenCache={tokenCache}>
-        <ClerkGate />
-      </ClerkProvider>
-    );
-  }
+  if (SUPABASE_URL) return <SupabaseGate />;
   return <MainApp />;
 }
 
-function ClerkGate() {
-  const { isLoaded, isSignedIn, getToken, signOut } = useAuth();
-  const { user } = useUser();
+function SupabaseGate() {
+  const [session, setSession] = useState<SupabaseSession | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setIsLoaded(true);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
   if (!isLoaded) {
     return <SafeAreaView style={styles.root}><View style={styles.loading}><ActivityIndicator color={colors.forest} /></View></SafeAreaView>;
   }
-  if (!isSignedIn) {
+  if (!session) {
     return (
       <SafeAreaView style={styles.root}>
         <StatusBar style="light" />
         <View style={styles.header}><Text style={styles.greet}>Stawi</Text><Text style={styles.h1}>Save together, grow together</Text></View>
-        <ClerkPhoneLogin />
+        <SupabasePhoneLogin />
       </SafeAreaView>
     );
   }
-  const phone = user?.primaryPhoneNumber?.phoneNumber ?? user?.phoneNumbers?.[0]?.phoneNumber ?? '';
-  return <MainApp session={{ phone, getToken: () => getToken(), signOut: () => signOut() }} />;
+  const phone = session.user.phone ? (toE164(session.user.phone) ?? '') : '';
+  return (
+    <MainApp
+      session={{
+        phone,
+        getToken: async () => (await supabase.auth.getSession()).data.session?.access_token ?? null,
+        signOut: () => { void supabase.auth.signOut(); },
+      }}
+    />
+  );
 }
 
 type View3 = 'login' | 'groups' | 'group';

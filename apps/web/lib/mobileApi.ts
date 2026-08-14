@@ -40,22 +40,24 @@ export function dbRequired() {
 
 /**
  * Authorize a mobile request. Order of precedence:
- *  1. Clerk session token (Authorization: Bearer …) verified with CLERK_SECRET_KEY.
+ *  1. Supabase session JWT (Authorization: Bearer …) verified (HS256) with
+ *     SUPABASE_JWT_SECRET — the Expo app now authenticates with Supabase phone-OTP,
+ *     the same identity the web uses.
  *  2. Shared key (x-stawi-mobile-key === MOBILE_API_KEY).
  *  3. Open — only when neither is configured (local/demo).
  * Returns null when allowed, or a 401 response otherwise.
  */
 export async function guard(req: Request): Promise<NextResponse | null> {
-  const secret = process.env.CLERK_SECRET_KEY;
+  const secret = process.env.SUPABASE_JWT_SECRET;
   const key = process.env.MOBILE_API_KEY;
   const authz = req.headers.get('authorization');
   const bearer = authz?.startsWith('Bearer ') ? authz.slice(7) : null;
 
   if (bearer && secret) {
     try {
-      const { verifyToken } = await import('@clerk/backend');
-      await verifyToken(bearer, { secretKey: secret });
-      return null; // valid Clerk session
+      const jwt = (await import('jsonwebtoken')).default;
+      jwt.verify(bearer, secret); // throws if invalid/expired
+      return null; // valid Supabase session
     } catch {
       return bad('Invalid session', 401);
     }
