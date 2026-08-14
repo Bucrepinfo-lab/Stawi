@@ -27,9 +27,9 @@ const DENY = '__deny__';
 async function tenantCtx() {
   if (!dbEnabled()) return null;
   const db = await import('@stawi/db');
-  const { auth } = await import('@clerk/nextjs/server');
+  const { getUserId } = await import('@/lib/auth');
   const { headers } = await import('next/headers');
-  const { userId } = await auth();
+  const userId = await getUserId();
   if (!userId) return null;
 
   const slug = (await headers()).get('x-stawi-tenant-slug');
@@ -53,10 +53,8 @@ export async function getMyGroups(): Promise<GroupAccount[]> {
   // (covers the window before the sign-in webhook links pending roster rows).
   let byPhone: unknown[] = [];
   try {
-    const { currentUser } = await import('@clerk/nextjs/server');
-    const u = await currentUser();
-    const phone = u?.primaryPhoneNumber?.phoneNumber
-      ?? u?.phoneNumbers?.[0]?.phoneNumber;
+    const { getUserPhone } = await import('@/lib/auth');
+    const phone = await getUserPhone();
     if (phone) byPhone = await c.db.getGroupsByPhone(c.db.prisma, phone, c.tenantId ?? undefined);
   } catch { /* phone lookup is best-effort */ }
   const merged = new Map<string, GroupAccount>();
@@ -145,8 +143,8 @@ export type ViewerRole = 'MEMBER' | 'OFFICIAL' | 'SUPER_ADMIN';
  */
 export async function getViewerRole(): Promise<ViewerRole> {
   if (!dbEnabled()) return 'OFFICIAL';
-  const { auth } = await import('@clerk/nextjs/server');
-  const { userId } = await auth();
+  const { getUserId } = await import('@/lib/auth');
+  const userId = await getUserId();
   if (!userId) return 'MEMBER';
   const supers = (process.env.SUPER_ADMIN_CLERK_IDS ?? '').split(',').map((s) => s.trim()).filter(Boolean);
   if (supers.includes(userId)) return 'SUPER_ADMIN';

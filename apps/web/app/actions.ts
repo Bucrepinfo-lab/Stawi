@@ -13,8 +13,8 @@ import { publishEvent } from '@/lib/events';
 
 async function tenantId(): Promise<string | undefined> {
   const { prisma, getTenantContext } = await import('@stawi/db');
-  const { auth } = await import('@clerk/nextjs/server');
-  const { userId } = await auth();
+  const { getUserId } = await import('@/lib/auth');
+  const userId = await getUserId();
   if (!userId) return undefined;
   const ctx = await getTenantContext(prisma, userId);
   return ctx?.tenantId;
@@ -31,8 +31,8 @@ export async function recordContributionAction(input: {
     return { ok: true, persisted: false };
   }
   const { prisma, recordContribution } = await import('@stawi/db');
-  const { auth } = await import('@clerk/nextjs/server');
-  const { userId } = await auth();
+  const { getUserId } = await import('@/lib/auth');
+  const userId = await getUserId();
   try {
     await recordContribution(prisma, {
       groupId: input.groupId,
@@ -104,8 +104,8 @@ export async function openSaccoAccountAction(input: {
   if (!dbEnabled()) return { ok: true, persisted: false };
   try {
     const { prisma, openSaccoAccount } = await import('@stawi/db');
-    const { auth } = await import('@clerk/nextjs/server');
-    const { userId } = await auth();
+    const { getUserId } = await import('@/lib/auth');
+    const userId = await getUserId();
     const tid = await tenantId();
     if (!userId || !tid) return { ok: false, persisted: false, error: 'Not signed in to a tenant' };
     const r = await openSaccoAccount(prisma, {
@@ -142,8 +142,8 @@ export async function activateSaccoFromPillar1Action(input: {
   if (!dbEnabled()) return { ok: true, persisted: false, seededCents: input.openingDepositCents ?? 0 };
   try {
     const { prisma, openSaccoAccount, postSaccoTxn } = await import('@stawi/db');
-    const { auth } = await import('@clerk/nextjs/server');
-    const { userId } = await auth();
+    const { getUserId } = await import('@/lib/auth');
+    const userId = await getUserId();
     const tid = await tenantId();
     if (!userId || !tid) return { ok: false, persisted: false, error: 'Not signed in to a tenant' };
     const acct = await openSaccoAccount(prisma, {
@@ -185,8 +185,8 @@ export async function saccoTxnAction(input: {
   if (!dbEnabled()) return { ok: true, persisted: false };
   try {
     const { prisma, postSaccoTxn } = await import('@stawi/db');
-    const { auth } = await import('@clerk/nextjs/server');
-    const { userId } = await auth();
+    const { getUserId } = await import('@/lib/auth');
+    const userId = await getUserId();
     const tid = await tenantId();
     if (!userId || !tid) return { ok: false, persisted: false, error: 'Not signed in to a tenant' };
     const r = await postSaccoTxn(prisma, {
@@ -276,8 +276,8 @@ export async function createGroupAction(input: {
   }
   try {
     const { prisma } = await import('@stawi/db');
-    const { auth } = await import('@clerk/nextjs/server');
-    const { userId } = await auth();
+    const { getUserId } = await import('@/lib/auth');
+    const userId = await getUserId();
     const tid = await tenantId();
     const g = await prisma.group.create({
       data: { name, type: input.type ?? 'CHAMA', countryCode: input.countryCode ?? 'KE', tenantId: tid, clerkOrgId: `manual-${Date.now()}` },

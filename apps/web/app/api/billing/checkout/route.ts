@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getUserId } from '@/lib/auth';
 import { getPlan, getCountryProfile, buildSubscriptionCheckout, type PlanTier, type CountryCode } from '@stawi/core';
 import { startCheckout } from '@/lib/billing';
 
@@ -10,7 +10,7 @@ export const runtime = 'nodejs';
  * Creates a hosted checkout session (Stripe when configured) and returns its URL.
  */
 export async function POST(req: Request) {
-  const { userId } = await auth();
+  const userId = await getUserId();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   let body: { tier?: PlanTier; country?: string; tenantRef?: string };

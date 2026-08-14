@@ -33,3 +33,4 @@ export * from './journey';
 // Expose the broader compliance definition explicitly to resolve the star-export
 // ambiguity; tax's narrower 'KE' remains available via direct import from './tax'.
 export type { CountryCode } from './compliance';
+export * from './phone';
