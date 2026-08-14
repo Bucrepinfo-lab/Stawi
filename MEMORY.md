@@ -1,5 +1,13 @@
 # Stawi — session memory / start-here
 
+> **RESUME HERE (2026-08-14, end of session 3):** Auth migrated Clerk → **Supabase
+> phone-OTP** across web + mobile (OTP SMS via Africa's Talking); web+mobile now one
+> identity. Typechecks green, pushed to `main` (`154bcec`). Set the Supabase + AT env
+> (`.env.example`, `docs/PHONE_AUTH_MIGRATION.md`), a Supabase project (Phone auth +
+> Send-SMS hook → `/api/auth/send-sms`), and `SUPABASE_JWT_SECRET` for the mobile bridge.
+> **Only blocker to live SMS/M-Pesa = Africa's Talking account activation (user-side).**
+> Full detail: **Session 3 log** below. Older Clerk-era notes retained for history.
+>
 > **RESUME HERE (2026-07-18, end of session 2):**
 > 1. `git push origin main` if `git status` shows commits ahead (last local commit: `5e67b01`).
 > 2. Re-run `npm run build` once (landing changed after last green build) — expect 24/24.
@@ -28,6 +36,41 @@
 > v1.9-import-notes promoted as the single source of truth, duplicates removed.
 > Backup of all snapshots: `ChamaaApp-backup.tar.gz` (in the Cowork outputs folder).
 > v1.9 adds: import written notes (photo/file → OCR/parse → minutes) + per-country phone length.
+
+## Session 3 log (2026-08-14) — Clerk → Supabase phone-OTP migration (web + mobile)
+
+**Why:** unify on phone-number login (no email) for the informal/African market, with
+the login phone doubling as the M-Pesa number. Clerk replaced by **Supabase phone-OTP**;
+**Africa's Talking** delivers the OTP SMS. M-Pesa was already native (Daraja STK at
+`/api/mpesa/stk` + callback) — unchanged.
+
+**Web (`apps/web`) — identity-source swap, no schema change.** Clerk's `userId` was an
+opaque string identity everywhere (`getTenantContext(prisma, userId)`, stored in
+`clerkUserId`/`ownerClerkId` columns). New `lib/auth.ts#getUserId()` returns the Supabase
+user id; every `auth()` call-site (`app/actions.ts`, `lib/data.ts`, `api/mpesa/stk`,
+`api/billing/checkout`) uses it. Columns keep their names (now hold Supabase ids).
+- `lib/supabase/{server,client,middleware}.ts` (SSR, Next 15 async cookies); `middleware.ts`
+  = Supabase guard that **preserves** the tenant-slug resolution (`x-stawi-tenant-slug`).
+- `app/sign-in` + `app/sign-up` → phone→OTP (`components/phone-auth.tsx`); `ClerkProvider`
+  removed. `app/api/auth/send-sms` = Supabase Send-SMS hook → Africa's Talking (HMAC).
+- Phone-first group linking (`getGroupsByPhone`) now reads the phone from the Supabase user
+  (`getUserPhone`). `toE164` added to `@stawi/core`. `@clerk/nextjs` → `@supabase/ssr` +
+  `@supabase/supabase-js`. Doc: `docs/PHONE_AUTH_MIGRATION.md`.
+
+**Mobile (`apps/mobile`) — Expo → Supabase.** `lib/supabase.ts` (session in AsyncStorage) +
+`screens/SupabasePhoneLogin.tsx`; `App.tsx` gates on `EXPO_PUBLIC_SUPABASE_URL` (`SupabaseGate`
+manages session → passes phone/getToken/signOut to `MainApp`). `@clerk/clerk-expo` →
+`@supabase/supabase-js` + async-storage + url-polyfill. `ClerkPhoneLogin.tsx` + `tokenCache.ts`
+inert. Removing Clerk also removes the root cause of the `.npmrc` `legacy-peer-deps` react-dom
+hoist (flag left in place, harmless).
+
+**Web ↔ mobile bridge — one identity.** `apps/web/lib/mobileApi.ts#guard` now verifies the
+Expo app's **Supabase session JWT** (HS256, `SUPABASE_JWT_SECRET`) instead of Clerk;
+`@clerk/backend` → `jsonwebtoken`. Web and mobile now share one Supabase identity.
+
+**Validated on-machine (2026-08-14):** `@stawi/db generate` → `@stawi/web typecheck` ✅;
+`apps/mobile tsc --noEmit` ✅. Both green, pushed to `main` (`154bcec`).
+**Still blocking live SMS/M-Pesa:** Africa's Talking account activation (user-side).
 
 ## Session 2 log (2026-07-18) — build-out on top of the consolidation
 - **Pillar 1→4 bridge:** `sacco-activation.ts` + SACCO+ cockpit tab (opt-in join).
@@ -73,19 +116,23 @@
   (phone match / groups-by-phone). Tests: charter/minutes/statement/identity.
 - **Web:** `/groups/[id]` cockpit (Charter · Minutes · Documents · Month-End), `/groups/new`,
   role-gated; phone-first sign-in/up; JSON API `apps/web/app/api/mobile/*`.
-- **Mobile (Expo):** phone login (demo + Clerk OTP), groups-by-phone, full cockpit,
-  Table banking, SACCO+; `lib/api.ts` (live ⇄ offline seed), Live/Offline pill.
+- **Mobile (Expo):** phone login (demo + **Supabase phone-OTP**), groups-by-phone, full
+  cockpit, Table banking, SACCO+; `lib/api.ts` (live ⇄ offline seed), Live/Offline pill.
 - **DB (live-on-key):** `GroupCharter`/`Meeting`/`MonthlyStatement` + phone-keyed
   memberships; repo helpers; RLS; seed creates Umoja charter + 2 meetings + phones.
-- **Auth:** phone-first. Clerk optional on mobile (`EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`),
-  verified server-side (`@clerk/backend` + `CLERK_SECRET_KEY`). API auth precedence:
-  Clerk bearer → `MOBILE_API_KEY` → open (dev only).
+- **Auth (session 3):** phone-first via **Supabase phone-OTP** (web + mobile), OTP SMS by
+  Africa's Talking; enabled when `NEXT_PUBLIC_SUPABASE_URL`/`EXPO_PUBLIC_SUPABASE_URL` set,
+  else demo/dev. Web + mobile share one Supabase identity. API auth precedence (mobile
+  bridge): **Supabase JWT** (`SUPABASE_JWT_SECRET`) → `MOBILE_API_KEY` → open (dev only).
 - **Production rule:** `DATABASE_URL` REQUIRED; no seed fall-back in prod (API → 503).
 
-## Key env
-Web: `DATABASE_URL`, `CLERK_*`, `MOBILE_API_KEY`, `MPESA_*`, `STRIPE_*`, `CRON_SECRET`.
-Mobile (`apps/mobile/.env`): `EXPO_PUBLIC_API_BASE`, `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`,
-`EXPO_PUBLIC_API_KEY`. See `.env.example`, `DB-SETUP.md`, `.do/app.yaml`.
+## Key env (updated session 3)
+Web: `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+`SUPABASE_SEND_SMS_HOOK_SECRET`, `SUPABASE_JWT_SECRET` (mobile-bridge JWT verify),
+`AT_USERNAME`/`AT_API_KEY`/`AT_SENDER_ID`, `MOBILE_API_KEY`, `MPESA_*` (Daraja), `STRIPE_*`,
+`CRON_SECRET`. Mobile (`apps/mobile/.env`): `EXPO_PUBLIC_SUPABASE_URL`,
+`EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_API_BASE`, `EXPO_PUBLIC_API_KEY`.
+See `.env.example`, `docs/PHONE_AUTH_MIGRATION.md`, `DB-SETUP.md`, `.do/app.yaml`.
 
 ## Verification note
 Core logic unit-verified; all TS/TSX syntax-clean; imported symbols confirmed.
