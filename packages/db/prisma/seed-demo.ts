@@ -6,7 +6,22 @@
  * Uses a canonical E.164 phone so it matches toE164() from the sign-in form (the
  * main seed's local-format phones like 0712345678 won't match phone-login).
  */
+import { existsSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
+
+// Load DATABASE_URL from a .env if it isn't already in the environment (Node 20.12+).
+if (!process.env.DATABASE_URL && typeof process.loadEnvFile === "function") {
+  for (const p of [".env", "packages/db/.env", "apps/web/.env", "prisma/.env"]) {
+    if (existsSync(p)) {
+      try {
+        process.loadEnvFile(p);
+      } catch {
+        /* ignore */
+      }
+      if (process.env.DATABASE_URL) break;
+    }
+  }
+}
 
 const prisma = new PrismaClient();
 
