@@ -34,8 +34,11 @@ sudo -u postgres psql -v ON_ERROR_STOP=1 -c \
 sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='stawi'" | grep -q 1 \
   || sudo -u postgres createdb -O stawi stawi
 
-echo "==> Installing JS dependencies (npm ci)"
-npm ci
+# The committed package-lock.json is intentionally reconciled by `npm install`
+# (the repo's documented setup command, also used by CI); `npm ci` would reject
+# the lockfile because it lags the workspace package.json files.
+echo "==> Installing JS dependencies (npm install)"
+npm install --no-audit --no-fund
 
 echo "==> Generating Prisma client"
 npm run generate --workspace @stawi/db
