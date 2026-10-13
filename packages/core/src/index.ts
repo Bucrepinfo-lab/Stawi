@@ -21,6 +21,7 @@ export * from './charter';
 export * from './minutes';
 export * from './minutes-prose';
 export * from './statement';
+export * from './member-statement-explainer';
 export * from './identity';
 export * from './intake';
 export * from './sacco-activation';
