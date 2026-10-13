@@ -45,6 +45,8 @@ export function createMemberStatementGenerate(): MemberStatementGenerate | undef
   const model = process.env.MEMBER_EXPLANATION_MODEL?.trim() || MEMBER_STATEMENT_MODEL;
 
   return async (prompt: string): Promise<string | null> => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     try {
       const res = await fetch(ANTHROPIC_MESSAGES_URL, {
         method: 'POST',
@@ -58,13 +60,15 @@ export function createMemberStatementGenerate(): MemberStatementGenerate | undef
           max_tokens: MEMBER_STATEMENT_MAX_TOKENS,
           messages: [{ role: 'user', content: prompt }],
         }),
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        signal: controller.signal,
       });
       if (!res.ok) return null;
       const text = extractText(await res.json());
       return text || null;
     } catch {
       return null;
+    } finally {
+      clearTimeout(timer);
     }
   };
 }
