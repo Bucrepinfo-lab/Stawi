@@ -17,5 +17,15 @@ Turborepo. `apps/web` (Next.js 15, Clerk), `apps/mobile` (Expo, no UI kits), `pa
 4. Match the existing "warm savanna fintech" design tokens and code style.
 5. Keep money in integer cents; never use floats for currency.
 
+## Stawi specifics (see `.claude/skills/`)
+- **Tenant isolation is non-negotiable.** Every query uses `tenantScope` /
+  `assertSameTenant` and every tenant-owned table needs an RLS policy in
+  `prisma/rls.sql` (`tenant-isolation-guard`).
+- **Money is integer cents; propose, don't dispose** — no autonomous disbursement;
+  dual approval + audit trail (`money-movement-testing`, `kyc-aml-onboarding`).
+- **Compliance values are indicative defaults — cite the source, flag "verify
+  against current local law"** (`compliance-pack`). Follow the CI gate order and the
+  Clerk→Supabase deploy-drift note in `do-deploy-runbook` / `ship-workflow`.
+
 ## Definition of done
 Typecheck clean, tests passing, file integrity verified, change explained, and (if asked) committed for the user to push.
