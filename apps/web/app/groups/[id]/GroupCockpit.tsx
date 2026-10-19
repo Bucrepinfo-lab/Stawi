@@ -40,6 +40,7 @@ import {
   postMeetingAction,
   saveStatementAction,
   activateSaccoFromPillar1Action,
+  explainMemberStatementAction,
 } from '@/app/actions';
 import type { Cockpit } from '@/lib/cockpit';
 
@@ -1048,6 +1049,29 @@ function StatementTab({ charter, meetings, canEdit, groupId }: { charter: GroupC
 }
 
 function StatementDocument({ charter, st, narrative, onEditNarrative }: { charter: GroupCharter; st: MonthEndStatement; narrative: string[]; onEditNarrative?: (i: number, v: string) => void }) {
+  // Plain-language explanation for one member, generated on demand only (never per page view).
+  const [explaining, setExplaining] = useState<string | null>(null);
+  const [explained, setExplained] = useState<{ name: string; text: string; usedModel: boolean } | null>(null);
+  const [explainErr, setExplainErr] = useState<string>();
+  async function explain(m: MonthEndStatement['members'][number]) {
+    setExplaining(m.memberId);
+    setExplainErr(undefined);
+    try {
+      const r = await explainMemberStatementAction({
+        groupName: charter.name,
+        periodLabel: st.period.label,
+        meetingsHeld: st.meetingsHeld,
+        member: m,
+        closingCents: st.finance.closingCents,
+      });
+      if (r.ok && r.text) setExplained({ name: m.name, text: r.text, usedModel: !!r.usedModel });
+      else setExplainErr(r.error ?? 'Could not explain this statement.');
+    } catch {
+      setExplainErr('Could not explain this statement.');
+    } finally {
+      setExplaining(null);
+    }
+  }
   return (
     <div className="print-doc" style={{ ...card, padding: 30 }}>
       <DocHeader charter={charter} subtitle="Month-End Statement" />
@@ -1071,7 +1095,7 @@ function StatementDocument({ charter, st, narrative, onEditNarrative }: { charte
       <h4 style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--forest-deep)', marginTop: 22 }}>2. MEMBER ATTENDANCE & CONTRIBUTIONS</h4>
       <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8, fontSize: 12.5 }}>
         <thead><tr style={{ borderBottom: '2px solid var(--forest-deep)', textAlign: 'left' }}>
-          <th style={{ padding: '6px 4px' }}>Member</th><th style={{ padding: '6px 4px', textAlign: 'center' }}>Present</th><th style={{ padding: '6px 4px', textAlign: 'center' }}>Att.%</th><th style={{ padding: '6px 4px', textAlign: 'right' }}>Contributed</th><th style={{ padding: '6px 4px', textAlign: 'right' }}>Fines</th>
+          <th style={{ padding: '6px 4px' }}>Member</th><th style={{ padding: '6px 4px', textAlign: 'center' }}>Present</th><th style={{ padding: '6px 4px', textAlign: 'center' }}>Att.%</th><th style={{ padding: '6px 4px', textAlign: 'right' }}>Contributed</th><th style={{ padding: '6px 4px', textAlign: 'right' }}>Fines</th><th className="no-print" style={{ padding: '6px 4px' }} />
         </tr></thead>
         <tbody>
           {st.members.map((m) => (
@@ -1081,10 +1105,22 @@ function StatementDocument({ charter, st, narrative, onEditNarrative }: { charte
               <td style={{ padding: '6px 4px', textAlign: 'center' }} className="mono">{m.attendancePct}%</td>
               <td style={{ padding: '6px 4px', textAlign: 'right' }} className="mono">{formatKes(m.contributedCents)}</td>
               <td style={{ padding: '6px 4px', textAlign: 'right' }} className="mono">{formatKes(m.finesCents)}</td>
+              <td className="no-print" style={{ padding: '6px 4px', textAlign: 'right' }}>
+                <button type="button" onClick={() => explain(m)} disabled={explaining !== null} style={{ fontSize: 11.5, padding: '3px 9px', borderRadius: 8, border: '1px solid var(--line)', background: 'transparent', cursor: 'pointer' }}>
+                  {explaining === m.memberId ? 'Explaining…' : 'Explain'}
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+      {(explained || explainErr) && (
+        <div className="no-print" style={{ marginTop: 10, padding: 12, background: 'var(--bone-2)', borderRadius: 12, fontSize: 13, lineHeight: 1.6 }}>
+          {explainErr
+            ? <span style={{ color: 'var(--danger, #b42318)' }}>{explainErr}</span>
+            : explained && <><strong>{explained.name}</strong>{explained.usedModel ? ' (AI-polished)' : ''}: {explained.text}</>}
+        </div>
+      )}
 
       <h4 style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--forest-deep)', marginTop: 22 }}>3. FINANCIAL RECONCILIATION</h4>
       <div style={{ marginTop: 8, padding: 14, background: 'var(--bone-2)', borderRadius: 12, display: 'grid', gap: 5, fontSize: 13 }}>

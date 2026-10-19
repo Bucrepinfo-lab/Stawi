@@ -409,3 +409,73 @@ async function assertCleanSafe(text: string): Promise<{ ok: boolean; error?: str
     return { ok: false, error: e instanceof Error ? e.message : 'Content not allowed' };
   }
 }
+
+/**
+ * Plain-language explanation of one member's month-end figures.
+ *
+ * Read-only and propose-only: it rephrases figures the statement already shows,
+ * never moves money and gives no financial advice. The optional AI pass
+ * (MEMBER_EXPLANATION_PROVIDER=anthropic + key) runs only for a signed-in user,
+ * once per click; everyone else — and any failure — gets the free template.
+ */
+export async function explainMemberStatementAction(input: {
+  groupName: string;
+  periodLabel: string;
+  meetingsHeld: number;
+  member: {
+    memberId: string;
+    name: string;
+    meetingsPresent: number;
+    meetingsApology: number;
+    meetingsAbsent: number;
+    attendancePct: number;
+    contributedCents: number;
+    finesCents: number;
+  };
+  closingCents: number;
+}): Promise<{ ok: boolean; text?: string; usedModel?: boolean; error?: string }> {
+  const { explainMemberStatement } = await import('@stawi/core');
+  const { createMemberStatementGenerate } = await import('@/lib/member-statement-ai');
+  const { getUserId } = await import('@/lib/auth');
+
+  const whole = (n: number) => (Number.isFinite(n) && n >= 0 ? Math.round(n) : 0);
+  const text = (s: string, max: number) => String(s ?? '').slice(0, max);
+  if (!input?.member) return { ok: false, error: 'Missing member' };
+
+  const signedIn = Boolean(await getUserId());
+  try {
+    const result = await explainMemberStatement(
+      {
+        groupName: text(input.groupName, 120),
+        periodLabel: text(input.periodLabel, 40),
+        meetingsHeld: whole(input.meetingsHeld),
+        member: {
+          memberId: text(input.member.memberId, 80),
+          name: text(input.member.name, 80),
+          meetingsPresent: whole(input.member.meetingsPresent),
+          meetingsApology: whole(input.member.meetingsApology),
+          meetingsAbsent: whole(input.member.meetingsAbsent),
+          attendancePct: Math.min(100, whole(input.member.attendancePct)),
+          contributedCents: whole(input.member.contributedCents),
+          finesCents: whole(input.member.finesCents),
+        },
+        finance: {
+          openingCents: 0,
+          contributionsCents: 0,
+          finesCents: 0,
+          otherInCents: 0,
+          payoutsCents: 0,
+          otherOutCents: 0,
+          totalInCents: 0,
+          totalOutCents: 0,
+          closingCents: whole(input.closingCents),
+        },
+      },
+      // AI only for a signed-in user; anonymous viewers get the free template.
+      signedIn ? createMemberStatementGenerate() : undefined,
+    );
+    return { ok: true, text: result.text, usedModel: result.usedModel };
+  } catch {
+    return { ok: false, error: 'Could not prepare the explanation' };
+  }
+}
