@@ -50,3 +50,4 @@ session.
 - Never commit secrets; env var names only.
 - Keep changes reviewable: small, coherent, well-described.
 - Only commit/push when the user asks; branch first if needed.
+- Owner standing rules (`docs/STANDING_RULES.md`) apply to every change: live stays live; fix once, fix everywhere; escalate, don't fix, in protected areas or after three failed attempts (`health-audit-guard` checks `fix/health-audit-*` PRs); never weaken a test; merge only green at the exact head SHA, confirm the health endpoint, and name the screens to retest (incl. 375 px).

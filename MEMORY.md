@@ -37,6 +37,11 @@
 > Backup of all snapshots: `ChamaaApp-backup.tar.gz` (in the Cowork outputs folder).
 > v1.9 adds: import written notes (photo/file → OCR/parse → minutes) + per-country phone length.
 
+## 2026-10-25 — Owner standing rules adopted
+- Owner standing rules from Telpen Edu (24/10/26) now apply here: `docs/STANDING_RULES.md` (live stays live, fix once / fix everywhere, escalate-don't-fix in protected areas or after 3 failed attempts, never weaken a test, merge only green at the exact head SHA, propose-don't-dispose money).
+- `.github/workflows/health-audit-guard.yml` fails any `fix/health-audit-*` PR that touches money, tax/compliance/KYC, auth/tenancy, `packages/db/`, `legal/`, deploy config or secrets, or weakens a test.
+- New root `CLAUDE.md` points agents at the rules and the gate.
+
 ## Session 3 log (2026-08-14) — Clerk → Supabase phone-OTP migration (web + mobile)
 
 **Why:** unify on phone-number login (no email) for the informal/African market, with
