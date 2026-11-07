@@ -10,7 +10,8 @@
 
 ARG NODE_VERSION=20
 
-# ── deps: install workspace dependencies (web + core + db; mobile excluded) ──
+# ── deps: install exactly what CI installs (all workspace manifests, so the
+#    lockfile resolves identically; mobile sources are not copied or built) ──
 FROM node:${NODE_VERSION}-bookworm-slim AS deps
 RUN apt-get update -y && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
@@ -18,6 +19,7 @@ COPY package.json package-lock.json .npmrc ./
 COPY apps/web/package.json apps/web/package.json
 COPY packages/core/package.json packages/core/package.json
 COPY packages/db/package.json packages/db/package.json
+COPY apps/mobile/package.json apps/mobile/package.json
 RUN npm install --no-audit --no-fund
 
 # ── build: prisma client + next build ──
