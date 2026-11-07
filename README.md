@@ -31,7 +31,8 @@ institution. Mobile-first and M-Pesa-native.
    dead-stock analysis, supplier alerts, Kenya tax auto-calc (VAT, PAYE, levies),
    and a constituency → county → national → continental → global → super-admin
    sales hierarchy.
-4. **SACCO+ Savings & Credit** *(optional — activate from the dashboard)* —
+4. **SACCO+ Savings & Credit** *(OFF in v1 — behind `SACCO_PLUS_ENABLED`, default off; not
+   offered on Google Play until licensed)* —
    10% p.a. on deposits, 13% dividends, loans from 1%/month reducing balance
    with explainable 100-point eligibility scoring, low-fee remittances, and the
    **Graduation Engine**: eight research-backed reasons microfinance groups fail
