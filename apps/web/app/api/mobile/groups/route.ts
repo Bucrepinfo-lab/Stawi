@@ -2,17 +2,28 @@ import { findMemberGroups, type GroupDirectory } from '@stawi/core';
 import { dbEnabled } from '@/lib/data';
 import { getCockpit } from '@/lib/cockpit';
 import { MY_GROUPS } from '@/lib/groups';
-import { ok, bad, guard, preflight, seedAllowed, dbRequired } from '@/lib/mobileApi';
+import { phoneForLookup } from '@stawi/core';
+import { ok, bad, authorize, requireMobileGroupRole, preflight, seedAllowed, dbRequired } from '@/lib/mobileApi';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export function OPTIONS() { return preflight(); }
 
-/** GET /api/mobile/groups?phone=07... → groups this phone belongs to. */
+/**
+ * GET /api/mobile/groups → groups of the SIGNED-IN caller's verified phone.
+ * A `?phone=` that differs from the session's phone is refused — typing a
+ * number never lists anyone's groups.
+ */
 export async function GET(req: Request) {
-  const denied = await guard(req); if (denied) return denied;
-  const phone = new URL(req.url).searchParams.get('phone')?.trim() ?? '';
+  const auth = await authorize(req); if (auth instanceof Response) return auth;
+  const requested = new URL(req.url).searchParams.get('phone')?.trim() ?? '';
+  let phone = requested;
+  if (auth.identity) {
+    const own = phoneForLookup(auth.identity, requested);
+    if (!own) return bad('You can only list your own groups', 403);
+    phone = own;
+  }
   if (!phone) return bad('phone is required');
 
   if (dbEnabled()) {

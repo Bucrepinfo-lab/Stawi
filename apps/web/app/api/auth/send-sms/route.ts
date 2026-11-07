@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   // Play reviewer number (PLAY_REVIEW_PHONE + PLAY_REVIEW_CODE both set): no SMS —
   // the reviewer signs in with the fixed code via /api/auth/review-sign-in.
   if (isReviewPhone(process.env, phone)) return NextResponse.json({});
-  const result = await sendSms(phone, `${otp} is your Stawi verification code. It expires in 10 minutes. Do not share it.`);
+  const result = await sendSms(phone, `${otp} is your Stawi sign-in code. It expires in 5 minutes. Never share it, not even with Stawi staff.`);
   if (!result.ok) return NextResponse.json({ error: 'sms_send_failed', detail: result.raw }, { status: 502 });
   return NextResponse.json({});
 }

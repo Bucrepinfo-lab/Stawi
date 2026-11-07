@@ -3,7 +3,6 @@
 import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toE164 } from "@stawi/core";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 /**
  * Phone → SMS-OTP auth. One flow covers sign-up AND sign-in (Supabase creates the
@@ -14,7 +13,6 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard" }: { afterAuthUrl?: stri
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") || afterAuthUrl;
-  const supabase = createSupabaseBrowserClient();
 
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [phoneInput, setPhoneInput] = useState("");
@@ -32,10 +30,16 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard" }: { afterAuthUrl?: stri
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({ phone: e164, options: { shouldCreateUser: true } });
+    // Server-side send: rate-limited per number and per IP; code valid 5 minutes.
+    const res = await fetch("/api/auth/otp/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: e164 }),
+    }).catch(() => null);
+    const data = res ? await res.json().catch(() => ({})) : {};
     setLoading(false);
-    if (error) {
-      setError(error.message);
+    if (!res?.ok) {
+      setError(data.error ?? "Could not send the code. Check your connection and try again.");
       return;
     }
     setPhone(e164);
@@ -46,27 +50,16 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard" }: { afterAuthUrl?: stri
     event.preventDefault();
     setError(null);
     setLoading(true);
-    // Play reviewer access: the server accepts a fixed code for one configured
-    // number only (PLAY_REVIEW_PHONE + PLAY_REVIEW_CODE); anything else → 404 → normal OTP.
-    try {
-      const review = await fetch("/api/auth/review-sign-in", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, code: code.trim() }),
-      });
-      if (review.ok) {
-        setLoading(false);
-        router.push(next);
-        router.refresh();
-        return;
-      }
-    } catch {
-      /* fall through to the normal OTP check */
-    }
-    const { error } = await supabase.auth.verifyOtp({ phone, token: code.trim(), type: "sms" });
+    // Server-side check: single use, expires after 5 minutes, attempts limited.
+    const res = await fetch("/api/auth/otp/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, code: code.trim() }),
+    }).catch(() => null);
+    const data = res ? await res.json().catch(() => ({})) : {};
     setLoading(false);
-    if (error) {
-      setError(error.message);
+    if (!res?.ok) {
+      setError(data.error ?? "Could not check the code. Try again.");
       return;
     }
     router.push(next);
@@ -112,7 +105,7 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard" }: { afterAuthUrl?: stri
           />
         </label>
         <p style={{ fontSize: 12.5, color: "var(--ink-2)", margin: 0 }}>
-          We&apos;ll text you a 6-digit code. This number is also your M-Pesa number for contributions.
+          We&apos;ll text you a 6-digit code (valid for 5 minutes). This number is also your M-Pesa number for contributions.
         </p>
         {error && <p style={{ fontSize: 13.5, color: "#b3261e", margin: 0 }}>{error}</p>}
         <button type="submit" disabled={loading} style={{ ...btnStyle, opacity: loading ? 0.6 : 1 }}>
@@ -138,7 +131,7 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard" }: { afterAuthUrl?: stri
         autoFocus
       />
       {error && <p style={{ fontSize: 13.5, color: "#b3261e", margin: 0 }}>{error}</p>}
-      <button type="submit" disabled={loading || code.length < 4} style={{ ...btnStyle, opacity: loading || code.length < 4 ? 0.6 : 1 }}>
+      <button type="submit" disabled={loading || code.length < 6} style={{ ...btnStyle, opacity: loading || code.length < 6 ? 0.6 : 1 }}>
         {loading ? "Verifying…" : "Verify & continue"}
       </button>
       <button

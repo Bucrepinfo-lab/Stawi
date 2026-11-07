@@ -41,6 +41,12 @@
   success even when the write failed; new-group founder was named "You"; workspace showed
   "Group" instead of the real name; account deletion only signed out (login + charter
   roster copy kept) → now deletes the Supabase login (service-role) and scrubs roster copies.
+- **Sign-in standing rule (07/11/26): phone → 6-digit SMS code on a new device → 4-digit PIN.**
+  Audit gap fixed: `/api/mobile/*` returned any typed phone's groups and had no membership
+  checks (open, or behind a shared key bundled in the app) → now a verified Supabase session
+  is required in production, groups come from the session's own phone, routes check the
+  per-group role. OTP send/verify moved server-side (`/api/auth/otp/send|verify`): 5-minute,
+  single-use window, rate limits per number and per IP (core `auth-policy.ts`, tested).
 
 > **RESUME HERE (2026-08-14, end of session 3):** Auth migrated Clerk → **Supabase
 > phone-OTP** across web + mobile (OTP SMS via Africa's Talking); web+mobile now one

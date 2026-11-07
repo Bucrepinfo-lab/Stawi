@@ -2,14 +2,12 @@
  * Shared helpers for the mobile JSON API (apps/web/app/api/mobile/*).
  *
  * The mobile app is phone-first and cross-origin, so these routes add permissive
- * CORS and an OPTIONAL shared-key gate. Set MOBILE_API_KEY in production and send
- * it as `x-stawi-mobile-key`; when unset (local/demo) the gate is open so the
- * Expo app works against a dev server immediately.
- *
- * NOTE: for production, put Clerk mobile session verification in front of writes.
- * The seed-mode responses let the app run with no database at all.
+ * CORS. Every data route needs a verified Supabase session (see `authorize`)
+ * and checks the caller's membership/role in the group. Seed-mode responses
+ * (no database) exist only outside production.
  */
 import { NextResponse } from 'next/server';
+import { decideApiAccess, toE164, type VerifiedIdentity } from '@stawi/core';
 
 export const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -39,32 +37,53 @@ export function dbRequired() {
 }
 
 /**
- * Authorize a mobile request. Order of precedence:
- *  1. Supabase session JWT (Authorization: Bearer …) verified (HS256) with
- *     SUPABASE_JWT_SECRET — the Expo app now authenticates with Supabase phone-OTP,
- *     the same identity the web uses.
- *  2. Shared key (x-stawi-mobile-key === MOBILE_API_KEY).
- *  3. Open — only when neither is configured (local/demo).
- * Returns null when allowed, or a 401 response otherwise.
+ * Authorize a mobile request (owner rule 07/11/26: a typed phone number alone
+ * never reaches account or group data).
+ *  1. Supabase session token (Authorization: Bearer …) → verified with Supabase
+ *     (auth.getUser), giving the caller's user id and verified phone.
+ *  2. Otherwise: denied in production. A shared app key (MOBILE_API_KEY) is no
+ *     longer enough on its own — it ships inside the app and is not a secret.
+ *  3. Open only outside production when nothing is configured (seed demo).
+ * Returns the identity (or null in dev-open mode), or a 401 response.
  */
-export async function guard(req: Request): Promise<NextResponse | null> {
-  const secret = process.env.SUPABASE_JWT_SECRET;
-  const key = process.env.MOBILE_API_KEY;
+export async function authorize(req: Request): Promise<{ identity: VerifiedIdentity | null } | NextResponse> {
   const authz = req.headers.get('authorization');
-  const bearer = authz?.startsWith('Bearer ') ? authz.slice(7) : null;
+  const bearer = authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (bearer && secret) {
+  let identity: VerifiedIdentity | null = null;
+  if (bearer && url && anon) {
     try {
-      const jwt = (await import('jsonwebtoken')).default;
-      jwt.verify(bearer, secret); // throws if invalid/expired
-      return null; // valid Supabase session
+      const { createClient } = await import('@supabase/supabase-js');
+      const sb = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false } });
+      const { data, error } = await sb.auth.getUser(bearer);
+      if (!error && data.user) identity = { userId: data.user.id, phone: data.user.phone ? toE164(data.user.phone) : null };
     } catch {
-      return bad('Invalid session', 401);
+      identity = null;
     }
+    if (!identity) return bad('Invalid session', 401);
   }
-  if (key) {
-    const got = req.headers.get('x-stawi-mobile-key');
-    return got === key ? null : bad('Unauthorized', 401);
-  }
-  return null; // demo/dev: no auth configured
+
+  const decision = decideApiAccess({
+    production: process.env.NODE_ENV === 'production',
+    identity,
+    authConfigured: !!(url && anon) || !!process.env.MOBILE_API_KEY,
+  });
+  if (decision === 'deny') return bad('Sign in required', 401);
+  return { identity };
+}
+
+/** Membership check for mobile routes: the caller's role in `groupId`, or a 403/401 response. */
+export async function requireMobileGroupRole(
+  identity: VerifiedIdentity | null,
+  groupId: string,
+  allowed: 'member' | 'records',
+): Promise<NextResponse | null> {
+  if (!identity) return null; // dev-open seed mode only (never production)
+  const { groupRoleFor, RECORD_EDITOR_ROLES } = await import('@/lib/group-access');
+  const role = await groupRoleFor(groupId, identity);
+  if (!role) return bad('Not a member of this group', 403);
+  if (allowed === 'records' && !RECORD_EDITOR_ROLES.has(role)) return bad('Only group officials can change records', 403);
+  return null;
 }

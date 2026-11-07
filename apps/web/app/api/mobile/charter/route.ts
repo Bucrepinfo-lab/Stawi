@@ -1,6 +1,6 @@
 import { assertClean } from '@stawi/core';
 import { dbEnabled } from '@/lib/data';
-import { ok, bad, guard, preflight, seedAllowed, dbRequired } from '@/lib/mobileApi';
+import { ok, bad, authorize, requireMobileGroupRole, preflight, seedAllowed, dbRequired } from '@/lib/mobileApi';
 
 export const runtime = 'nodejs';
 
@@ -8,10 +8,11 @@ export function OPTIONS() { return preflight(); }
 
 /** POST /api/mobile/charter { groupId, charter } */
 export async function POST(req: Request) {
-  const denied = await guard(req); if (denied) return denied;
+  const auth = await authorize(req); if (auth instanceof Response) return auth;
   let body: any; try { body = await req.json(); } catch { return bad('Invalid JSON'); }
   const { groupId, charter } = body ?? {};
   if (!groupId || !charter?.name?.trim()) return bad('groupId and charter.name are required');
+  if (dbEnabled()) { const denied = await requireMobileGroupRole(auth.identity, groupId, 'records'); if (denied) return denied; }
   for (const field of [charter.constitution, charter.motto, charter.mission, charter.vision, charter.notes]) {
     if (field) { try { assertClean(String(field)); } catch (e) { return bad(e instanceof Error ? e.message : 'Content not allowed'); } }
   }
