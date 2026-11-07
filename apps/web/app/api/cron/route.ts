@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { saccoPlusEnabled } from '@/lib/features';
 
 export const runtime = 'nodejs';
 
@@ -8,8 +9,9 @@ export const runtime = 'nodejs';
  * Guarded by CRON_SECRET (Authorization: Bearer <secret> or ?key=).
  *
  * Jobs:
- *  1. interest  — month-end SACCO+ deposit-interest accrual (idempotent,
- *     first call of each calendar month wins; 10% p.a. from @stawi/core).
+ *  1. interest  — month-end SACCO+ deposit-interest accrual, ONLY when
+ *     SACCO_PLUS_ENABLED=true (idempotent, first call of each month wins).
+ *     Reports 'disabled' otherwise.
  *  2. dunning   — subscriptions past currentPeriodEnd flip ACTIVE → PAST_DUE.
  *  3. (reconciliation roll-ups are computed on read in @stawi/core
  *     accounting — nothing to materialize until reports move off-line.)
@@ -29,10 +31,13 @@ async function run(req: Request) {
   const { prisma, accrueMonthlyInterest } = await import('@stawi/db');
   const out: Record<string, unknown> = {};
 
-  // 1) Month-end interest accrual (safe to call daily — idempotent per month).
+  // 1) Month-end interest accrual — SACCO+ only (SACCO_PLUS_ENABLED). Off by
+  //    default: no interest is ever computed or posted by a v1 deployment.
   const now = new Date();
   const lastDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
-  if (now.getUTCDate() === lastDay || url.searchParams.get('force') === 'interest') {
+  if (!saccoPlusEnabled()) {
+    out.interest = 'disabled';
+  } else if (now.getUTCDate() === lastDay || url.searchParams.get('force') === 'interest') {
     out.interest = await accrueMonthlyInterest(prisma);
   } else {
     out.interest = 'not month-end';

@@ -29,6 +29,7 @@ export * from './business-activation';
 export * from './pos';
 export * from './automation';
 export * from './journey';
+export * from './features';
 
 // `CountryCode` is declared in both ./tax ('KE') and ./compliance (multi-country).
 // Expose the broader compliance definition explicitly to resolve the star-export

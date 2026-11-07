@@ -1,14 +1,17 @@
+import { notFound } from 'next/navigation';
 import { SaccoStudio } from './SaccoStudio';
+import { saccoPlusEnabled } from '@/lib/features';
 import { LiveRefresh } from '@/components/LiveRefresh';
 import { getSaccoAccountsData, getViewerRole } from '@/lib/data';
 
-export const metadata = {
-  title: 'Stawi SACCO+ — savings & credit services',
-  description:
-    'Open an account, save with interest, borrow at 1%/month reducing balance, and watch your institution climb the ladder from chama to listed bank.',
-};
+// Flag is read per request (runtime env), never baked in at build time.
+export const dynamic = 'force-dynamic';
+
+export const metadata = { title: 'Stawi' };
 
 export default async function SaccoPage() {
+  // SACCO+ is off unless SACCO_PLUS_ENABLED=true — answer 404, not just hide.
+  if (!saccoPlusEnabled()) notFound();
   const accounts = await getSaccoAccountsData();
   const viewerRole = await getViewerRole();
   return (

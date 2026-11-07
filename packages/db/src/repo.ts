@@ -8,7 +8,7 @@
  */
 
 import type { PrismaClient, GroupType, MemberRole } from '@prisma/client';
-import { assertSameTenant, toSlug } from '@stawi/core';
+import { assertSameTenant, toSlug, assertSaccoPlusEnabled, isSaccoPlusEnabled } from '@stawi/core';
 import type { TenantContext, TenantRole } from '@stawi/core';
 import type {
   GroupAccountDTO,
@@ -330,6 +330,8 @@ export async function getSaccoAccounts(
   tenantId: string,
   clerkUserId?: string,
 ): Promise<SaccoAccountDTO[]> {
+  // SACCO+ off → nothing to show. Rows stay in the database untouched.
+  if (!isSaccoPlusEnabled()) return [];
   const rows = await prisma.saccoAccount.findMany({
     where: {
       tenantId,
@@ -362,6 +364,7 @@ export async function openSaccoAccount(
     kycComplete?: boolean;
   },
 ): Promise<{ id: string }> {
+  assertSaccoPlusEnabled();
   if (input.ownerGroupId) await assertGroupInTenant(prisma, input.ownerGroupId, input.tenantId);
   return prisma.saccoAccount.create({
     data: {
@@ -409,6 +412,7 @@ export async function postSaccoTxn(
     approvedByClerkId?: string;
   },
 ): Promise<{ id: string; balanceCents: number }> {
+  assertSaccoPlusEnabled();
   const { applySaccoTxn } = await import('@stawi/core');
   const acct = await assertAccountInTenant(prisma, input.accountId, input.tenantId);
 
@@ -463,6 +467,7 @@ export async function applyForLoan(
     guarantorCoverageCents?: number;
   },
 ): Promise<{ id: string; qualified: boolean; tier: string; monthlyRatePct: number; reasons: string[] }> {
+  assertSaccoPlusEnabled();
   const { LOAN_PRODUCTS, scoreEligibility } = await import('@stawi/core');
   const acct = await assertAccountInTenant(prisma, input.accountId, input.tenantId);
 
@@ -519,6 +524,7 @@ export async function applyForLoan(
 export async function accrueMonthlyInterest(
   prisma: PrismaClient,
 ): Promise<{ accounts: number; totalCents: number }> {
+  assertSaccoPlusEnabled();
   const { monthlyDepositInterestCents } = await import('@stawi/core');
   const monthStart = new Date();
   monthStart.setUTCDate(1);

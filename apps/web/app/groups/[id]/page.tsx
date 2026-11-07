@@ -3,6 +3,7 @@ import { GroupCockpit } from './GroupCockpit';
 import { LiveRefresh } from '@/components/LiveRefresh';
 import { getCockpit } from '@/lib/cockpit';
 import { getViewerRole } from '@/lib/data';
+import { saccoPlusEnabled } from '@/lib/features';
 
 export default async function GroupWorkspacePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,7 +23,7 @@ export default async function GroupWorkspacePage({ params }: { params: Promise<{
         </p>
       </div>
       <div style={{ marginTop: 22 }}>
-        <GroupCockpit cockpit={cockpit} canEdit={canEdit} />
+        <GroupCockpit cockpit={cockpit} canEdit={canEdit} saccoPlus={saccoPlusEnabled()} />
       </div>
     </main>
   );

@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { resolveTenantSlug } from '@stawi/core';
+import { resolveTenantSlug, isSaccoPlusEnabled, isSaccoPlusPath } from '@stawi/core';
 import { updateSupabaseSession } from '@/lib/supabase/middleware';
 
 const PUBLIC: RegExp[] = [
@@ -19,6 +19,13 @@ const PUBLIC: RegExp[] = [
 const isPublic = (pathname: string) => PUBLIC.some((re) => re.test(pathname));
 
 export async function middleware(request: NextRequest) {
+  // SACCO+ (loans, interest, scoring) is off unless SACCO_PLUS_ENABLED=true:
+  // its routes answer 404 for everyone. The pages, server actions and db repo
+  // refuse again on their own (defence in depth).
+  if (isSaccoPlusPath(request.nextUrl.pathname) && !isSaccoPlusEnabled(process.env)) {
+    return new NextResponse('Not found', { status: 404 });
+  }
+
   // Resolve the active tenant from subdomain or /t/{slug} and forward it downstream.
   const slug = resolveTenantSlug({
     host: request.headers.get('host'),
