@@ -14,6 +14,9 @@ export async function POST(req: Request) {
   if (!groupId || !meeting?.meetingNo) return bad('groupId and meeting.meetingNo are required');
   if (dbEnabled()) { const denied = await requireMobileGroupRole(auth.identity, groupId, 'records'); if (denied) return denied; }
   if (!dbEnabled()) { if (!seedAllowed()) return dbRequired(); publishEvent({ type: 'meeting', channel: 'public' }); return ok({ ok: true, persisted: false }); }
+  const { checkMeetingWrite } = await import('@/lib/meeting-guard');
+  const refused = await checkMeetingWrite(groupId, meeting);
+  if (refused) return bad(refused.error, 422);
   try {
     const { prisma, upsertMeeting } = await import('@stawi/db');
     await upsertMeeting(prisma, { groupId, ...meeting });

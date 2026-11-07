@@ -17,6 +17,8 @@ import {
   ackFor,
   feedbackLabel,
   ALERT_FEEDBACK_OPTIONS,
+  entriesInPeriod,
+  formatDateTime,
   type LedgerEntry,
   type StockItem,
   type Period,
@@ -29,6 +31,7 @@ import {
   type AlertFeedback,
 } from '@stawi/core';
 import { addLedgerEntryAction } from '@/app/actions';
+import { setUrlParams } from '@/lib/url-state';
 
 export interface BooksProps {
   businessId?: string;
@@ -39,6 +42,9 @@ export interface BooksProps {
   stock: StockItem[];
   /** Business sector — drives supplier matching. Defaults to retail. */
   industry?: Industry;
+  /** Period from the URL (?period=); the P&L, tax lines and ledger CSV all use it. */
+  initialPeriod?: Period;
+  onPeriodChange?: (p: Period) => void;
 }
 
 const card: React.CSSProperties = {
@@ -53,9 +59,12 @@ const card: React.CSSProperties = {
 const PERIODS: Period[] = ['day', 'week', 'month', 'year'];
 const MOVE_COLOR = { fast: 'var(--good)', slow: 'var(--danger)', dead: 'var(--dim)' } as const;
 
-export function Books({ businessId, businessName, vatRegistered, tourismSector, initialEntries, stock, industry = 'retail' }: BooksProps) {
+export function Books({ businessId, businessName, vatRegistered, tourismSector, initialEntries, stock, industry = 'retail', initialPeriod = 'day', onPeriodChange }: BooksProps) {
   const [entries, setEntries] = useState<LedgerEntry[]>(initialEntries);
-  const [period, setPeriod] = useState<Period>('day');
+  const [period, setPeriodState] = useState<Period>(initialPeriod);
+  const setPeriod = (p: Period) => { setPeriodState(p); setUrlParams({ period: p }); onPeriodChange?.(p); };
+  const [saveErr, setSaveErr] = useState<string | null>(null);
+  const [receiptAt, setReceiptAt] = useState<string>('');
   const [type, setType] = useState<EntryType>('SALE');
   const [amount, setAmount] = useState('');
   const [desc, setDesc] = useState('');
@@ -63,6 +72,8 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
   const [receipt, setReceipt] = useState<PosReceiptModel | null>(null);
 
   const pnl = useMemo(() => reconcile(entries, period, new Date()), [entries, period]);
+  // Same window as the P&L, so the ledger export matches the totals on screen.
+  const periodEntries = useMemo(() => entriesInPeriod(entries, period, new Date()), [entries, period]);
   const insights = useMemo(() => classifyStock(stock), [stock]);
   const critical = useMemo(() => criticalStockAlerts(insights), [insights]);
 
@@ -96,6 +107,7 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
     ]);
     // A sale produces a printable receipt.
     if (type === 'SALE') {
+      setReceiptAt(new Date().toISOString());
       setReceipt(
         buildPosReceipt({
           businessName,
@@ -107,8 +119,17 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
         }),
       );
     }
-    // Persist when a DB is configured (no-op on seed data).
-    void addLedgerEntryAction({ businessId, type, description, amountCents: cents }).catch(() => {});
+    // Persist when a DB is configured (no-op on seed data). A refused or failed
+    // write is taken back off the screen and explained — never shown as saved.
+    setSaveErr(null);
+    void addLedgerEntryAction({ businessId, type, description, amountCents: cents })
+      .catch(() => ({ ok: false, persisted: false, error: 'Could not save the entry — try again.' }))
+      .then((r) => {
+        if (r.ok) return;
+        setEntries((prev) => prev.filter((e) => e.id !== id));
+        if (type === 'SALE') setReceipt(null);
+        setSaveErr(r.error ?? 'Could not save the entry — try again.');
+      });
     setAmount('');
     setDesc('');
   }
@@ -145,9 +166,9 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
       {/* Downloadable tools */}
       <div style={{ ...card, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         <span style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--dim)' }}>Download</span>
-        <button onClick={() => saveCsv('stawi-ledger.csv', ledgerCsv(entries))} style={dlBtn}>⬇ Ledger CSV</button>
+        <button onClick={() => saveCsv(`stawi-ledger-${period}.csv`, ledgerCsv(periodEntries))} style={dlBtn}>⬇ Ledger CSV ({period})</button>
         <button onClick={() => saveCsv('stawi-stock.csv', stockCsv(insights))} style={dlBtn}>⬇ Stock CSV</button>
-        <button onClick={() => saveCsv('stawi-tax.csv', taxCsv(taxes))} style={dlBtn}>⬇ Tax report CSV</button>
+        <button onClick={() => saveCsv(`stawi-tax-${period}.csv`, taxCsv(taxes))} style={dlBtn}>⬇ Tax report CSV ({period})</button>
         {receipt && <button onClick={printReceipt} style={{ ...dlBtn, background: 'var(--gold)', borderColor: 'var(--gold)' }}>🖨 Print last receipt ({receipt.receiptNo})</button>}
       </div>
 
@@ -170,7 +191,7 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontWeight: 700 }}>
             <span>Total</span><span className="mono" style={{ color: 'var(--forest-deep)' }}>{receipt.totalDisplay}</span>
           </div>
-          <div style={{ fontSize: 12, color: 'var(--dim)', marginTop: 4 }}>Paid by {receipt.paymentLabel} · {receipt.dateDisplay}</div>
+          <div style={{ fontSize: 12, color: 'var(--dim)', marginTop: 4 }}>Paid by {receipt.paymentLabel} · {formatDateTime(receiptAt, {}, receipt.dateDisplay)}</div>
         </div>
       )}
 
@@ -213,6 +234,7 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
           <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="numeric" className="mono" style={inp} />
         </label>
         <button onClick={addEntry} style={btnGold}>＋ Add entry</button>
+        {saveErr && <span role="alert" style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 13 }}>{saveErr}</span>}
       </div>
 
       <div style={card}>
@@ -314,19 +336,19 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
       </div>
     </div>
 
-      <div id="books-print-portal">{receipt && <PrintReceipt r={receipt} businessName={businessName} />}</div>
+      <div id="books-print-portal">{receipt && <PrintReceipt r={receipt} businessName={businessName} at={receiptAt} />}</div>
       <style>{`#books-print-portal{display:none} @media print { body.books-printing #books-root{display:none} body.books-printing #books-print-portal{display:block} }`}</style>
     </>
   );
 }
 
-function PrintReceipt({ r, businessName }: { r: PosReceiptModel; businessName: string }) {
+function PrintReceipt({ r, businessName, at }: { r: PosReceiptModel; businessName: string; at: string }) {
   return (
     <div style={{ maxWidth: 360, margin: '0 auto', fontFamily: 'ui-monospace, monospace', color: '#111', padding: 20 }}>
       <div style={{ textAlign: 'center', borderBottom: '2px dashed #999', paddingBottom: 10 }}>
         <div style={{ fontWeight: 700, fontSize: 16 }}>{businessName}</div>
         <div style={{ fontSize: 11 }}>Sales Receipt · {r.receiptNo}</div>
-        <div style={{ fontSize: 11 }}>{r.dateDisplay}</div>
+        <div style={{ fontSize: 11 }}>{formatDateTime(at, {}, r.dateDisplay)}</div>
       </div>
       <div style={{ marginTop: 8 }}>
         {r.lines.map((l, i) => (

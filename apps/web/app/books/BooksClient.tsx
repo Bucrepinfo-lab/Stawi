@@ -5,17 +5,23 @@ import { GroupSwitcher } from '@/components/GroupSwitcher';
 import { Books } from './Books';
 import type { GroupAccount } from '@/lib/groups';
 import type { WebBooks } from '@/lib/data';
-import type { LedgerEntry } from '@stawi/core';
+import type { LedgerEntry, Period } from '@stawi/core';
+import { setUrlParams } from '@/lib/url-state';
 
 interface Props {
   groups: GroupAccount[];
   booksByGroup: Record<string, WebBooks | null>;
+  initialId?: string;
+  initialPeriod?: Period;
 }
 
-export function BooksClient({ groups, booksByGroup }: Props) {
-  const [activeId, setActiveId] = useState(
-    groups.find((g) => booksByGroup[g.id])?.id ?? groups[0]?.id ?? '',
+export function BooksClient({ groups, booksByGroup, initialId, initialPeriod }: Props) {
+  const [activeId, setActiveIdState] = useState(
+    initialId || (groups.find((g) => booksByGroup[g.id])?.id ?? groups[0]?.id ?? ''),
   );
+  const setActiveId = (id: string) => { setActiveIdState(id); setUrlParams({ group: id }); };
+  // Kept here so switching group keeps the chosen period.
+  const [period, setPeriod] = useState<Period>(initialPeriod ?? 'day');
   const active = groups.find((g) => g.id === activeId) ?? groups[0];
   const business = active ? booksByGroup[active.id] : null;
 
@@ -62,6 +68,8 @@ export function BooksClient({ groups, booksByGroup }: Props) {
             tourismSector={business.tourismSector}
             initialEntries={entries}
             stock={business.stock}
+            initialPeriod={period}
+            onPeriodChange={setPeriod}
           />
         </>
       ) : (

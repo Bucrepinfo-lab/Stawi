@@ -7,7 +7,7 @@
  *  3. Persistence — hit Postgres when DATABASE_URL is set, else no-op on seed data.
  */
 
-import { assertClean, SACCO_PLUS_DISABLED_MESSAGE } from '@stawi/core';
+import { assertClean, duplicateRosterPhones, SACCO_PLUS_DISABLED_MESSAGE } from '@stawi/core';
 import { dbEnabled } from '@/lib/data';
 import { saccoPlusEnabled } from '@/lib/features';
 
@@ -89,6 +89,13 @@ export async function addLedgerEntryAction(input: {
   }
   if (!dbEnabled() || !input.businessId) return { ok: true, persisted: false };
   const { prisma, addLedgerEntry } = await import('@stawi/db');
+  // The books belong to one group's business: only that group's members may
+  // write to them (the page only offers the caller's own groups; this is the
+  // server-side check behind it).
+  const biz = await prisma.business.findUnique({ where: { id: input.businessId }, select: { groupId: true } });
+  if (!biz) return { ok: false, persisted: false, error: 'Business not found.' };
+  const { myGroupRole } = await import('@/lib/group-access');
+  if (!(await myGroupRole(biz.groupId))) return { ok: false, persisted: false, error: 'You can only add entries to your own group’s books.' };
   try {
     await addLedgerEntry(prisma, {
       businessId: input.businessId,
@@ -333,6 +340,11 @@ export async function saveCharterAction(input: {
 }): Promise<{ ok: boolean; persisted: boolean; error?: string }> {
   const c = input.charter as any;
   if (!c?.name?.trim()) return { ok: false, persisted: false, error: 'Charter needs a group name.' };
+  // Each person once on the roster — a phone entered twice would create two
+  // membership rows and list the same member twice in every picker.
+  if (Array.isArray(c.members) && duplicateRosterPhones(c.members).length) {
+    return { ok: false, persisted: false, error: 'The same phone number is on the roster more than once. Each member should appear once.' };
+  }
   // Screen the free-text governance fields.
   for (const field of [c.constitution, c.motto, c.mission, c.vision, c.notes]) {
     if (field) {
@@ -391,6 +403,9 @@ export async function saveMeetingAction(input: {
   }
   const deniedMeeting = await requireGroupRole(input.groupId, 'records');
   if (deniedMeeting) return { ok: false, persisted: false, error: deniedMeeting };
+  const { checkMeetingWrite } = await import('@/lib/meeting-guard');
+  const refused = await checkMeetingWrite(input.groupId, m);
+  if (refused) return { ok: false, persisted: false, error: refused.error };
   try {
     const { prisma, upsertMeeting } = await import('@stawi/db');
     await upsertMeeting(prisma, { groupId: input.groupId, tenantId: await tenantId(), ...m });
@@ -413,6 +428,9 @@ export async function postMeetingAction(input: {
   }
   const deniedPost = await requireGroupRole(input.groupId, 'records');
   if (deniedPost) return { ok: false, persisted: false, error: deniedPost };
+  const { checkMeetingPost } = await import('@/lib/meeting-guard');
+  const refusedPost = await checkMeetingPost(input.groupId, input.meetingNo);
+  if (refusedPost) return { ok: false, persisted: false, error: refusedPost.error };
   try {
     const { prisma, postMeeting } = await import('@stawi/db');
     await postMeeting(prisma, { groupId: input.groupId, meetingNo: input.meetingNo, generatedDoc: input.generatedDoc, tenantId: await tenantId() });
@@ -433,9 +451,21 @@ export async function saveStatementAction(input: {
   if (!dbEnabled()) return { ok: true, persisted: false };
   const deniedStatement = await requireGroupRole(input.groupId, 'records');
   if (deniedStatement) return { ok: false, persisted: false, error: deniedStatement };
+  // Only a month the picker offers (has meetings, not in the future); the
+  // figures are recomputed from the stored meetings, never taken from the client.
+  const narrative = (input.payload as any)?.narrative;
+  if (Array.isArray(narrative)) {
+    for (const p of narrative) {
+      const clean = await assertCleanSafe(String(p ?? ''));
+      if (!clean.ok) return { ok: false, persisted: false, error: clean.error };
+    }
+  }
+  const { buildServerStatement } = await import('@/lib/meeting-guard');
+  const built = await buildServerStatement(input.groupId, input.year, input.month, narrative);
+  if ('error' in built) return { ok: false, persisted: false, error: built.error };
   try {
     const { prisma, saveMonthlyStatement } = await import('@stawi/db');
-    await saveMonthlyStatement(prisma, { groupId: input.groupId, tenantId: await tenantId(), year: input.year, month: input.month, payload: input.payload, post: input.post });
+    await saveMonthlyStatement(prisma, { groupId: input.groupId, tenantId: await tenantId(), year: input.year, month: input.month, payload: built.statement, post: input.post });
     return { ok: true, persisted: true };
   } catch (e) {
     return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Save failed' };

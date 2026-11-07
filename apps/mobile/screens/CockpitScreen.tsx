@@ -18,6 +18,9 @@ import {
   type AttendanceStatus,
   type ProfessionalMinutes,
   parseImportedNotes,
+  formatDate,
+  monthLabel,
+  statementMonths,
 } from '@stawi/core';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -120,7 +123,7 @@ function MinutesTab({ charter, list, setList, canEdit, onSaveMeeting, onPostMeet
               <Text style={g.cardTitle}>Meeting No. {m.meetingNo}</Text>
               <Badge label={m.status} kind={m.status === 'POSTED' ? 'posted' : 'draft'} />
             </View>
-            <Text style={g.meta}>{m.date} · {t.present}/{t.total} present · {m.agendas.filter((a) => a.title.trim()).length} agenda</Text>
+            <Text style={g.meta}>{formatDate(m.date, { year: 'yyyy' }, 'No date')} · {t.present}/{t.total} present · {m.agendas.filter((a) => a.title.trim()).length} agenda</Text>
             <TouchableOpacity style={g.ghost} onPress={() => setEditing(JSON.parse(JSON.stringify(m)))}><Text style={g.ghostTxt}>{m.status === 'POSTED' ? 'View →' : 'Continue →'}</Text></TouchableOpacity>
           </View>
         );
@@ -329,9 +332,26 @@ function DocumentsTab({ charter, list }: { charter: GroupCharter; list: Meeting[
 
 // ── Month-End ──────────────────────────────────────────────────────────────
 function StatementTab({ charter, list }: { charter: GroupCharter; list: Meeting[] }) {
-  const st = useMemo(() => reconcileMonth(list, charter, { year: 2026, month: 6 }), [list, charter]);
+  // Only months with recorded meetings, up to this month (newest first) — never a fixed or future month.
+  const months = useMemo(() => statementMonths(list), [list]);
+  const [picked, setPicked] = useState<string>('');
+  const ym = months.includes(picked) ? picked : months[0] ?? '';
+  const st = useMemo(() => {
+    const [y, mo] = ym.split('-').map(Number);
+    return ym ? reconcileMonth(list, charter, { year: y!, month: mo! }) : null;
+  }, [ym, list, charter]);
+  if (!st) return <ScrollView contentContainerStyle={{ padding: spacing.lg }}><View style={g.card}><Text style={g.meta}>Record and date at least one meeting to see a month-end statement.</Text></View></ScrollView>;
   return (
     <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
+      {months.length > 1 && (
+        <View style={g.chips}>
+          {months.map((m) => (
+            <TouchableOpacity key={m} style={[g.chip, m === ym && { backgroundColor: colors.forestDeep }]} onPress={() => setPicked(m)}>
+              <Text style={[g.chipTxt, m === ym && { color: colors.bone }]}>{monthLabel(m)}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
       <View style={g.docCard}>
         <View style={g.docHead}><View style={g.docLogo}><Text style={{ fontSize: 18 }}>🪙</Text></View><View style={{ flex: 1 }}><Text style={g.docGroup}>{charter.name}</Text></View><Badge label="Month-End" kind="official" /></View>
         <Text style={g.docTitle}>Statement for {st.period.label}</Text>
