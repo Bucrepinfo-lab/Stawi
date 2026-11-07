@@ -41,3 +41,5 @@ export * from './pin-policy';
 // ambiguity; tax's narrower 'KE' remains available via direct import from './tax'.
 export type { CountryCode } from './compliance';
 export * from './phone';
+export * from './dates';
+export * from './scope';

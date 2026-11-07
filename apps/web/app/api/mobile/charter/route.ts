@@ -1,4 +1,4 @@
-import { assertClean } from '@stawi/core';
+import { assertClean, duplicateRosterPhones } from '@stawi/core';
 import { dbEnabled } from '@/lib/data';
 import { ok, bad, authorize, requireMobileGroupRole, preflight, seedAllowed, dbRequired } from '@/lib/mobileApi';
 
@@ -13,6 +13,7 @@ export async function POST(req: Request) {
   const { groupId, charter } = body ?? {};
   if (!groupId || !charter?.name?.trim()) return bad('groupId and charter.name are required');
   if (dbEnabled()) { const denied = await requireMobileGroupRole(auth.identity, groupId, 'records'); if (denied) return denied; }
+  if (Array.isArray(charter.members) && duplicateRosterPhones(charter.members).length) return bad('The same phone number is on the roster more than once. Each member should appear once.');
   for (const field of [charter.constitution, charter.motto, charter.mission, charter.vision, charter.notes]) {
     if (field) { try { assertClean(String(field)); } catch (e) { return bad(e instanceof Error ? e.message : 'Content not allowed'); } }
   }

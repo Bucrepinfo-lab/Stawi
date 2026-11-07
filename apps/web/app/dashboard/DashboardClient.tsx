@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { GroupSwitcher } from '@/components/GroupSwitcher';
 import { TableBanking } from './TableBanking';
 import type { GroupAccount } from '@/lib/groups';
+import { setUrlParams } from '@/lib/url-state';
 
-export function DashboardClient({ groups }: { groups: GroupAccount[] }) {
-  const [activeId, setActiveId] = useState(groups[0]?.id ?? '');
+export function DashboardClient({ groups, initialId }: { groups: GroupAccount[]; initialId?: string }) {
+  const [activeId, setActiveIdState] = useState(initialId || groups[0]?.id || '');
+  const setActiveId = (id: string) => { setActiveIdState(id); setUrlParams({ group: id }); };
   const active = groups.find((g) => g.id === activeId) ?? groups[0];
   if (!active) {
     return <p style={{ marginTop: 40, color: 'var(--dim)' }}>You are not a member of any group yet.</p>;

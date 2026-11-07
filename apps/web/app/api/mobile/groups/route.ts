@@ -1,4 +1,4 @@
-import { findMemberGroups, type GroupDirectory } from '@stawi/core';
+import { findMemberGroups, mergeGroupsById, uniqueBy, type GroupDirectory } from '@stawi/core';
 import { dbEnabled } from '@/lib/data';
 import { getCockpit } from '@/lib/cockpit';
 import { MY_GROUPS } from '@/lib/groups';
@@ -28,7 +28,8 @@ export async function GET(req: Request) {
 
   if (dbEnabled()) {
     const { prisma, getGroupsByPhone } = await import('@stawi/db');
-    const groups = await getGroupsByPhone(prisma, phone);
+    // One row per membership → the same group can come back twice; list it once (most privileged role).
+    const groups = mergeGroupsById(await getGroupsByPhone(prisma, phone));
     return ok({ links: groups.map((g: any) => ({ groupId: g.id, groupName: g.name, memberName: 'You', designation: g.myRole, isOfficial: ['Chairman', 'Secretary', 'Treasurer', 'Signatory'].includes(g.myRole) })) });
   }
 
@@ -39,5 +40,5 @@ export async function GET(req: Request) {
     const c = await getCockpit(g.id);
     if (c) dirs.push({ groupId: g.id, groupName: c.groupName, members: c.charter.members.map((m) => ({ name: m.fullName, phone: m.phone, designation: m.designation })) });
   }
-  return ok({ links: findMemberGroups(phone, dirs) });
+  return ok({ links: uniqueBy(findMemberGroups(phone, dirs), (l) => l.groupId) });
 }

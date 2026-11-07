@@ -1,7 +1,36 @@
 # Stawi — session memory / start-here
 
+## Session 5 (07/11/26) — pickers scoped, dates day-first, filters in the URL
+> **RESUME HERE (07/11/26):** sweep of the Telpen Edu bugs (a)–(e) fixed on 07/11/26, applied
+> here (PR "fix: scoped pickers, day-first dates, consistent filters"). Owner/Chrome next steps
+> are unchanged (Session 4 below); not deployed yet — Stawi has no Fly app, so no health check.
+- **Shared core helpers (tested):** `packages/core/src/dates.ts` — `formatDate` (dd/mm/yy,
+  `year:'yyyy'` → dd/mm/yyyy), `formatDateTime` (24 h, Africa/Nairobi), `weekdayOf`,
+  `monthLabel`, `todayIso`; never uses the device locale, date-only strings never shift.
+  `packages/core/src/scope.ts` — `uniqueBy`, `mergeGroupsById` (one row per group, most
+  privileged role), `pickAllowedId`, `duplicateRosterPhones`, `meetingRefsOutsideRoster` +
+  `allowedMeetingRefs`, `checkMeetingDates`, `statementMonths` / `checkStatementMonth` /
+  `pickStatementMonth`, `parsePeriod`, `entriesInPeriod`. Tests: `test/dates.test.ts`, `test/scope.test.ts`.
+- **Server rejects what the pickers hide (`apps/web/lib/meeting-guard.ts`, used by web actions
+  and `/api/mobile/meeting|post-meeting`):** minutes may only name members on the group's saved
+  charter roster (or ones the stored meeting already named); minutes post only for a meeting
+  already held (Nairobi date), next meeting not before it; month-end statement posts only for a
+  month with recorded meetings, not in the future, and its figures are recomputed server-side
+  from stored meetings (client numbers ignored; narrative moderated). Books ledger writes need
+  membership of the business's group. Charter save refuses the same phone twice on the roster.
+- **Duplicates:** dashboard/books group list and `/api/mobile/groups` list each group once
+  (most privileged role, same rule as `groupRoleFor`); payout/fines pickers de-duplicated.
+- **Dates day-first:** minutes list, documents, receipt page, Books receipt, devices page and
+  mobile minutes list use the shared formatter; meeting date inputs show a dd/mm/yyyy echo,
+  date held capped at today, next meeting ≥ meeting date. Mobile month-end was hard-coded to
+  June 2026 → now the newest month with meetings, with a month chooser.
+- **Filters:** `?group=` (dashboard, books; only the caller's own groups), `?period=` (books;
+  P&L, tax lines and the ledger CSV now use the same period — the CSV used to export everything),
+  `?tab=` + `?month=` (group workspace; month select offers only months with meetings).
+- **Escalated (protected — not changed):** see the PR body / HANDOFF "Open owner decisions".
+
 ## Session 4 (07/11/26) — Google Play readiness (closed testing ~28/11/26)
-> **RESUME HERE (07/11/26):** code side for Play is done (PRs #6–#13). Next = owner/Chrome:
+> **Session 4 status (07/11/26):** code side for Play is done (PRs #6–#13). Next = owner/Chrome:
 > `fly apps create stawi` + secrets (DEPLOYMENT-RUNBOOK.md), `FLY_API_TOKEN` repo secret,
 > confirm `/api/health`, build the TWA for `ke.stawi.app`, set `ANDROID_CERT_FINGERPRINTS`,
 > reviewer env + `seed-demo.ts`, then the listing in `docs/PLAY-LISTING.md`.

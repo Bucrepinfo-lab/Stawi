@@ -6,8 +6,9 @@ import { getViewerRole, dbEnabled } from '@/lib/data';
 import { myGroupRole, RECORD_EDITOR_ROLES } from '@/lib/group-access';
 import { saccoPlusEnabled } from '@/lib/features';
 
-export default async function GroupWorkspacePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function GroupWorkspacePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; month?: string }> }) {
   const { id } = await params;
+  const { tab, month } = await searchParams;
   const [viewer, groupRole] = await Promise.all([getViewerRole(), myGroupRole(id)]);
   // DB mode: only members of THIS group (or a super-admin) may open it — 404 otherwise.
   if (dbEnabled() && !groupRole && viewer !== 'SUPER_ADMIN') notFound();
@@ -29,7 +30,7 @@ export default async function GroupWorkspacePage({ params }: { params: Promise<{
         </p>
       </div>
       <div style={{ marginTop: 22 }}>
-        <GroupCockpit cockpit={cockpit} canEdit={canEdit} saccoPlus={saccoPlusEnabled()} />
+        <GroupCockpit cockpit={cockpit} canEdit={canEdit} saccoPlus={saccoPlusEnabled()} initialTab={tab} initialMonth={month} />
       </div>
     </main>
   );

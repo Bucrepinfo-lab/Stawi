@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { getUserId } from '@/lib/auth';
 import { currentDevice, pinFeatureEnabled } from '@/lib/pin';
 import { SecurityActions } from './SecurityActions';
+import { formatDate } from '@stawi/core';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,7 @@ export default async function SecurityPage() {
     devices = await listTrustedDevices(prisma, userId);
     here = (await currentDevice())?.id ?? null;
   }
-  const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'Africa/Nairobi' });
+  const fmt = (d: Date) => formatDate(d);
   return (
     <main style={{ maxWidth: 560, margin: '0 auto', padding: '28px 16px 80px' }}>
       <Link href="/dashboard" style={{ fontSize: 13, color: 'var(--forest)', fontWeight: 600, textDecoration: 'none' }}>← Dashboard</Link>

@@ -57,9 +57,9 @@ export async function getMyGroups(): Promise<GroupAccount[]> {
     const phone = await getUserPhone();
     if (phone) byPhone = await c.db.getGroupsByPhone(c.db.prisma, phone, c.tenantId ?? undefined);
   } catch { /* phone lookup is best-effort */ }
-  const merged = new Map<string, GroupAccount>();
-  for (const g of [...(byUser as GroupAccount[]), ...(byPhone as GroupAccount[])]) merged.set(g.id, g);
-  return [...merged.values()];
+  // Each group once, with the most privileged role (same rule as groupRoleFor on the server).
+  const { mergeGroupsById } = await import('@stawi/core');
+  return mergeGroupsById([...(byUser as GroupAccount[]), ...(byPhone as GroupAccount[])]);
 }
 
 export async function getBusinessMap(

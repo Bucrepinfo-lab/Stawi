@@ -33,6 +33,13 @@ import {
   type MonthEndStatement,
   type SaccoActivationPacket,
   type MemberCreditPreview,
+  formatDate,
+  weekdayOf,
+  todayIso,
+  monthLabel,
+  statementMonths,
+  pickStatementMonth,
+  uniqueBy,
 } from '@stawi/core';
 import {
   saveCharterAction,
@@ -43,8 +50,10 @@ import {
   explainMemberStatementAction,
 } from '@/app/actions';
 import type { Cockpit } from '@/lib/cockpit';
+import { setUrlParams } from '@/lib/url-state';
 
 type Tab = 'charter' | 'minutes' | 'documents' | 'statement' | 'sacco';
+const TABS: readonly Tab[] = ['charter', 'minutes', 'documents', 'statement', 'sacco'];
 
 const card: React.CSSProperties = { background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 'var(--radius)', padding: 22, boxShadow: 'var(--shadow)' };
 const label: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: 'var(--dim)', marginBottom: 6 };
@@ -74,8 +83,11 @@ function Hint({ text }: { text?: string }) {
   );
 }
 
-export function GroupCockpit({ cockpit, canEdit, saccoPlus = false }: { cockpit: Cockpit; canEdit: boolean; saccoPlus?: boolean }) {
-  const [tab, setTab] = useState<Tab>('charter');
+export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, initialMonth }: { cockpit: Cockpit; canEdit: boolean; saccoPlus?: boolean; initialTab?: string; initialMonth?: string }) {
+  // Tab and statement month live in the URL (?tab=, ?month=) so a refresh or shared link reopens the same view.
+  const startTab: Tab = (TABS as readonly string[]).includes(initialTab ?? '') && (initialTab !== 'sacco' || saccoPlus) ? (initialTab as Tab) : 'charter';
+  const [tab, setTabState] = useState<Tab>(startTab);
+  const setTab = (t: Tab) => { setTabState(t); setUrlParams({ tab: t, month: t === 'statement' ? undefined : null }); };
   const [charter, setCharter] = useState<GroupCharter>(cockpit.charter);
   const [meetings, setMeetings] = useState<Meeting[]>(cockpit.meetings);
   const [saccoActive, setSaccoActive] = useState(false);
@@ -142,7 +154,7 @@ export function GroupCockpit({ cockpit, canEdit, saccoPlus = false }: { cockpit:
         {tab === 'charter' && <CharterTab charter={charter} setCharter={setCharter} canEdit={canEdit} groupId={cockpit.groupId} />}
         {tab === 'minutes' && <MinutesTab charter={charter} meetings={meetings} setMeetings={setMeetings} canEdit={canEdit} groupId={cockpit.groupId} />}
         {tab === 'documents' && <DocumentsTab charter={charter} meetings={meetings} />}
-        {tab === 'statement' && <StatementTab charter={charter} meetings={meetings} canEdit={canEdit} groupId={cockpit.groupId} />}
+        {tab === 'statement' && <StatementTab charter={charter} meetings={meetings} canEdit={canEdit} groupId={cockpit.groupId} initialMonth={initialMonth} />}
         {saccoPlus && tab === 'sacco' && <SaccoActivationTab charter={charter} meetings={meetings} canEdit={canEdit} groupId={cockpit.groupId} onActivated={() => setSaccoActive(true)} />}
       </div>
     </div>
@@ -603,7 +615,7 @@ function MinutesTab({ charter, meetings, setMeetings, canEdit, groupId }: { char
                 <span className="display" style={{ fontSize: 17, fontWeight: 600 }}>Meeting No. {m.meetingNo}</span>
                 <StatusBadge status={m.status} />
               </div>
-              <p style={{ color: 'var(--dim)', fontSize: 13, marginTop: 3 }}>{m.date || 'No date'} · {t.present}/{t.total} present · {m.agendas.filter((a) => a.title.trim()).length} agenda item(s)</p>
+              <p style={{ color: 'var(--dim)', fontSize: 13, marginTop: 3 }}>{formatDate(m.date, { year: 'yyyy' }, 'No date')} · {t.present}/{t.total} present · {m.agendas.filter((a) => a.title.trim()).length} agenda item(s)</p>
             </div>
             {canEdit && <button style={btnGhost} onClick={() => setEditing(m)}>{m.status === 'POSTED' ? 'View / re-open' : 'Continue →'}</button>}
           </div>
@@ -659,7 +671,8 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
     if (!preview) return;
     setBusy(true); setErr(undefined);
     const posted: Meeting = { ...m, status: 'POSTED' };
-    await saveMeetingAction({ groupId, meeting: posted });
+    const saved = await saveMeetingAction({ groupId, meeting: posted });
+    if (!saved.ok) { setBusy(false); setErr(saved.error); return; }
     const r = await postMeetingAction({ groupId, meetingNo: m.meetingNo, generatedDoc: preview.text });
     setBusy(false);
     if (r.ok) onCommit(posted); else setErr(r.error);
@@ -702,7 +715,7 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
       <div style={card}>
         <SectionTitle n={1} title="Meeting details" />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div><label style={label}>Date</label><input type="date" style={input} value={m.date} onChange={(e) => set({ date: e.target.value, day: e.target.value ? new Date(e.target.value + 'T00:00:00Z').toLocaleDateString('en-KE', { weekday: 'long', timeZone: 'UTC' }) : m.day })} /></div>
+          <div><label style={label}>Date held{m.date ? ` · ${formatDate(m.date, { year: 'yyyy' })}` : ' (dd/mm/yyyy)'}</label><input type="date" style={input} value={m.date} max={todayIso()} onChange={(e) => set({ date: e.target.value, day: e.target.value ? weekdayOf(e.target.value) || m.day : m.day })} /></div>
           <div><label style={label}>Venue</label><input style={input} value={m.venue} onChange={(e) => set({ venue: e.target.value })} /></div>
           <div><label style={label}>Start time</label><input style={input} value={m.startTime} onChange={(e) => set({ startTime: e.target.value })} placeholder="4:00 PM" /></div>
           <div><label style={label}>End time</label><input style={input} value={m.endTime} onChange={(e) => set({ endTime: e.target.value })} placeholder="6:00 PM" /></div>
@@ -756,7 +769,7 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
           <div><label style={label}>Merry-go-round payout to</label>
             <select style={input} value={m.tableBanking.payoutRecipient ?? ''} onChange={(e) => setTB({ payoutRecipient: e.target.value || undefined })}>
               <option value="">— none —</option>
-              {roster.map((r) => <option key={r.id}>{r.fullName}</option>)}
+              {uniqueBy(roster, (r) => r.fullName.trim().toLowerCase()).map((r) => <option key={r.id} value={r.fullName}>{r.fullName}</option>)}
             </select>
           </div>
           <div><label style={label}>Amount (KES)</label><input style={input} inputMode="decimal" value={fromCents(m.tableBanking.payoutCents ?? 0)} onChange={(e) => setTB({ payoutCents: toCents(e.target.value) })} /></div>
@@ -780,7 +793,7 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
         <SectionTitle n={6} title="Adjournment" />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div><label style={label}>Adjourned at</label><input style={input} value={m.adjournmentTime} onChange={(e) => set({ adjournmentTime: e.target.value })} placeholder="6:00 PM" /></div>
-          <div><label style={label}>Next meeting date</label><input type="date" style={input} value={m.nextMeetingDate ?? ''} onChange={(e) => set({ nextMeetingDate: e.target.value || undefined })} /></div>
+          <div><label style={label}>Next meeting date{m.nextMeetingDate ? ` · ${formatDate(m.nextMeetingDate, { year: 'yyyy' })}` : ' (dd/mm/yyyy)'}</label><input type="date" style={input} value={m.nextMeetingDate ?? ''} min={m.date || undefined} onChange={(e) => set({ nextMeetingDate: e.target.value || undefined })} /></div>
         </div>
       </div>
 
@@ -835,7 +848,7 @@ function FinesEditor({ roster, fines, onChange }: { roster: CharterMember[]; fin
           <div key={i} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr .8fr 28px', gap: 6, alignItems: 'center' }}>
             <select style={{ ...input, padding: '8px 10px' }} value={f.memberId} onChange={(e) => { const mem = roster.find((r) => r.id === e.target.value); update(i, { memberId: e.target.value, name: mem?.fullName ?? '' }); }}>
               <option value="">Member…</option>
-              {roster.map((r) => <option key={r.id} value={r.id}>{r.fullName}</option>)}
+              {uniqueBy(roster, (r) => r.id).map((r) => <option key={r.id} value={r.id}>{r.fullName}</option>)}
             </select>
             <input style={{ ...input, padding: '8px 10px' }} value={f.reason} placeholder="Reason" onChange={(e) => update(i, { reason: e.target.value })} />
             <input style={{ ...input, padding: '8px 10px' }} inputMode="decimal" placeholder="KES" value={fromCents(f.amountCents)} onChange={(e) => update(i, { amountCents: toCents(e.target.value) })} />
@@ -1004,7 +1017,7 @@ function DocumentsTab({ charter, meetings }: { charter: GroupCharter; meetings: 
     <div style={{ display: 'grid', gap: 14 }}>
       <div className="no-print" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {posted.map((m) => (
-          <button key={m.id} onClick={() => setOpenNo(m.meetingNo)} style={{ padding: '8px 14px', borderRadius: 10, border: `1px solid ${m.meetingNo === open.meetingNo ? 'var(--forest)' : 'var(--line)'}`, background: m.meetingNo === open.meetingNo ? 'var(--forest)' : '#fff', color: m.meetingNo === open.meetingNo ? '#fff' : 'var(--ink-2)', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>No. {m.meetingNo} · {m.date}</button>
+          <button key={m.id} onClick={() => setOpenNo(m.meetingNo)} style={{ padding: '8px 14px', borderRadius: 10, border: `1px solid ${m.meetingNo === open.meetingNo ? 'var(--forest)' : 'var(--line)'}`, background: m.meetingNo === open.meetingNo ? 'var(--forest)' : '#fff', color: m.meetingNo === open.meetingNo ? '#fff' : 'var(--ink-2)', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>No. {m.meetingNo} · {formatDate(m.date, {}, 'no date')}</button>
         ))}
       </div>
       <div className="no-print"><button style={btnGold} onClick={() => window.print()}>↓ Print / Save this document as PDF</button></div>
@@ -1015,11 +1028,14 @@ function DocumentsTab({ charter, meetings }: { charter: GroupCharter; meetings: 
 
 // ───────────────────────────── Statement tab ────────────────────────────
 
-function StatementTab({ charter, meetings, canEdit, groupId }: { charter: GroupCharter; meetings: Meeting[]; canEdit: boolean; groupId: string }) {
-  const dated = meetings.filter((m) => m.date);
-  const latest = dated.map((m) => m.date).sort().at(-1) ?? '';
-  const [period, setPeriod] = useState<string>(latest ? latest.slice(0, 7) : '');
+function StatementTab({ charter, meetings, canEdit, groupId, initialMonth }: { charter: GroupCharter; meetings: Meeting[]; canEdit: boolean; groupId: string; initialMonth?: string }) {
+  // Only months that have recorded meetings, up to this month — each once, newest first.
+  // The server applies the same rule when a statement is posted.
+  const months = useMemo(() => statementMonths(meetings), [meetings]);
+  const [period, setPeriodState] = useState<string>(() => pickStatementMonth(initialMonth, months));
+  const setPeriod = (p: string) => { setPeriodState(p); setUrlParams({ month: p }); };
   const [posted, setPosted] = useState(false);
+  const [postErr, setPostErr] = useState<string>();
 
   const statement: MonthEndStatement | null = useMemo(() => {
     if (!period) return null;
@@ -1033,19 +1049,25 @@ function StatementTab({ charter, meetings, canEdit, groupId }: { charter: GroupC
   async function post() {
     if (!statement) return;
     const [y, mo] = period.split('-').map(Number);
+    setPostErr(undefined);
     const r = await saveStatementAction({ groupId, year: y!, month: mo!, payload: { ...statement, narrative }, post: true });
-    if (r.ok) setPosted(true);
+    if (r.ok) setPosted(true); else setPostErr(r.error ?? 'Could not post the statement.');
   }
 
-  if (dated.length === 0) return <div style={card}><p style={{ color: 'var(--ink-2)' }}>Record and date at least one meeting to generate a month-end statement.</p></div>;
+  if (months.length === 0) return <div style={card}><p style={{ color: 'var(--ink-2)' }}>Record and date at least one meeting to generate a month-end statement.</p></div>;
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       <div className="no-print" style={{ ...card, display: 'flex', gap: 12, alignItems: 'end', flexWrap: 'wrap' }}>
-        <div><label style={label}>Statement month</label><input type="month" style={input} value={period} onChange={(e) => { setPeriod(e.target.value); setNarr(null); setPosted(false); }} /></div>
+        <div><label style={label}>Statement month</label>
+          <select style={input} value={period} onChange={(e) => { setPeriod(e.target.value); setNarr(null); setPosted(false); setPostErr(undefined); }}>
+            {months.map((ym) => <option key={ym} value={ym}>{monthLabel(ym)}</option>)}
+          </select>
+        </div>
         {statement && <button style={btnGold} onClick={() => window.print()}>↓ Print / Save PDF</button>}
         {statement && canEdit && <button style={btn} onClick={post}>✓ Post statement</button>}
         {posted && <span style={{ color: 'var(--good)', fontWeight: 700, fontSize: 13 }}>✓ Posted</span>}
+        {postErr && <span role="alert" style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 13 }}>{postErr}</span>}
       </div>
 
       {statement && <StatementDocument charter={charter} st={statement} narrative={narrative} onEditNarrative={canEdit ? (i, v) => setNarr(narrative.map((p, j) => j === i ? v : p)) : undefined} />}
