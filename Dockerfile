@@ -24,7 +24,9 @@ RUN npm install --no-audit --no-fund
 FROM node:${NODE_VERSION}-bookworm-slim AS build
 RUN apt-get update -y && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Whole deps tree: root node_modules plus any workspace-nested node_modules
+# (npm keeps conflicting versions, e.g. typescript/@types, under apps/web).
+COPY --from=deps /app ./
 COPY package.json package-lock.json .npmrc turbo.json tsconfig.base.json ./
 COPY apps/web apps/web
 COPY packages/core packages/core
