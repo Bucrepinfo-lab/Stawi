@@ -58,6 +58,8 @@ the full list is in `.env.example` and `docs/PLAY-LISTING.md`.
 3. Optional demo data: `npm run -w @stawi/db seed` then
    `npx tsx packages/db/prisma/seed-demo.ts` from a machine with `DATABASE_URL`.
 4. Supabase: Auth → Hooks → Send SMS → `https://stawi.fly.dev/api/auth/send-sms`.
+   Auth → Providers → Phone: **SMS OTP expiry = 300 seconds**, OTP length 6 (the app also
+   refuses codes older than 5 minutes and rate-limits per number and per IP).
 5. Verify: `curl https://stawi.fly.dev/api/health` → `{"status":"ok"}`.
 
 ## Rollback

@@ -16,13 +16,20 @@ export const MONEY_ROLES: ReadonlySet<GroupRole> = new Set(['TREASURER']);
 
 const last9 = (raw: string) => raw.replace(/\D/g, '').replace(/^0+/, '').slice(-9);
 
-/** The caller's role in `groupId`, or null if not a member / signed out / no DB. */
+/** The signed-in (cookie session) caller's role in `groupId`, or null. */
 export async function myGroupRole(groupId: string): Promise<GroupRole | null> {
   if (!process.env.DATABASE_URL || !groupId) return null;
   const userId = await getUserId();
   if (!userId) return null;
   const phone = await getUserPhone().catch(() => null);
-  const key = phone ? last9(phone) : '';
+  return groupRoleFor(groupId, { userId, phone });
+}
+
+/** Role of a verified identity (user id + verified phone) in `groupId`, or null. */
+export async function groupRoleFor(groupId: string, who: { userId: string; phone: string | null }): Promise<GroupRole | null> {
+  if (!process.env.DATABASE_URL || !groupId) return null;
+  const userId = who.userId;
+  const key = who.phone ? last9(who.phone) : '';
   const { prisma } = await import('@stawi/db');
   const rows = await prisma.membership.findMany({
     where: {
