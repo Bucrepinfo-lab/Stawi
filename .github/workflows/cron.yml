@@ -1,5 +1,7 @@
-# Daily scheduler — hits /api/cron (interest accrual runs month-end, dunning daily).
-# Set repo secrets: CRON_URL (https://<app>/api/cron) and CRON_SECRET.
+# Daily scheduler — hits /api/cron (subscription dunning daily; SACCO+ interest
+# accrual only when SACCO_PLUS_ENABLED=true). Daily is the least frequent schedule
+# that keeps dunning accurate to the day.
+# Set repo secrets: CRON_URL (https://stawi.fly.dev/api/cron) and CRON_SECRET.
 name: Cron
 
 on:

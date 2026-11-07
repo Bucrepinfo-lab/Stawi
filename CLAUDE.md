@@ -19,10 +19,12 @@ npm install
 npm run generate --workspace @stawi/db
 npm run typecheck && npm run lint && npm run test && npm run build --workspace @stawi/web
 ```
-Deploy: DigitalOcean App Platform, only on `main` with `DEPLOY_ENABLED == 'true'`
-(`do-deploy-runbook`). Confirm `/api/health` → `{"status":"ok"}`.
+Deploy: Fly.io app `stawi` (fra) via `.github/workflows/deploy.yml`, only on `main`
+and only when the `FLY_API_TOKEN` secret exists (`fly-deploy-runbook`). Confirm
+`/api/health` → `{"status":"ok"}`. SACCO+ (lending/interest) stays behind
+`SACCO_PLUS_ENABLED` (off) for the Google Play launch.
 
 ## Skills
 `.claude/skills/`: `ship-workflow`, `tenant-isolation-guard`, `money-movement-testing`,
 `kyc-aml-onboarding`, `compliance-pack`, `sacco-graduation-domain`,
-`do-deploy-runbook`, `stawi-design-system`. UTF-8 + LF only. Commit/push only when asked.
+`fly-deploy-runbook`, `stawi-design-system`. UTF-8 + LF only. Commit/push only when asked.

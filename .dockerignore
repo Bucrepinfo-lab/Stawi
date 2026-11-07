@@ -1,0 +1,16 @@
+**/node_modules
+**/.next
+**/.turbo
+**/dist
+.git
+.github
+.env
+.env.*
+!.env.example
+apps/mobile/*
+!apps/mobile/package.json
+design
+docs
+legal
+*.md
+!apps/web/**/*.md

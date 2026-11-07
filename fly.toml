@@ -1,0 +1,46 @@
+# Fly.io — Stawi web (Next.js standalone). Region: Frankfurt (fra).
+# One-time owner setup and secret NAMES: DEPLOYMENT-RUNBOOK.md.
+# Deploys: .github/workflows/deploy.yml (main, only when FLY_API_TOKEN exists).
+app = "stawi"
+primary_region = "fra"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[deploy]
+  # Additive schema sync (`prisma db push` WITHOUT --accept-data-loss: a
+  # destructive diff fails the release and the old version keeps serving),
+  # then re-apply the idempotent RLS policies. Skips cleanly with no DATABASE_URL.
+  release_command = "sh packages/db/prisma/release.sh"
+  strategy = "rolling"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+  HOSTNAME = "0.0.0.0"
+  # v1 ships without lending/interest (Google Play). Do not flip without a CBK licence.
+  SACCO_PLUS_ENABLED = "false"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 200
+    hard_limit = 250
+
+  [[http_service.checks]]
+    grace_period = "20s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/api/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

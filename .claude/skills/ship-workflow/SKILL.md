@@ -1,6 +1,6 @@
 ---
 name: ship-workflow
-description: Use when implementing a backlog slice, fixing a bug, or preparing to commit/deploy Stawi — the house delivery loop: CI gate order, deploy gated on DEPLOY_ENABLED, keep the ~242 core tests green, update MEMORY.md/HANDOFF, one focused PR at a time.
+description: Use when implementing a backlog slice, fixing a bug, or preparing to commit/deploy Stawi — the house delivery loop: CI gate order, deploy to Fly.io gated on FLY_API_TOKEN, keep the ~242 core tests green, update MEMORY.md/HANDOFF, one focused PR at a time.
 ---
 
 # Ship Workflow
@@ -15,7 +15,7 @@ session.
 
 ## Ground-truth files
 - `MEMORY.md` — session log + "RESUME HERE" pointer (read first; the auth migration
-  is logged here — see `do-deploy-runbook` for the deploy-config drift it creates).
+  is logged here — see `fly-deploy-runbook`).
 - `HANDOFF-v1.9.md` — latest handoff state.
 - `.github/workflows/ci.yml` (gate order + gated deploy), `PRE-DEPLOY-CHECKLIST.md`.
 - `README.md`, `PRD.md` — product truth.
@@ -39,9 +39,9 @@ session.
    "RESUME HERE" pointer) and `HANDOFF` on completion; update `PRD.md`/`README.md` if
    behaviour changed.
 5. **Ship one focused PR.** Clear message; exclude line-ending-only churn. Deploy is
-   gated: the CI deploy job runs only on `main` AND repo variable
-   `DEPLOY_ENABLED == 'true'` with DO secrets present — so pushing before launch keeps
-   CI green without deploying. Arm deploy only when intended (see `do-deploy-runbook`).
+   gated: `deploy.yml` runs `flyctl deploy` only on `main` AND only when the
+   `FLY_API_TOKEN` secret exists — otherwise it passes with a notice. Arm deploy only
+   when intended (see `fly-deploy-runbook`).
 
 ## Guardrails
 - Tests green before "done" — reproduce a bug before claiming a fix.

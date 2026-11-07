@@ -1,56 +1,70 @@
-# Stawi — Deployment Runbook
+# Stawi — Deployment Runbook (Fly.io)
 
-Target: **DigitalOcean App Platform**, region **Frankfurt (fra1)**, Node.js runtime.
+Target: **Fly.io**, app **`stawi`**, region **Frankfurt (`fra`)**, Next.js
+standalone in Docker (`Dockerfile`, `fly.toml`). DigitalOcean is retired.
 
-## Prerequisites
-- GitHub repo: `Bucrepinfo-lab/Stawi` (this repo)
-- DigitalOcean account + `doctl` CLI authenticated (`doctl auth init`)
-- Clerk app (publishable + secret keys, webhook secret)
-- Safaricom Daraja **sandbox** app (consumer key/secret, passkey, shortcode)
+## How deploys work
+- `.github/workflows/deploy.yml` — on every push to `main` it runs
+  `flyctl deploy --remote-only` **only if the `FLY_API_TOKEN` repo secret exists**;
+  otherwise the job passes with a "skipping" notice. On pull requests it only
+  builds the Docker image (catches a broken Dockerfile before merge).
+- `fly.toml` `release_command` → `packages/db/prisma/release.sh`: additive
+  `prisma db push` (**never** `--accept-data-loss` — a destructive diff fails the
+  release and the old version keeps serving), then re-applies `rls.sql`
+  (idempotent). With no `DATABASE_URL` it skips.
+- Health check: `GET /api/health` → `{"status":"ok"}` (Fly checks it every 30 s;
+  the workflow confirms it after each deploy).
 
-## 9 steps
+## One-time owner setup (values are never committed)
+```bash
+fly auth login
+fly apps create stawi                      # org: your personal org
+# Postgres — any managed Postgres works (e.g. Neon or Fly Postgres); keep sslmode=require
+fly secrets set --app stawi \
+  DATABASE_URL="postgresql://USER:PASSWORD@HOST/stawi?sslmode=require" \
+  NEXT_PUBLIC_SUPABASE_URL="https://<project-ref>.supabase.co" \
+  NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon key>" \
+  SUPABASE_SEND_SMS_HOOK_SECRET="v1,whsec_<...>" \
+  SUPABASE_JWT_SECRET="<jwt secret>" \
+  AT_USERNAME="<...>" AT_API_KEY="<...>" AT_SENDER_ID="<optional>" \
+  CRON_SECRET="<random>" \
+  NEXT_PUBLIC_APP_URL="https://stawi.fly.dev" \
+  NEXT_PUBLIC_ROOT_DOMAIN="stawi.fly.dev"
+fly tokens create deploy --app stawi       # copy the token into GitHub (below)
+```
+GitHub → repo **Settings → Secrets and variables → Actions**:
+- **Secrets:** `FLY_API_TOKEN` (arms auto-deploy), `CRON_URL`
+  (`https://stawi.fly.dev/api/cron`), `CRON_SECRET` (same value as on Fly).
+- **Variables** (public, inlined into the browser bundle at build time):
+  `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+  `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_ROOT_DOMAIN`.
 
-1. **Database** — create a Managed PostgreSQL cluster (fra1). Copy its
-   connection string into `DATABASE_URL` (append `?sslmode=require`).
-2. **Run migrations + seed** — from a machine with `DATABASE_URL` set:
-   ```bash
-   npm install
-   npm run -w @stawi/db generate
-   npm run -w @stawi/db migrate         # prisma migrate deploy
-   npm run -w @stawi/db seed            # optional: load the demo groups/business
-   ```
-   > With no `DATABASE_URL`, the app runs on bundled seed data. Set `DATABASE_URL`
-   > to switch reads/writes to Postgres automatically (via `lib/data.ts`).
-3. **Clerk** — in the Clerk dashboard, copy keys into your env. Register the
-   webhook endpoint `POST /api/webhooks/clerk` and copy the signing secret to
-   `CLERK_WEBHOOK_SECRET`.
-4. **M-Pesa (sandbox)** — create a Daraja sandbox app, set `MPESA_ENV=sandbox`,
-   and fill consumer key/secret, passkey, shortcode `174379`. Point
-   `MPESA_CALLBACK_URL` at `https://<app>/api/mpesa/callback`.
-5. **Spaces** — create a Spaces bucket `stawi` (fra1, CDN on). Save key/secret;
-   add the CDN hostname to `next.config.mjs` `images.remotePatterns`.
-6. **Create the app** — `doctl apps create --spec .do/app.yaml`. Add all SECRET
-   env vars in the DO dashboard (they are slots in `app.yaml`, values not committed).
-7. **GitHub Actions secrets** — set `DIGITALOCEAN_ACCESS_TOKEN` and `DO_APP_ID`
-   so pushes to `main` auto-deploy.
-8. **Domain** — in GoDaddy add a CNAME → the DO app URL; DO issues Let's Encrypt
-   SSL automatically.
-9. **Verify** — hit `https://<app>/api/health` → expect `{"status":"ok"}`.
+Later blocks add their own secret names (M-Pesa, Play reviewer, assetlinks) —
+the full list is in `.env.example` and `docs/PLAY-LISTING.md`.
+
+## Secret / env NAMES (runtime, `fly secrets set`)
+`DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+`SUPABASE_SEND_SMS_HOOK_SECRET`, `SUPABASE_JWT_SECRET`, `AT_USERNAME`, `AT_API_KEY`,
+`AT_SENDER_ID`, `CRON_SECRET`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_ROOT_DOMAIN`,
+`MOBILE_API_KEY` (optional), `MPESA_*` (see `.env.example`), `STRIPE_SECRET_KEY` /
+`STRIPE_WEBHOOK_SECRET` (optional), `MEMBER_EXPLANATION_PROVIDER` /
+`ANTHROPIC_API_KEY` (optional). `SACCO_PLUS_ENABLED` is set to `"false"` in
+`fly.toml` — v1 ships without lending.
+
+## First deploy
+1. Complete the one-time setup above.
+2. Either push to `main` (workflow deploys) or run locally: `fly deploy --remote-only`
+   with the four `--build-arg NEXT_PUBLIC_*=...` values.
+3. Optional demo data: `npm run -w @stawi/db seed` then
+   `npx tsx packages/db/prisma/seed-demo.ts` from a machine with `DATABASE_URL`.
+4. Supabase: Auth → Hooks → Send SMS → `https://stawi.fly.dev/api/auth/send-sms`.
+5. Verify: `curl https://stawi.fly.dev/api/health` → `{"status":"ok"}`.
 
 ## Rollback
-- DO App Platform → Deployments → roll back to the previous successful build.
-- DB: restore from the latest automated Managed-DB backup.
+- `fly releases --app stawi` then `fly deploy --image <previous image ref>`.
+- DB: restore from the provider's latest backup (schema changes are additive only).
 
-## Health
-- Liveness: `GET /api/health`
-- Watch: DO App metrics (CPU/mem), Postgres connections, Clerk + M-Pesa error rates.
-
-## Stripe (global card subscriptions)
-- Set `STRIPE_SECRET_KEY`. Checkout activates automatically (subscription mode,
-  30-day trial = first month free), charged in USD, localized display elsewhere.
-- Register a webhook at `https://<app>/api/billing/webhook` for
-  `checkout.session.completed`; copy the signing secret to `STRIPE_WEBHOOK_SECRET`.
-- `/api/billing/checkout` returns a hosted Checkout URL; the /subscribe page
-  redirects to it when a paid plan is chosen and the Terms are accepted.
-- Paystack/Flutterwave/M-Pesa recurring are routed by country (see core/payments.ts)
-  and remain stubs until their keys are added.
+## Cron
+`.github/workflows/cron.yml` calls `/api/cron` daily (subscription dunning;
+SACCO+ interest accrual only when `SACCO_PLUS_ENABLED=true`). It skips until
+`CRON_URL` is set.

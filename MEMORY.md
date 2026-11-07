@@ -8,6 +8,11 @@
   `postSaccoTxn`; `getSaccoAccounts` → []), cron skips interest, no loans/interest/credit
   copy in the UI. Data untouched. Tests: `packages/core/test/features.test.ts`,
   `packages/db/test/sacco-flag.test.ts`. Re-enable only after licensing.
+- **Hosting = Fly.io** (DigitalOcean retired, `.do/` removed). `Dockerfile` (Next standalone,
+  monorepo-aware, prisma generate), `fly.toml` (app `stawi`, fra, port 3000, health
+  `/api/health`, release = `packages/db/prisma/release.sh`: additive `db push` + `rls.sql`),
+  `.github/workflows/deploy.yml` (PR: docker build; main: `flyctl deploy` only when
+  `FLY_API_TOKEN` exists). Owner steps + secret NAMES: `DEPLOYMENT-RUNBOOK.md`.
 
 > **RESUME HERE (2026-08-14, end of session 3):** Auth migrated Clerk → **Supabase
 > phone-OTP** across web + mobile (OTP SMS via Africa's Talking); web+mobile now one

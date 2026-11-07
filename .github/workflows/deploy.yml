@@ -1,0 +1,67 @@
+name: Deploy (Fly.io)
+
+# main → Fly.io app "stawi" (fra). Skips cleanly (green, with a notice) until
+# the owner adds the FLY_API_TOKEN repo secret. PRs only build the Docker image
+# so a broken Dockerfile is caught before merge.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  docker-build:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the production image (no push)
+        run: docker build --progress=plain -t stawi:pr .
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    steps:
+      - name: Check deploy credentials
+        id: gate
+        run: |
+          if [ -z "$FLY_API_TOKEN" ]; then
+            echo "::notice::FLY_API_TOKEN is not set — skipping the Fly.io deploy (see DEPLOYMENT-RUNBOOK.md)."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.enabled == 'true'
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+        if: steps.gate.outputs.enabled == 'true'
+      - name: flyctl deploy
+        if: steps.gate.outputs.enabled == 'true'
+        # Public (browser-inlined) values come from repo Variables; nothing secret is a build arg.
+        run: >
+          flyctl deploy --remote-only --wait-timeout 600
+          --build-arg NEXT_PUBLIC_SUPABASE_URL="${{ vars.NEXT_PUBLIC_SUPABASE_URL }}"
+          --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}"
+          --build-arg NEXT_PUBLIC_APP_URL="${{ vars.NEXT_PUBLIC_APP_URL }}"
+          --build-arg NEXT_PUBLIC_ROOT_DOMAIN="${{ vars.NEXT_PUBLIC_ROOT_DOMAIN }}"
+      - name: Confirm /api/health
+        if: steps.gate.outputs.enabled == 'true'
+        run: |
+          URL="${{ vars.NEXT_PUBLIC_APP_URL }}"; URL="${URL:-https://stawi.fly.dev}"
+          for i in 1 2 3 4 5 6; do
+            if curl -fsS "$URL/api/health" | grep -q '"status":"ok"'; then echo "healthy: $URL"; exit 0; fi
+            sleep 10
+          done
+          echo "::error::$URL/api/health did not return status ok"; exit 1

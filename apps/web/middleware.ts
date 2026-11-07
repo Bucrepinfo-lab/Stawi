@@ -19,6 +19,10 @@ const PUBLIC: RegExp[] = [
 const isPublic = (pathname: string) => PUBLIC.some((re) => re.test(pathname));
 
 export async function middleware(request: NextRequest) {
+  // Liveness probe (Fly health check + deploy workflow): answer without touching
+  // Supabase, so health reflects the server itself, not an auth provider.
+  if (request.nextUrl.pathname === '/api/health') return NextResponse.next();
+
   // SACCO+ (loans, interest, scoring) is off unless SACCO_PLUS_ENABLED=true:
   // its routes answer 404 for everyone. The pages, server actions and db repo
   // refuse again on their own (defence in depth).

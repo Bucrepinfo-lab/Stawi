@@ -146,7 +146,7 @@ React Native can't call Next.js server actions, so the app talks to JSON routes:
 ## Persistence + Clerk mobile auth (added 2026-07-13)
 
 - **Postgres:** `docker-compose.yml` (local), `packages/db` `push`/`generate`/`seed`
-  scripts, and `DB-SETUP.md` (local + DigitalOcean paths). Seed now creates the
+  scripts, and `DB-SETUP.md` (local + managed-Postgres paths). Seed now creates the
   Umoja **charter + two meetings** and **phone-numbered memberships**, so DB-mode
   phone login and the cockpit have real data. Set `DATABASE_URL` and writes persist.
 - **Clerk mobile auth (optional):** set `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` and the
@@ -179,6 +179,6 @@ ZA — extend freely). `phoneRule()` / `isValidPhoneLength()` drive `maxLength` 
 validation on every phone input (charter roster, mobile + Clerk login, prototype
 login with a country picker). The typed limit now adapts to the country.
 
-**Production upload/OCR:** wire `MinutesImport` uploads to DigitalOcean Spaces and a
+**Production upload/OCR:** wire `MinutesImport` uploads to object storage and a
 server OCR/text-extraction step (e.g. Tesseract server or a cloud OCR) — the client
 degrades to manual entry when unavailable, so nothing is blocked.

@@ -8,7 +8,7 @@ running that business with QuickBooks-grade accounting and tax compliance →
 full savings & credit services with a graduation path to a licensed, listed
 institution. Mobile-first and M-Pesa-native.
 
-> Status: **v1.9 — LOCKED, ready for DigitalOcean deployment. Adds note import (photo/file) + per-country phone limits. Pillar 1 complete (web + mobile), phone-first identity, live API, Postgres persistence, Clerk mobile auth.** Domain logic
+> Status: **v1.9 — preparing the Google Play launch (Fly.io + Android TWA); SACCO+ lending is behind `SACCO_PLUS_ENABLED` (off) for v1. Adds note import (photo/file) + per-country phone limits. Pillar 1 complete (web + mobile), phone-first identity, live API, Postgres persistence, Clerk mobile auth.** Domain logic
 > implemented and tested, realtime SSE push live, all activation seams closed.
 > New: a role-gated group workspace that captures the charter, minutes every
 > meeting, auto-paraphrases them into bank-ready documents, and reconciles a
@@ -58,7 +58,7 @@ packages/
 ## Stack
 
 Next.js · React Native (Expo) · Clerk (auth/orgs/roles) · PostgreSQL (Prisma) ·
-M-Pesa Daraja 3.0 · DigitalOcean App Platform (fra1) · Turborepo.
+M-Pesa Daraja 3.0 · Fly.io (fra) · Turborepo.
 
 ## Quick start
 
@@ -95,8 +95,9 @@ npm run start --workspace @stawi/mobile   # Expo
 
 ## Deploy
 
-DigitalOcean App Platform via `.do/app.yaml` (Frankfurt). CI/CD in
-`.github/workflows/ci.yml`. Full steps in [`DEPLOYMENT-RUNBOOK.md`](./DEPLOYMENT-RUNBOOK.md).
+Fly.io (app `stawi`, Frankfurt) via `Dockerfile` + `fly.toml`. CI in
+`.github/workflows/ci.yml`; deploys from `main` in `.github/workflows/deploy.yml`
+(only when the `FLY_API_TOKEN` secret exists). Full steps in [`DEPLOYMENT-RUNBOOK.md`](./DEPLOYMENT-RUNBOOK.md).
 
 ## License
 

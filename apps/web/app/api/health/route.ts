@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-// Health check for DigitalOcean App Platform.
+// Health check for Fly.io (fly.toml [[http_service.checks]]) and the deploy workflow.
 export function GET() {
   return NextResponse.json({
     status: 'ok',
