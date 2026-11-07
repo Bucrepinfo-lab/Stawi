@@ -43,3 +43,4 @@ export type { CountryCode } from './compliance';
 export * from './phone';
 export * from './dates';
 export * from './scope';
+export * from './receipt-access';

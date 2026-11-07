@@ -20,21 +20,31 @@ Not deployed yet (no Fly app / `FLY_API_TOKEN`), so there is no `/api/health` to
    meetings and a month chooser (was fixed to June 2026); groups list shows each group once.
 9. Charter — entering the same phone twice on the roster is refused on save.
 
-**Open owner decisions (protected areas — escalated, not changed):**
-- `packages/db/src/repo.ts#provisionRosterMemberships` does not add newly created phone keys to
-  its `have` set inside the loop, so a roster carrying one phone twice creates two membership
-  rows (now blocked at charter save; existing duplicates, if any, need a data check).
-- `packages/core/src/pos.ts#ledgerCsv` writes ISO (yyyy-mm-dd) dates; `receipt.ts`/`pos.ts`
-  `dateDisplay` use en-KE medium on the server/device clock (the screens now override display).
-  Decide whether CSV exports should be dd/mm/yyyy (spreadsheet locale risk) or stay ISO.
-- `/receipt/[ref]` builds the receipt from URL query values, not a stored contribution — anyone
-  can print a receipt with any group/member/amount. Should load the contribution by id and check
-  membership.
-- Who may write to a group business's books (now: any member of that group) — officials or
-  treasurer only?
-- `reconcileMonth` includes DRAFT meetings in a posted statement; should only POSTED count?
-- Native `<input type="date">` still renders in the device locale on Android (a dd/mm/yyyy echo
-  is shown beside it); a custom day-first picker is a design decision.
+**Owner decisions (07/11/26) — implemented in the follow-up PR:**
+1. **Duplicate memberships.** `provisionRosterMemberships` is now idempotent (one row per group +
+   phone; upsert on `(groupId, "pending:<key>")`; never deletes or merges). A read-only check lists
+   any duplicates already in the database — **nothing is changed; the owner approves any clean-up
+   after reading its output.** Run it from the repo root against the target database:
+   ```
+   npm install && npm run generate --workspace @stawi/db
+   DATABASE_URL="<connection string>" npm run check:duplicates --workspace @stawi/db
+   ```
+   On Fly (once deployed): `fly ssh console -a stawi -C "npm run check:duplicates --workspace @stawi/db"`
+   (DATABASE_URL is already set there). It prints group id, kind (phone|user), a masked key and the
+   membership ids — no names or full phones.
+2. **Receipts.** `/receipt/[ref]` loads the stored CONFIRMED contribution by id (query values are
+   ignored), scoped to the caller's tenant, visible to that member or the group's chair, secretary or
+   treasurer; anything else is 404. The dashboard links `/receipt/<id>` only after a stored
+   contribution (no receipt link in demo mode).
+3. **Books.** Only chair, secretary and treasurer add ledger entries (server: `addLedgerEntryAction`;
+   UI: form hidden, read-only note for members and signatories).
+4. **Statements count POSTED meetings only** — totals, the month list and the server recompute.
+5. **CSV dates stay ISO** (comment beside `ledgerCsv` in `packages/core/src/pos.ts`).
+6. **Native date inputs unchanged** (dd/mm/yyyy label beside them stays).
+
+**Retest additions:** `/receipt/<id>` as the paying member (opens), as another member (404), signed
+out (404), with `?amount=` added (ignored); `/books` as a member (no add form) and as treasurer (form);
+Month-End with a draft meeting (not counted, its month not offered unless it has a posted meeting).
 
 # Stawi — v1.9 (import written notes + per-country phone length)
 

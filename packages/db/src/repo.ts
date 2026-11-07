@@ -721,6 +721,12 @@ function phoneKey(raw: string): string {
  * Provision membership rows from a charter roster so members exist (phone-keyed)
  * before they ever sign in. Rows without a matching clerkUserId are "pending"
  * and get linked automatically on first phone sign-in.
+ *
+ * Idempotent (owner, 07/11/26): one row per group + phone, however many times
+ * the roster is saved or a phone repeats in it (in any format). A phone already
+ * on any row of the group (pending or linked) is skipped; a new one is UPSERTED
+ * on the unique (groupId, clerkUserId = "pending:<9-digit key>"), so even two
+ * saves racing each other cannot create a second row. Never deletes or merges.
  */
 export async function provisionRosterMemberships(
   prisma: PrismaClient,
@@ -736,16 +742,23 @@ export async function provisionRosterMemberships(
   for (const r of input.roster) {
     const key = phoneKey(r.phone);
     if (!key || have.has(key)) continue;
-    await prisma.membership.create({
-      data: {
-        groupId: input.groupId,
-        clerkUserId: `pending:${key}`, // placeholder until the person signs in
-        fullName: r.fullName,
-        phone: r.phone,
-        role: roleMap[r.designation ?? 'Member'] ?? 'MEMBER',
-      },
-    }).catch(() => {});
-    created++;
+    have.add(key); // a phone repeated later in this roster is the same person
+    try {
+      await prisma.membership.upsert({
+        where: { groupId_clerkUserId: { groupId: input.groupId, clerkUserId: `pending:${key}` } },
+        create: {
+          groupId: input.groupId,
+          clerkUserId: `pending:${key}`, // placeholder until the person signs in
+          fullName: r.fullName,
+          phone: r.phone,
+          role: roleMap[r.designation ?? 'Member'] ?? 'MEMBER',
+        },
+        update: {}, // already there: leave it exactly as it is
+      });
+      created++;
+    } catch {
+      /* a concurrent save created it first — still exactly one row */
+    }
   }
   return { created };
 }

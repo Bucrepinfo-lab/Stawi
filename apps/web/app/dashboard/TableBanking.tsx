@@ -7,6 +7,7 @@ import {
   formatMoney,
   type MemberContribution,
 } from '@stawi/core';
+import { receiptPath } from '@stawi/core';
 import { recordContributionAction } from '@/app/actions';
 
 interface SeedMember extends MemberContribution {
@@ -15,11 +16,9 @@ interface SeedMember extends MemberContribution {
 }
 
 interface LastReceipt {
-  id: string;
+  /** Stored contribution id — the receipt page loads everything else from the database. */
+  contributionId: string;
   memberName: string;
-  amountCents: number;
-  capitalCents: number;
-  dateISO: string;
 }
 
 const PALETTE = ['#1f4d3a', '#c5613c', '#e0a32e', '#3c7d8c', '#7a5230', '#5a7d52'];
@@ -67,18 +66,12 @@ export function TableBanking({
     const me = next.members.find((x) => x.memberId === selected);
     const who = me?.name ?? '';
     setFlash(`${who} +KES ${formatMoney(cents)} · ratios updated`);
-    setReceipt({
-      id: Math.random().toString(36).slice(2, 9),
-      memberName: who,
-      amountCents: cents,
-      capitalCents: me?.totalCents ?? cents,
-      dateISO: new Date().toISOString(),
-    });
+    // A receipt exists only for a stored contribution (none in demo mode).
+    setReceipt(res.contributionId ? { contributionId: res.contributionId, memberName: who } : null);
     setTimeout(() => setFlash(null), 2400);
   }
 
-  const receiptHref = (r: LastReceipt) =>
-    `/receipt/${r.id}?group=${encodeURIComponent(groupName)}&member=${encodeURIComponent(r.memberName)}&amount=${r.amountCents}&capital=${r.capitalCents}&date=${encodeURIComponent(r.dateISO)}&channel=CASH`;
+  const receiptHref = (r: LastReceipt) => receiptPath(r.contributionId);
 
   async function requestViaMpesa() {
     const cents = Math.round((parseFloat(amount) || 0) * 100);

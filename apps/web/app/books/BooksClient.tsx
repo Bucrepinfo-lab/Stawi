@@ -5,7 +5,7 @@ import { GroupSwitcher } from '@/components/GroupSwitcher';
 import { Books } from './Books';
 import type { GroupAccount } from '@/lib/groups';
 import type { WebBooks } from '@/lib/data';
-import type { LedgerEntry, Period } from '@stawi/core';
+import { canWriteBooks, type LedgerEntry, type Period } from '@stawi/core';
 import { setUrlParams } from '@/lib/url-state';
 
 interface Props {
@@ -70,6 +70,7 @@ export function BooksClient({ groups, booksByGroup, initialId, initialPeriod }: 
             stock={business.stock}
             initialPeriod={period}
             onPeriodChange={setPeriod}
+            canWrite={canWriteBooks(active.myRole)}
           />
         </>
       ) : (

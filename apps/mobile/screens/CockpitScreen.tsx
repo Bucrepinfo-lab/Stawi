@@ -11,7 +11,7 @@ import {
   tableBankingSummary,
   meetingCompleteness,
   paraphraseMinutes,
-  reconcileMonth,
+  reconcilePostedMonth,
   formatKes,
   type GroupCharter,
   type Meeting,
@@ -332,15 +332,15 @@ function DocumentsTab({ charter, list }: { charter: GroupCharter; list: Meeting[
 
 // ── Month-End ──────────────────────────────────────────────────────────────
 function StatementTab({ charter, list }: { charter: GroupCharter; list: Meeting[] }) {
-  // Only months with recorded meetings, up to this month (newest first) — never a fixed or future month.
+  // Only months with posted meetings (drafts don't count), up to this month (newest first).
   const months = useMemo(() => statementMonths(list), [list]);
   const [picked, setPicked] = useState<string>('');
   const ym = months.includes(picked) ? picked : months[0] ?? '';
   const st = useMemo(() => {
     const [y, mo] = ym.split('-').map(Number);
-    return ym ? reconcileMonth(list, charter, { year: y!, month: mo! }) : null;
+    return ym ? reconcilePostedMonth(list, charter, { year: y!, month: mo! }) : null;
   }, [ym, list, charter]);
-  if (!st) return <ScrollView contentContainerStyle={{ padding: spacing.lg }}><View style={g.card}><Text style={g.meta}>Record and date at least one meeting to see a month-end statement.</Text></View></ScrollView>;
+  if (!st) return <ScrollView contentContainerStyle={{ padding: spacing.lg }}><View style={g.card}><Text style={g.meta}>Post the minutes of at least one dated meeting to see a month-end statement.</Text></View></ScrollView>;
   return (
     <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
       {months.length > 1 && (

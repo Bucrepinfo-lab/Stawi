@@ -27,7 +27,13 @@
 - **Filters:** `?group=` (dashboard, books; only the caller's own groups), `?period=` (books;
   P&L, tax lines and the ledger CSV now use the same period — the CSV used to export everything),
   `?tab=` + `?month=` (group workspace; month select offers only months with meetings).
-- **Escalated (protected — not changed):** see the PR body / HANDOFF "Open owner decisions".
+- **Owner-approved follow-ups (07/11/26, second PR):** roster provisioning idempotent + read-only
+  duplicate check (`npm run check:duplicates --workspace @stawi/db`, see HANDOFF — no clean-up
+  without the owner); receipts only from the stored confirmed contribution by id (member or
+  officials, tenant-scoped, else 404; core `receipt-access.ts`); books writes chair/secretary/
+  treasurer only (`canWriteBooks`); statements count POSTED meetings only (`reconcilePostedMonth`,
+  `statementMonths`); CSV dates stay ISO by design; native date inputs unchanged.
+  Tests: core `receipt-access.test.ts`, `statement-posted.test.ts`, `scope.test.ts`; db `memberships.test.ts`.
 
 ## Session 4 (07/11/26) — Google Play readiness (closed testing ~28/11/26)
 > **Session 4 status (07/11/26):** code side for Play is done (PRs #6–#13). Next = owner/Chrome:

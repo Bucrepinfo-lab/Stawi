@@ -62,6 +62,25 @@ function monthOf(iso: string): { year: number; month: number } | null {
 }
 
 /**
+ * Owner decision (07/11/26): a month-end statement counts POSTED meetings only.
+ * Drafts are work in progress — they are excluded from the totals and do not
+ * make a month eligible for a statement. Every statement screen and the server
+ * use this, not `reconcileMonth` directly.
+ */
+export function postedMeetings<T extends Pick<Meeting, 'status'>>(meetings: readonly T[]): T[] {
+  return meetings.filter((m) => m?.status === 'POSTED');
+}
+
+/** `reconcileMonth` over posted meetings only (see `postedMeetings`). */
+export function reconcilePostedMonth(
+  allMeetings: Meeting[],
+  charter?: GroupCharter,
+  period?: { year: number; month: number },
+): MonthEndStatement {
+  return reconcileMonth(postedMeetings(allMeetings), charter, period);
+}
+
+/**
  * Harmonise the meetings that fall in a given month.
  * If `year`/`month` are omitted, the period is inferred from the first dated meeting.
  */

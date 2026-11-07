@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "echo \"(lint: db)\"",
     "push": "prisma db push",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check:duplicates": "tsx scripts/check-duplicate-memberships.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

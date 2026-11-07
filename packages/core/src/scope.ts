@@ -14,6 +14,7 @@ import type { CharterMember } from './charter';
 import { periodStart, type LedgerEntry, type Period } from './accounting';
 import { phoneKey } from './identity';
 import { dateParts, todayIso } from './dates';
+import { postedMeetings } from './statement';
 
 // ───────────────────────── Unique options ─────────────────────────
 
@@ -145,13 +146,13 @@ export function checkMeetingDates(
 
 /**
  * Months a statement can be prepared for: months that have at least one dated
- * meeting, up to and including the current month (country clock). Newest
- * first, each once — "yyyy-mm".
+ * POSTED meeting (drafts never count — owner, 07/11/26), up to and including
+ * the current month (country clock). Newest first, each once — "yyyy-mm".
  */
-export function statementMonths(meetings: readonly Pick<Meeting, 'date'>[], now: Date = new Date(), timeZone?: string): string[] {
+export function statementMonths(meetings: readonly Pick<Meeting, 'date' | 'status'>[], now: Date = new Date(), timeZone?: string): string[] {
   const current = todayIso(now, timeZone).slice(0, 7);
   const months = new Set<string>();
-  for (const m of meetings) {
+  for (const m of postedMeetings(meetings)) {
     if (!m?.date || !dateParts(m.date)) continue;
     const ym = m.date.slice(0, 7);
     if (/^\d{4}-\d{2}$/.test(ym) && ym <= current) months.add(ym);
@@ -161,7 +162,7 @@ export function statementMonths(meetings: readonly Pick<Meeting, 'date'>[], now:
 
 /** Server check for a statement post: the month must be one `statementMonths` offers. */
 export function checkStatementMonth(
-  meetings: readonly Pick<Meeting, 'date'>[],
+  meetings: readonly Pick<Meeting, 'date' | 'status'>[],
   year: number,
   month: number,
   now: Date = new Date(),
@@ -169,13 +170,27 @@ export function checkStatementMonth(
 ): string | null {
   if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) return 'Choose a statement month.';
   const ym = `${year}-${String(month).padStart(2, '0')}`;
-  if (!statementMonths(meetings, now, timeZone).includes(ym)) return 'A statement can only be posted for a past or current month that has recorded meetings.';
+  if (!statementMonths(meetings, now, timeZone).includes(ym)) return 'A statement can only be posted for a past or current month that has posted meetings.';
   return null;
 }
 
 /** Parse a "yyyy-mm" URL value to the offered month, else the newest offered (or ''). */
 export function pickStatementMonth(requested: string | null | undefined, offered: readonly string[]): string {
   return pickAllowedId(requested ?? null, offered);
+}
+
+// ───────────────────────── Books write access ─────────────────────────
+
+/**
+ * Who may add entries to a group business's books (owner, 07/11/26): the
+ * group's officials — chair, secretary, treasurer. Ordinary members (and
+ * signatories) read only. Accepts the DB enum (TREASURER) or the UI's title
+ * case (Treasurer).
+ */
+export const BOOKS_WRITER_ROLES: readonly string[] = ['CHAIRMAN', 'SECRETARY', 'TREASURER'];
+
+export function canWriteBooks(role: string | null | undefined): boolean {
+  return !!role && BOOKS_WRITER_ROLES.includes(role.trim().toUpperCase());
 }
 
 // ───────────────────────── Books period filter ─────────────────────────

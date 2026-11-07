@@ -7,9 +7,9 @@
  *  - a meeting may only reference members on the group's saved charter roster
  *    (or those the stored copy of that meeting already referenced);
  *  - minutes can only be posted for a meeting already held (Nairobi clock);
- *  - a statement can only be posted for a month that has recorded meetings,
+ *  - a statement can only be posted for a month that has POSTED meetings,
  *    not in the future, and its figures are recomputed here from the stored
- *    meetings — the client's numbers are never persisted.
+ *    posted meetings — drafts and the client's numbers are never persisted.
  * Requires DATABASE_URL (callers only use it in DB mode).
  */
 import {
@@ -17,7 +17,7 @@ import {
   meetingRefsOutsideRoster,
   checkMeetingDates,
   checkStatementMonth,
-  reconcileMonth,
+  reconcilePostedMonth,
   type GroupCharter,
   type Meeting,
   type MonthEndStatement,
@@ -84,7 +84,8 @@ export async function buildServerStatement(
   const monthErr = checkStatementMonth(cockpit.meetings, year, month);
   if (monthErr) return { error: monthErr };
   const charter: GroupCharter = cockpit.charter;
-  const st = reconcileMonth(cockpit.meetings, charter, { year, month });
+  // Posted meetings only (owner, 07/11/26) — drafts never reach a statement.
+  const st = reconcilePostedMonth(cockpit.meetings, charter, { year, month });
   const edited = Array.isArray(narrative)
     ? narrative.filter((p): p is string => typeof p === 'string').map((p) => p.slice(0, 4000)).slice(0, 20)
     : null;

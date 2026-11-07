@@ -120,6 +120,7 @@ export function toCsv(rows: (string | number)[][]): string {
     .join('\r\n');
 }
 
+// Dates stay ISO (yyyy-mm-dd) on purpose (owner, 07/11/26): spreadsheets read ISO reliably in any locale; dd/mm is for screens.
 export function ledgerCsv(entries: LedgerEntry[]): string {
   return toCsv([
     ['Date', 'Type', 'Description', 'Amount (KES)'],
