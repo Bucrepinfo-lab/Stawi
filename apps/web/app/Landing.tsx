@@ -474,6 +474,8 @@ export function Landing({ saccoPlus }: { saccoPlus: boolean }) {
         <span className="display" style={{ color: 'var(--forest-deep)', fontWeight: 600 }}>Stawi</span>
         <span>Save · Grow · Thrive — multi-tenant SaaS</span>
         <Link href="/terms" style={{ color: 'var(--faint)' }}>Terms</Link>
+        <Link href="/privacy" style={{ color: 'var(--faint)' }}>Privacy</Link>
+        <Link href="/delete-account" style={{ color: 'var(--faint)' }}>Delete account</Link>
         <Link href="/subscribe" style={{ color: 'var(--faint)' }}>{t.pricing}</Link>
       </footer>
     </main>
