@@ -1,5 +1,14 @@
 # Stawi — session memory / start-here
 
+## Session 4 (07/11/26) — Google Play readiness (closed testing ~28/11/26)
+- **SACCO+ behind `SACCO_PLUS_ENABLED` (default OFF).** Owner approved launching v1
+  without lending (Play bans Kenyan loan apps without a CBK digital-credit licence).
+  Off ⇒ `/sacco` + SACCO+ APIs 404 (middleware + page), SACCO+ server actions refuse,
+  `@stawi/db` repo refuses (`applyForLoan`, `accrueMonthlyInterest`, `openSaccoAccount`,
+  `postSaccoTxn`; `getSaccoAccounts` → []), cron skips interest, no loans/interest/credit
+  copy in the UI. Data untouched. Tests: `packages/core/test/features.test.ts`,
+  `packages/db/test/sacco-flag.test.ts`. Re-enable only after licensing.
+
 > **RESUME HERE (2026-08-14, end of session 3):** Auth migrated Clerk → **Supabase
 > phone-OTP** across web + mobile (OTP SMS via Africa's Talking); web+mobile now one
 > identity. Typechecks green, pushed to `main` (`154bcec`). Set the Supabase + AT env

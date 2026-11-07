@@ -7,6 +7,7 @@ const fresh: JourneyInput = {
   registered: false,
   saccoReadinessPct: 0,
   saccoActive: false,
+  saccoPlusEnabled: true,
 };
 
 describe('computeJourney', () => {
@@ -59,7 +60,7 @@ describe('computeJourney', () => {
   });
 
   it('marks SACCO+ active and keeps overall progress high', () => {
-    const j = computeJourney({ charterPct: 100, postedRecords: 4, registered: true, booksStarted: true, matchingStarted: true, saccoReadinessPct: 100, saccoActive: true });
+    const j = computeJourney({ charterPct: 100, postedRecords: 4, registered: true, booksStarted: true, matchingStarted: true, saccoReadinessPct: 100, saccoActive: true, saccoPlusEnabled: true });
     const p4 = j.pillars.find((p) => p.id === 4)!;
     expect(p4.status).toBe('active');
     expect(p4.pct).toBe(100);

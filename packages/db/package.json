@@ -13,7 +13,8 @@
     "studio": "prisma studio",
     "typecheck": "tsc --noEmit",
     "lint": "echo \"(lint: db)\"",
-    "push": "prisma db push"
+    "push": "prisma db push",
+    "test": "vitest run"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -25,6 +26,7 @@
   "devDependencies": {
     "prisma": "^5.18.0",
     "tsx": "^4.16.0",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
   }
 }

@@ -7,8 +7,9 @@
  *  3. Persistence — hit Postgres when DATABASE_URL is set, else no-op on seed data.
  */
 
-import { assertClean } from '@stawi/core';
+import { assertClean, SACCO_PLUS_DISABLED_MESSAGE } from '@stawi/core';
 import { dbEnabled } from '@/lib/data';
+import { saccoPlusEnabled } from '@/lib/features';
 import { publishEvent } from '@/lib/events';
 
 async function tenantId(): Promise<string | undefined> {
@@ -89,6 +90,9 @@ export async function moderateAction(text: string): Promise<{ ok: boolean; error
 }
 
 // ───────────────────────── SACCO+ (Pillar 4) actions ─────────────────────────
+// Every action below refuses when SACCO_PLUS_ENABLED is off (the default), and
+// the @stawi/db repo refuses again underneath — so nothing is scored, lent,
+// accrued or debited by a v1 deployment, whatever the client sends.
 
 export async function openSaccoAccountAction(input: {
   entityType: 'REGISTERED_GROUP' | 'BUSINESS' | 'INDIVIDUAL' | 'INSTITUTION';
@@ -96,6 +100,7 @@ export async function openSaccoAccountAction(input: {
   countryCode?: string;
   ownerGroupId?: string;
 }): Promise<{ ok: boolean; persisted: boolean; id?: string; error?: string }> {
+  if (!saccoPlusEnabled()) return { ok: false, persisted: false, error: SACCO_PLUS_DISABLED_MESSAGE };
   try {
     assertClean(input.displayName);
   } catch (e) {
@@ -134,6 +139,7 @@ export async function activateSaccoFromPillar1Action(input: {
   countryCode?: string;
   openingDepositCents?: number;
 }): Promise<{ ok: boolean; persisted: boolean; accountId?: string; seededCents?: number; error?: string }> {
+  if (!saccoPlusEnabled()) return { ok: false, persisted: false, error: SACCO_PLUS_DISABLED_MESSAGE };
   try {
     assertClean(input.displayName);
   } catch (e) {
@@ -181,6 +187,7 @@ export async function saccoTxnAction(input: {
   amountCents: number;
   reference?: string;
 }): Promise<{ ok: boolean; persisted: boolean; balanceCents?: number; error?: string }> {
+  if (!saccoPlusEnabled()) return { ok: false, persisted: false, error: SACCO_PLUS_DISABLED_MESSAGE };
   if (input.amountCents <= 0) return { ok: false, persisted: false, error: 'Amount must be positive' };
   if (!dbEnabled()) return { ok: true, persisted: false };
   try {
@@ -225,6 +232,7 @@ export async function applyLoanAction(input: {
   reasons?: string[];
   error?: string;
 }> {
+  if (!saccoPlusEnabled()) return { ok: false, persisted: false, error: SACCO_PLUS_DISABLED_MESSAGE };
   if (input.principalCents <= 0) return { ok: false, persisted: false, error: 'Amount must be positive' };
   if (!dbEnabled()) return { ok: true, persisted: false };
   try {

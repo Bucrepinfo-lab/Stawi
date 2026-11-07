@@ -125,6 +125,8 @@ const SEED_SACCO: WebSaccoAccount[] = [
 
 /** SACCO+ accounts for the signed-in caller (seed fallback without a DB). */
 export async function getSaccoAccountsData(): Promise<WebSaccoAccount[]> {
+  const { saccoPlusEnabled } = await import('@/lib/features');
+  if (!saccoPlusEnabled()) return [];
   const c = await tenantCtx();
   if (!c || !c.tenantId) return SEED_SACCO;
   const { getSaccoAccounts } = c.db;

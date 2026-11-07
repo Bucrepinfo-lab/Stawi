@@ -71,6 +71,12 @@ export interface JourneyInput {
   saccoActive: boolean;
   /** Pillars the member has subscribed to directly (any pillar, no Pillar-1 gate). */
   subscribedPillars?: PillarId[];
+  /**
+   * SACCO+ (Pillar 4: savings & credit) is offered on this deployment. Fails
+   * closed: when not explicitly true, Pillar 4 is left out of the journey
+   * entirely — no pillar card, no next step, no credit wording.
+   */
+  saccoPlusEnabled?: boolean;
 }
 
 const clampPct = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
@@ -161,22 +167,23 @@ function pillar2(i: JourneyInput): PillarProgress {
  * order the focus selector prefers.
  */
 export function computeJourney(input: JourneyInput): GroupJourney {
+  const sacco = input.saccoPlusEnabled === true;
   const p1 = pillar1(input);
   const p3 = pillar3(input);
-  const p4 = pillar4(input);
+  const p4 = sacco ? pillar4(input) : undefined;
   const p2 = pillar2(input);
-  const pillars = [p1, p3, p4, p2];
+  const pillars = p4 ? [p1, p3, p4, p2] : [p1, p3, p2];
 
-  const overallPct = clampPct((p1.pct + p2.pct + p3.pct + p4.pct) / 4);
+  const overallPct = clampPct(pillars.reduce((sum, p) => sum + p.pct, 0) / pillars.length);
 
   // If the member subscribed to specific pillars directly (no Pillar-1 gate),
   // point them at the first of those that still needs action.
-  const byId: Record<PillarId, PillarProgress> = { 1: p1, 2: p2, 3: p3, 4: p4 };
+  const byId: Partial<Record<PillarId, PillarProgress>> = { 1: p1, 2: p2, 3: p3, 4: p4 };
   const subs = input.subscribedPillars ?? [];
   const subFocus = ([1, 3, 4, 2] as PillarId[])
     .filter((id) => subs.includes(id))
     .map((id) => byId[id])
-    .find((p) => p.status !== 'done' && p.status !== 'active' && p.nextAction);
+    .find((p): p is PillarProgress => !!p && p.status !== 'done' && p.status !== 'active' && !!p.nextAction);
 
   // Otherwise, a self-directing ladder — but Pillar 1 is only *suggested*, never
   // required: any pillar can be entered directly.
@@ -199,13 +206,13 @@ export function computeJourney(input: JourneyInput): GroupJourney {
       why: 'Registration gives your group legal standing lenders and partners require.',
       target: p3.nextAction.target,
     }) ||
-    (p4.status === 'ready' && p4.nextAction && {
+    (p4 && p4.status === 'ready' && p4.nextAction && {
       pillarId: 4 as PillarId,
       label: p4.nextAction.label,
       why: 'Your Pillar 1 record already meets what a lender asks for — activate credit.',
       target: p4.nextAction.target,
     }) ||
-    (p4.status === 'available' && p4.nextAction && {
+    (p4 && p4.status === 'available' && p4.nextAction && {
       pillarId: 4 as PillarId,
       label: p4.nextAction.label,
       why: 'Keep posting records to become fully lender-ready for savings & credit.',
@@ -222,12 +229,20 @@ export function computeJourney(input: JourneyInput): GroupJourney {
       label: p2.nextAction.label,
       why: 'Grow your group’s capital into real business opportunities.',
       target: p2.nextAction.target,
-    }) || {
-      pillarId: 4 as PillarId,
-      label: 'Manage savings & credit',
-      why: 'All four pillars are engaged — keep your momentum.',
-      target: { kind: 'tab', tab: 'sacco' } as JourneyTarget,
-    };
+    }) ||
+    (p4
+      ? {
+          pillarId: 4 as PillarId,
+          label: 'Manage savings & credit',
+          why: 'All four pillars are engaged — keep your momentum.',
+          target: { kind: 'tab', tab: 'sacco' } as JourneyTarget,
+        }
+      : {
+          pillarId: 1 as PillarId,
+          label: 'Review your month-end statement',
+          why: 'Every pillar is engaged — keep your records current.',
+          target: { kind: 'tab', tab: 'statement' } as JourneyTarget,
+        });
 
   return { pillars, overallPct, focus };
 }
