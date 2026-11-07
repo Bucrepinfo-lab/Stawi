@@ -45,6 +45,8 @@ export interface BooksProps {
   /** Period from the URL (?period=); the P&L, tax lines and ledger CSV all use it. */
   initialPeriod?: Period;
   onPeriodChange?: (p: Period) => void;
+  /** Group officials (chair, secretary, treasurer) add entries; members read only. The server enforces it too. */
+  canWrite?: boolean;
 }
 
 const card: React.CSSProperties = {
@@ -59,7 +61,7 @@ const card: React.CSSProperties = {
 const PERIODS: Period[] = ['day', 'week', 'month', 'year'];
 const MOVE_COLOR = { fast: 'var(--good)', slow: 'var(--danger)', dead: 'var(--dim)' } as const;
 
-export function Books({ businessId, businessName, vatRegistered, tourismSector, initialEntries, stock, industry = 'retail', initialPeriod = 'day', onPeriodChange }: BooksProps) {
+export function Books({ businessId, businessName, vatRegistered, tourismSector, initialEntries, stock, industry = 'retail', initialPeriod = 'day', onPeriodChange, canWrite = false }: BooksProps) {
   const [entries, setEntries] = useState<LedgerEntry[]>(initialEntries);
   const [period, setPeriodState] = useState<Period>(initialPeriod);
   const setPeriod = (p: Period) => { setPeriodState(p); setUrlParams({ period: p }); onPeriodChange?.(p); };
@@ -216,6 +218,10 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
         </div>
       </div>
 
+      {!canWrite && (
+        <p style={{ ...card, fontSize: 13, color: 'var(--dim)' }}>You can view these books. Only the group&rsquo;s chair, secretary or treasurer can add entries.</p>
+      )}
+      {canWrite && (
       <div style={{ ...card, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end' }}>
         <label style={{ flex: '0 0 140px' }}>
           <span style={lab}>Type</span>
@@ -236,6 +242,7 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
         <button onClick={addEntry} style={btnGold}>＋ Add entry</button>
         {saveErr && <span role="alert" style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 13 }}>{saveErr}</span>}
       </div>
+      )}
 
       <div style={card}>
         <h2 className="display" style={{ fontWeight: 600, fontSize: 20 }}>Auto-calculated levies</h2>

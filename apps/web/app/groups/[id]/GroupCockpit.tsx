@@ -11,7 +11,7 @@ import {
   attendanceTally,
   tableBankingSummary,
   paraphraseMinutes,
-  reconcileMonth,
+  reconcilePostedMonth,
   formatKes,
   OFFICIAL_DESIGNATIONS,
   WEEK_DAYS,
@@ -108,7 +108,7 @@ export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, 
     const months = Array.from(new Set(posted.filter((m) => m.date).map((m) => m.date.slice(0, 7)))).sort();
     const statements: MonthEndStatement[] = months.map((p) => {
       const [y, mo] = p.split('-').map(Number);
-      return reconcileMonth(meetings, charter, { year: y!, month: mo! });
+      return reconcilePostedMonth(meetings, charter, { year: y!, month: mo! });
     });
     const packet = buildSaccoActivation(charter, statements);
     return computeJourney({
@@ -236,10 +236,10 @@ function SaccoActivationTab({ charter, meetings, canEdit, groupId, onActivated }
   // Reconcile every month that has dated meetings into a statement, then feed
   // the whole Pillar-1 record into the activation bridge.
   const packet: SaccoActivationPacket = useMemo(() => {
-    const months = Array.from(new Set(meetings.filter((m) => m.date).map((m) => m.date.slice(0, 7)))).sort();
+    const months = Array.from(new Set(meetings.filter((m) => m.status === 'POSTED' && m.date).map((m) => m.date.slice(0, 7)))).sort();
     const statements: MonthEndStatement[] = months.map((p) => {
       const [y, mo] = p.split('-').map(Number);
-      return reconcileMonth(meetings, charter, { year: y!, month: mo! });
+      return reconcilePostedMonth(meetings, charter, { year: y!, month: mo! });
     });
     return buildSaccoActivation(charter, statements);
   }, [charter, meetings]);
@@ -1029,7 +1029,7 @@ function DocumentsTab({ charter, meetings }: { charter: GroupCharter; meetings: 
 // ───────────────────────────── Statement tab ────────────────────────────
 
 function StatementTab({ charter, meetings, canEdit, groupId, initialMonth }: { charter: GroupCharter; meetings: Meeting[]; canEdit: boolean; groupId: string; initialMonth?: string }) {
-  // Only months that have recorded meetings, up to this month — each once, newest first.
+  // Only months that have posted meetings (drafts don't count), up to this month — each once, newest first.
   // The server applies the same rule when a statement is posted.
   const months = useMemo(() => statementMonths(meetings), [meetings]);
   const [period, setPeriodState] = useState<string>(() => pickStatementMonth(initialMonth, months));
@@ -1040,7 +1040,7 @@ function StatementTab({ charter, meetings, canEdit, groupId, initialMonth }: { c
   const statement: MonthEndStatement | null = useMemo(() => {
     if (!period) return null;
     const [y, mo] = period.split('-').map(Number);
-    return reconcileMonth(meetings, charter, { year: y!, month: mo! });
+    return reconcilePostedMonth(meetings, charter, { year: y!, month: mo! });
   }, [period, meetings, charter]);
 
   const [narr, setNarr] = useState<string[] | null>(null);
@@ -1054,7 +1054,7 @@ function StatementTab({ charter, meetings, canEdit, groupId, initialMonth }: { c
     if (r.ok) setPosted(true); else setPostErr(r.error ?? 'Could not post the statement.');
   }
 
-  if (months.length === 0) return <div style={card}><p style={{ color: 'var(--ink-2)' }}>Record and date at least one meeting to generate a month-end statement.</p></div>;
+  if (months.length === 0) return <div style={card}><p style={{ color: 'var(--ink-2)' }}>Post the minutes of at least one dated meeting to generate a month-end statement (drafts are not counted).</p></div>;
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>

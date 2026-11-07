@@ -45,7 +45,7 @@ export async function recordContributionAction(input: {
   groupId?: string;
   membershipId: string;
   amountCents: number;
-}): Promise<{ ok: boolean; persisted: boolean; error?: string }> {
+}): Promise<{ ok: boolean; persisted: boolean; contributionId?: string; error?: string }> {
   if (!Number.isInteger(input.amountCents) || input.amountCents <= 0) return { ok: false, persisted: false, error: 'Amount must be positive' };
   if (!dbEnabled() || !input.groupId) {
     publishEvent({ type: 'contribution', channel: 'public' });
@@ -58,8 +58,9 @@ export async function recordContributionAction(input: {
   const userId = await getUserId();
   const member = await prisma.membership.findFirst({ where: { id: input.membershipId, groupId: input.groupId }, select: { id: true } });
   if (!member) return { ok: false, persisted: false, error: 'Member not found in this group.' };
+  let contributionId: string;
   try {
-    await recordContribution(prisma, {
+    ({ id: contributionId } = await recordContribution(prisma, {
       groupId: input.groupId,
       membershipId: input.membershipId,
       amountCents: input.amountCents,
@@ -67,12 +68,13 @@ export async function recordContributionAction(input: {
       confirmed: true,
       recordedByClerkUserId: userId ?? undefined,
       tenantId: await tenantId(),
-    });
+    }));
   } catch (e) {
     return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Write failed' };
   }
   publishEvent({ type: 'contribution', channel: (await tenantId()) ?? 'public' });
-  return { ok: true, persisted: true };
+  // The receipt is opened by this id only (loaded from the database, never from URL values).
+  return { ok: true, persisted: true, contributionId };
 }
 
 export async function addLedgerEntryAction(input: {
@@ -94,8 +96,13 @@ export async function addLedgerEntryAction(input: {
   // server-side check behind it).
   const biz = await prisma.business.findUnique({ where: { id: input.businessId }, select: { groupId: true } });
   if (!biz) return { ok: false, persisted: false, error: 'Business not found.' };
+  // Owner (07/11/26): only the group's officials (chair, secretary, treasurer)
+  // write to the books; ordinary members read only.
   const { myGroupRole } = await import('@/lib/group-access');
-  if (!(await myGroupRole(biz.groupId))) return { ok: false, persisted: false, error: 'You can only add entries to your own group’s books.' };
+  const { canWriteBooks } = await import('@stawi/core');
+  const role = await myGroupRole(biz.groupId);
+  if (!role) return { ok: false, persisted: false, error: 'You can only add entries to your own group’s books.' };
+  if (!canWriteBooks(role)) return { ok: false, persisted: false, error: 'Only group officials (chair, secretary, treasurer) can add entries to the books.' };
   try {
     await addLedgerEntry(prisma, {
       businessId: input.businessId,

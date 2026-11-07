@@ -14,7 +14,7 @@ export interface ReceiptInput {
   /** Member's running capital after this payment. */
   runningCapitalCents: number;
   dateISO: string;
-  channel: 'MPESA_STK' | 'MPESA_C2B' | 'BANK' | 'CASH';
+  channel: 'MPESA_STK' | 'MPESA_C2B' | 'BANK' | 'CASH' | 'CARD';
   /** M-Pesa code or bank reference. */
   reference?: string;
   /** Stable id used to derive the receipt number. */
@@ -37,6 +37,7 @@ const CHANNEL_LABEL: Record<ReceiptInput['channel'], string> = {
   MPESA_C2B: 'M-Pesa (Paybill)',
   BANK: 'Bank transfer',
   CASH: 'Cash',
+  CARD: 'Card',
 };
 
 /** Deterministic, human-friendly receipt number from the contribution id. */
