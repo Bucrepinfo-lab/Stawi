@@ -1,29 +1,39 @@
 /**
  * M-Pesa Daraja HTTP client (server-only).
  *
- * Wraps Safaricom's OAuth + STK Push endpoints. Pure payload/parse logic lives
- * in @stawi/core; this file only does the network calls and reads env.
+ * Treasurer-initiated collection only (Lipa na M-Pesa Online / STK Push). There
+ * is no B2C, payout or refund call in this codebase by design.
+ *
+ * Environment: `MPESA_ENV` = `sandbox` | `production` picks the Daraja base URL;
+ * shortcode, passkey, consumer key/secret and callback URL all come from env
+ * (resolved + validated by @stawi/core `resolveDarajaConfig`). Production refuses
+ * the public sandbox shortcode and non-https callbacks.
  */
 
-import { buildStkPushPayload, type StkPushParams } from '@stawi/core';
-
-const BASE =
-  process.env.MPESA_ENV === 'production'
-    ? 'https://api.safaricom.co.ke'
-    : 'https://sandbox.safaricom.co.ke';
-
-function env(name: string): string {
-  const v = process.env[name];
-  if (!v) throw new Error(`Missing env var: ${name}`);
-  return v;
-}
+import {
+  buildStkPushPayload,
+  darajaTimestampEAT,
+  resolveDarajaConfig,
+  type DarajaConfig,
+  type StkPushParams,
+} from '@stawi/core';
 
 const toBase64 = (s: string) => Buffer.from(s).toString('base64');
 
+/** Thrown when M-Pesa is not (correctly) configured for this environment. */
+export class MpesaConfigError extends Error {}
+
+/** Resolve the Daraja config for this deployment, or throw MpesaConfigError. */
+export function darajaConfig(): DarajaConfig {
+  const r = resolveDarajaConfig(process.env);
+  if (!r.ok) throw new MpesaConfigError(r.error);
+  return r.config;
+}
+
 /** OAuth: exchange consumer key/secret for a short-lived access token. */
-export async function getAccessToken(): Promise<string> {
-  const auth = toBase64(`${env('MPESA_CONSUMER_KEY')}:${env('MPESA_CONSUMER_SECRET')}`);
-  const res = await fetch(`${BASE}/oauth/v1/generate?grant_type=client_credentials`, {
+export async function getAccessToken(cfg: DarajaConfig = darajaConfig()): Promise<string> {
+  const auth = toBase64(`${cfg.consumerKey}:${cfg.consumerSecret}`);
+  const res = await fetch(`${cfg.baseUrl}/oauth/v1/generate?grant_type=client_credentials`, {
     headers: { Authorization: `Basic ${auth}` },
     cache: 'no-store',
   });
@@ -48,21 +58,21 @@ export interface StkInitiateResponse {
   CustomerMessage: string;
 }
 
-/** Trigger an STK Push — the customer gets a PIN prompt on their phone. */
-export async function initiateStkPush(
-  args: InitiateStkArgs,
-): Promise<StkInitiateResponse> {
-  const token = await getAccessToken();
+/** Trigger an STK Push — the customer gets a PIN prompt and must approve it themselves. */
+export async function initiateStkPush(args: InitiateStkArgs): Promise<StkInitiateResponse> {
+  const cfg = darajaConfig();
+  const token = await getAccessToken(cfg);
   const params: StkPushParams = {
-    shortcode: env('MPESA_SHORTCODE'),
-    passkey: env('MPESA_PASSKEY'),
-    callbackUrl: env('MPESA_CALLBACK_URL'),
+    shortcode: cfg.shortcode,
+    passkey: cfg.passkey,
+    callbackUrl: cfg.callbackUrl,
+    timestamp: darajaTimestampEAT(),
     encodeBase64: toBase64,
     ...args,
   };
   const payload = buildStkPushPayload(params);
 
-  const res = await fetch(`${BASE}/mpesa/stkpush/v1/processrequest`, {
+  const res = await fetch(`${cfg.baseUrl}/mpesa/stkpush/v1/processrequest`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,

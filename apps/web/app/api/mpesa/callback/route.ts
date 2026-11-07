@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { parseStkCallback, notifyPaymentConfirmed, formatMoney } from '@stawi/core';
+import { parseStkCallback, notifyPaymentConfirmed, formatMoney, callbackTokenMatches } from '@stawi/core';
 import { sendSms } from '@/lib/notify';
 import { dbEnabled } from '@/lib/data';
 
@@ -11,6 +11,14 @@ export const runtime = 'nodejs';
  * Public route. Must ALWAYS return 200 {ResultCode:0} or Daraja keeps retrying.
  */
 export async function POST(req: Request) {
+  // Optional shared token (MPESA_CALLBACK_TOKEN, appended to the callback URL
+  // we give Daraja). A mismatch is acknowledged but ignored — never confirms.
+  const token = new URL(req.url).searchParams.get('token');
+  if (!callbackTokenMatches(process.env.MPESA_CALLBACK_TOKEN?.trim() || undefined, token)) {
+    console.warn('[mpesa] callback with bad token ignored');
+    return NextResponse.json({ ResultCode: 0, ResultDesc: 'Accepted' });
+  }
+
   let raw: unknown;
   try {
     raw = await req.json();

@@ -21,6 +21,10 @@
   (192/512 + maskable 512; generated from the brand mark), `sw.js` (offline page only —
   never caches pages/API), `/.well-known/assetlinks.json` → `/api/assetlinks` from env
   `ANDROID_CERT_FINGERPRINTS` for package `ke.stawi.app` (core `android.ts`, tested).
+- **M-Pesa env switch:** `MPESA_ENV` sandbox|production → Daraja base URL; shortcode, passkey,
+  keys, callback all env (core `mpesa-config.ts`, tested; production rejects 174379 and
+  non-https callbacks; timestamp in EAT). `/api/mpesa/stk` is TREASURER-only per group
+  (server-side, `lib/group-access.ts`); optional `MPESA_CALLBACK_TOKEN`. No B2C.
 
 > **RESUME HERE (2026-08-14, end of session 3):** Auth migrated Clerk → **Supabase
 > phone-OTP** across web + mobile (OTP SMS via Africa's Talking); web+mobile now one
