@@ -7,6 +7,8 @@ const PUBLIC: RegExp[] = [
   /^\/sign-in/,
   /^\/sign-up/,
   /^\/terms/,
+  /^\/privacy(?:\/|$)/,
+  /^\/delete-account(?:\/|$)/,
   /^\/subscribe/,
   /^\/api\/health/,
   /^\/api\/mpesa\/callback/,

@@ -13,6 +13,9 @@
   `/api/health`, release = `packages/db/prisma/release.sh`: additive `db push` + `rls.sql`),
   `.github/workflows/deploy.yml` (PR: docker build; main: `flyctl deploy` only when
   `FLY_API_TOKEN` exists). Owner steps + secret NAMES: `DEPLOYMENT-RUNBOOK.md`.
+- **Public legal pages (no login):** `/privacy` (Kenya DPA 2019, controller Telpen Systems Ltd,
+  contact telpeninfo@gmail.com), `/terms`, `/delete-account` (+ `/delete-account/email`
+  pre-filled mailto). Play privacy URL = `/privacy`, deletion URL = `/delete-account`.
 
 > **RESUME HERE (2026-08-14, end of session 3):** Auth migrated Clerk → **Supabase
 > phone-OTP** across web + mobile (OTP SMS via Africa's Talking); web+mobile now one
