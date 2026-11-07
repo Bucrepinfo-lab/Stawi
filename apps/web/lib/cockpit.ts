@@ -97,12 +97,13 @@ export async function getCockpit(groupId: string): Promise<Cockpit | null> {
   }
   // DB mode
   const db = await import('@stawi/db');
-  const [charterRow, meetingRows] = await Promise.all([
+  const [charterRow, meetingRows, groupRow] = await Promise.all([
     db.getGroupCharter(db.prisma, groupId),
     db.listMeetings(db.prisma, groupId),
+    db.prisma.group.findUnique({ where: { id: groupId }, select: { name: true } }),
   ]);
-  const group = MY_GROUPS.find((x) => x.id === groupId);
-  const name = charterRow?.name ?? group?.name ?? 'Group';
+  if (!groupRow) return null;
+  const name = charterRow?.name ?? groupRow.name;
   const charter: GroupCharter = charterRow
     ? {
         groupId,

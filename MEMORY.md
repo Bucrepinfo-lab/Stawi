@@ -29,6 +29,14 @@
   core `review-access.ts`, tested). `/api/auth/review-sign-in` provisions/signs in that one
   number via the Supabase admin API (`SUPABASE_SERVICE_ROLE_KEY`, derived server-only
   password); the SMS hook skips that number. `seed-demo.ts` adds it as TREASURER of the demo group only.
+- **Reviewer-flow sweep (bugs fixed):** group workspace was readable by any signed-in user
+  and edit rights came from the tenant role (a phone-signed-in founder could not edit their
+  own group) → now members-only (404) with edit rights from the per-group role; charter /
+  minutes / statement / contribution server actions had NO role check → officials /
+  treasurer enforced server-side; dashboard showed money controls to everyone and reported
+  success even when the write failed; new-group founder was named "You"; workspace showed
+  "Group" instead of the real name; account deletion only signed out (login + charter
+  roster copy kept) → now deletes the Supabase login (service-role) and scrubs roster copies.
 
 > **RESUME HERE (2026-08-14, end of session 3):** Auth migrated Clerk → **Supabase
 > phone-OTP** across web + mobile (OTP SMS via Africa's Talking); web+mobile now one
