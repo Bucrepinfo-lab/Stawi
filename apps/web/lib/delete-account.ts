@@ -1,6 +1,7 @@
 "use server";
 
-import { getUserId } from "@/lib/auth";
+import { getUserId, getUserPhone } from "@/lib/auth";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { dbEnabled } from "@/lib/data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -15,16 +16,42 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export async function deleteMyAccount(): Promise<{ ok: boolean }> {
   const userId = await getUserId();
   if (!userId) return { ok: false };
+  const phone = await getUserPhone().catch(() => null);
+  const key = phone ? phone.replace(/\D/g, "").slice(-9) : "";
 
   if (dbEnabled()) {
     const { prisma } = await import("@stawi/db");
+    const mine = {
+      OR: [{ clerkUserId: userId }, ...(key.length === 9 ? [{ phone: { endsWith: key } }] : [])],
+    };
+    const groups = await prisma.membership.findMany({ where: mine, select: { groupId: true } });
     await prisma.membership.updateMany({
-      where: { clerkUserId: userId },
+      where: mine,
       data: { fullName: "Deleted member", phone: null, photoUrl: null },
     });
+    // The charter roster keeps its own copy (name, phone, ID number) — scrub it too.
+    if (key.length === 9) {
+      for (const groupId of new Set(groups.map((g) => g.groupId))) {
+        const charter = await prisma.groupCharter.findUnique({ where: { groupId }, select: { members: true } });
+        const roster = Array.isArray(charter?.members) ? (charter!.members as unknown as Record<string, unknown>[]) : null;
+        if (!roster) continue;
+        let changed = false;
+        const next = roster.map((m) => {
+          const p = typeof m?.phone === "string" ? m.phone.replace(/\D/g, "").slice(-9) : "";
+          if (p !== key) return m;
+          changed = true;
+          return { ...m, fullName: "Deleted member", phone: "", idNumber: "" };
+        });
+        if (changed) await prisma.groupCharter.update({ where: { groupId }, data: { members: next as never } });
+      }
+    }
   }
 
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
+  // Remove the login itself (needs SUPABASE_SERVICE_ROLE_KEY; otherwise the
+  // account is signed out and anonymised, and support completes it on request).
+  const admin = createSupabaseAdminClient();
+  if (admin) await admin.auth.admin.deleteUser(userId).catch(() => undefined);
   return { ok: true };
 }

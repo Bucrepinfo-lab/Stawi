@@ -10,6 +10,26 @@
 import { assertClean, SACCO_PLUS_DISABLED_MESSAGE } from '@stawi/core';
 import { dbEnabled } from '@/lib/data';
 import { saccoPlusEnabled } from '@/lib/features';
+
+/**
+ * Per-group authority, enforced here on the server (the UI only mirrors it).
+ * Money (recording contributions) → treasurer; records (charter, minutes,
+ * statements) → chair, secretary or treasurer. Seed/demo mode (no DATABASE_URL)
+ * persists nothing, so it is not gated.
+ */
+async function requireGroupRole(groupId: string | undefined, allowed: 'money' | 'records'): Promise<string | null> {
+  if (!dbEnabled()) return null;
+  if (!groupId) return 'Missing group.';
+  const { myGroupRole, MONEY_ROLES, RECORD_EDITOR_ROLES } = await import('@/lib/group-access');
+  const role = await myGroupRole(groupId);
+  const set = allowed === 'money' ? MONEY_ROLES : RECORD_EDITOR_ROLES;
+  if (!role || !set.has(role)) {
+    return allowed === 'money'
+      ? 'Only the group treasurer can record contributions.'
+      : 'Only group officials (chair, secretary, treasurer) can change records.';
+  }
+  return null;
+}
 import { publishEvent } from '@/lib/events';
 
 async function tenantId(): Promise<string | undefined> {
@@ -26,14 +46,18 @@ export async function recordContributionAction(input: {
   membershipId: string;
   amountCents: number;
 }): Promise<{ ok: boolean; persisted: boolean; error?: string }> {
-  if (input.amountCents <= 0) return { ok: false, persisted: false, error: 'Amount must be positive' };
+  if (!Number.isInteger(input.amountCents) || input.amountCents <= 0) return { ok: false, persisted: false, error: 'Amount must be positive' };
   if (!dbEnabled() || !input.groupId) {
     publishEvent({ type: 'contribution', channel: 'public' });
     return { ok: true, persisted: false };
   }
+  const denied = await requireGroupRole(input.groupId, 'money');
+  if (denied) return { ok: false, persisted: false, error: denied };
   const { prisma, recordContribution } = await import('@stawi/db');
   const { getUserId } = await import('@/lib/auth');
   const userId = await getUserId();
+  const member = await prisma.membership.findFirst({ where: { id: input.membershipId, groupId: input.groupId }, select: { id: true } });
+  if (!member) return { ok: false, persisted: false, error: 'Member not found in this group.' };
   try {
     await recordContribution(prisma, {
       groupId: input.groupId,
@@ -292,7 +316,9 @@ export async function createGroupAction(input: {
       select: { id: true },
     });
     if (userId) {
-      await prisma.membership.create({ data: { groupId: g.id, clerkUserId: userId, fullName: 'You', role: 'CHAIRMAN' } }).catch(() => {});
+      const { getUserPhone } = await import('@/lib/auth');
+      const phone = await getUserPhone().catch(() => null);
+      await prisma.membership.create({ data: { groupId: g.id, clerkUserId: userId, fullName: 'Group founder', phone, role: 'CHAIRMAN' } }).catch(() => {});
     }
     publishEvent({ type: 'group', channel: tid ?? 'public' });
     return { ok: true, persisted: true, groupId: g.id };
@@ -318,6 +344,8 @@ export async function saveCharterAction(input: {
     publishEvent({ type: 'charter', channel: 'public' });
     return { ok: true, persisted: false };
   }
+  const deniedCharter = await requireGroupRole(input.groupId, 'records');
+  if (deniedCharter) return { ok: false, persisted: false, error: deniedCharter };
   try {
     const { prisma, upsertGroupCharter, provisionRosterMemberships } = await import('@stawi/db');
     await upsertGroupCharter(prisma, {
@@ -361,6 +389,8 @@ export async function saveMeetingAction(input: {
     publishEvent({ type: 'meeting', channel: 'public' });
     return { ok: true, persisted: false };
   }
+  const deniedMeeting = await requireGroupRole(input.groupId, 'records');
+  if (deniedMeeting) return { ok: false, persisted: false, error: deniedMeeting };
   try {
     const { prisma, upsertMeeting } = await import('@stawi/db');
     await upsertMeeting(prisma, { groupId: input.groupId, tenantId: await tenantId(), ...m });
@@ -381,6 +411,8 @@ export async function postMeetingAction(input: {
     publishEvent({ type: 'meeting', channel: 'public' });
     return { ok: true, persisted: false };
   }
+  const deniedPost = await requireGroupRole(input.groupId, 'records');
+  if (deniedPost) return { ok: false, persisted: false, error: deniedPost };
   try {
     const { prisma, postMeeting } = await import('@stawi/db');
     await postMeeting(prisma, { groupId: input.groupId, meetingNo: input.meetingNo, generatedDoc: input.generatedDoc, tenantId: await tenantId() });
@@ -399,6 +431,8 @@ export async function saveStatementAction(input: {
   post?: boolean;
 }): Promise<{ ok: boolean; persisted: boolean; error?: string }> {
   if (!dbEnabled()) return { ok: true, persisted: false };
+  const deniedStatement = await requireGroupRole(input.groupId, 'records');
+  if (deniedStatement) return { ok: false, persisted: false, error: deniedStatement };
   try {
     const { prisma, saveMonthlyStatement } = await import('@stawi/db');
     await saveMonthlyStatement(prisma, { groupId: input.groupId, tenantId: await tenantId(), year: input.year, month: input.month, payload: input.payload, post: input.post });

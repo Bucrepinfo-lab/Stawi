@@ -30,10 +30,13 @@ export function TableBanking({
   seed,
   groupId,
   groupName = 'Stawi Group',
+  canRecord = false,
 }: {
   seed: SeedMember[];
   groupId?: string;
   groupName?: string;
+  /** Treasurer of this group (server re-checks every write). */
+  canRecord?: boolean;
 }) {
   const [members, setMembers] = useState<SeedMember[]>(seed);
   const [flash, setFlash] = useState<string | null>(null);
@@ -45,9 +48,15 @@ export function TableBanking({
 
   const snapshot = useMemo(() => computeCapitalShares(members), [members]);
 
-  function record() {
+  async function record() {
     const cents = Math.round((parseFloat(amount) || 0) * 100);
     if (cents <= 0) return;
+    const res = await recordContributionAction({ groupId, membershipId: selected, amountCents: cents }).catch(() => null);
+    if (!res?.ok) {
+      setFlash(res?.error ?? 'Could not record the contribution — try again.');
+      setTimeout(() => setFlash(null), 4000);
+      return;
+    }
     const next = applyContribution(members, selected, cents);
     setMembers((prev) =>
       prev.map((m) => {
@@ -66,7 +75,6 @@ export function TableBanking({
       dateISO: new Date().toISOString(),
     });
     setTimeout(() => setFlash(null), 2400);
-    void recordContributionAction({ groupId, membershipId: selected, amountCents: cents }).catch(() => {});
   }
 
   const receiptHref = (r: LastReceipt) =>
@@ -106,6 +114,12 @@ export function TableBanking({
         )}
       </div>
 
+      {!canRecord && (
+        <p style={{ marginTop: 14, fontSize: 13, color: 'var(--dim)' }}>
+          Only your group&rsquo;s treasurer records contributions and sends M-Pesa requests. You can view the group&rsquo;s capital below.
+        </p>
+      )}
+      {canRecord && (<>
       <div style={{ marginTop: 16, background: 'var(--bone-2)', border: '1px solid var(--line)', borderRadius: 'var(--radius-sm)', padding: 16, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end' }}>
         <label style={{ flex: '1 1 180px' }}>
           <span style={lab}>Member</span>
@@ -123,12 +137,13 @@ export function TableBanking({
       <div style={{ marginTop: 12, background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 'var(--radius-sm)', padding: 16, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end' }}>
         <label style={{ flex: '1 1 180px' }}>
           <span style={lab}>Collect via M-Pesa · payer phone</span>
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" className="mono" style={{ ...inp, background: 'var(--bone)' }} />
+          <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="0712 345 678" className="mono" style={{ ...inp, background: 'var(--bone)' }} />
         </label>
         <button onClick={requestViaMpesa} disabled={stkBusy} style={{ padding: '12px 20px', borderRadius: 10, border: '1px solid var(--forest-deep)', background: stkBusy ? 'var(--bone-2)' : 'var(--forest-deep)', color: stkBusy ? 'var(--dim)' : 'var(--bone)', fontWeight: 700, fontSize: 14, cursor: stkBusy ? 'default' : 'pointer', fontFamily: 'inherit' }}>
           {stkBusy ? 'Sending…' : '↗ Request STK Push'}
         </button>
       </div>
+      </>)}
 
       <h2 style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.1em', color: 'var(--dim)', margin: '22px 2px 10px' }}>Capital ratio · {members.length} members</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

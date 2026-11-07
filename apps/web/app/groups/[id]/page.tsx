@@ -2,14 +2,20 @@ import { notFound } from 'next/navigation';
 import { GroupCockpit } from './GroupCockpit';
 import { LiveRefresh } from '@/components/LiveRefresh';
 import { getCockpit } from '@/lib/cockpit';
-import { getViewerRole } from '@/lib/data';
+import { getViewerRole, dbEnabled } from '@/lib/data';
+import { myGroupRole, RECORD_EDITOR_ROLES } from '@/lib/group-access';
 import { saccoPlusEnabled } from '@/lib/features';
 
 export default async function GroupWorkspacePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [cockpit, role] = await Promise.all([getCockpit(id), getViewerRole()]);
+  const [viewer, groupRole] = await Promise.all([getViewerRole(), myGroupRole(id)]);
+  // DB mode: only members of THIS group (or a super-admin) may open it — 404 otherwise.
+  if (dbEnabled() && !groupRole && viewer !== 'SUPER_ADMIN') notFound();
+  const cockpit = await getCockpit(id);
   if (!cockpit) notFound();
-  const canEdit = role === 'OFFICIAL' || role === 'SUPER_ADMIN';
+  const canEdit = dbEnabled()
+    ? viewer === 'SUPER_ADMIN' || (!!groupRole && RECORD_EDITOR_ROLES.has(groupRole))
+    : viewer === 'OFFICIAL' || viewer === 'SUPER_ADMIN';
   return (
     <main style={{ maxWidth: 860, margin: '0 auto', padding: '28px 24px 90px' }}>
       <LiveRefresh />

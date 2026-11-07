@@ -34,7 +34,7 @@ export function DashboardClient({ groups }: { groups: GroupAccount[] }) {
         <a href={`/groups/${active.id}`} style={{ color: 'var(--forest)', fontWeight: 600 }}>Open group workspace &rarr;</a>
       </p>
 
-      <TableBanking key={active.id} groupId={active.id} groupName={active.name} seed={active.members} />
+      <TableBanking key={active.id} groupId={active.id} groupName={active.name} seed={active.members} canRecord={active.myRole === 'Treasurer'} />
     </div>
   );
 }
