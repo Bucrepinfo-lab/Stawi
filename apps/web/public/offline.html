@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f4d3a">
+<title>Stawi — offline</title>
+<style>
+  :root { color-scheme: light; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f6f1e7; color: #1c2a23;
+         font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 16px; box-sizing: border-box; }
+  .card { max-width: 380px; text-align: center; background: #fff; border: 1px solid #e3dccd; border-radius: 18px; padding: 28px 22px; }
+  img { width: 72px; height: 72px; }
+  h1 { font-size: 20px; margin: 14px 0 6px; color: #16382a; }
+  p { font-size: 15px; line-height: 1.5; margin: 0 0 18px; color: #4a5a52; }
+  button { border: 0; border-radius: 12px; padding: 12px 20px; font-size: 15px; font-weight: 700; background: #16382a; color: #fff; cursor: pointer; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #0f1613; color: #e8efe9; } .card { background: #17211c; border-color: #26332c; }
+    h1 { color: #e8efe9; } p { color: #b5c2ba; } button { background: #2f855a; }
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <img src="/icons/icon-192.png" alt="">
+    <h1>You're offline</h1>
+    <p>Stawi needs a connection to load your group's records. Nothing you saved is lost — check your data or Wi-Fi and try again.</p>
+    <button onclick="location.reload()">Try again</button>
+  </div>
+</body>
+</html>

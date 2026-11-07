@@ -13,6 +13,16 @@ const nextConfig = {
   // root — that pulls in a second React copy and breaks prerender.
   outputFileTracingRoot: path.join(__dirname, '../../'),
   transpilePackages: ['@stawi/core', '@stawi/db'],
+  // Android TWA Digital Asset Links, built from ANDROID_CERT_FINGERPRINTS at request time.
+  async rewrites() {
+    return [{ source: '/.well-known/assetlinks.json', destination: '/api/assetlinks' }];
+  },
+  async headers() {
+    return [
+      { source: '/sw.js', headers: [{ key: 'Cache-Control', value: 'no-cache' }, { key: 'Service-Worker-Allowed', value: '/' }] },
+      { source: '/manifest.webmanifest', headers: [{ key: 'Content-Type', value: 'application/manifest+json' }] },
+    ];
+  },
   images: {
     remotePatterns: [
       // Add an object-storage/CDN hostname here when receipts move off-box.

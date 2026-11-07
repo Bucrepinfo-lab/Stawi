@@ -16,6 +16,11 @@
 - **Public legal pages (no login):** `/privacy` (Kenya DPA 2019, controller Telpen Systems Ltd,
   contact telpeninfo@gmail.com), `/terms`, `/delete-account` (+ `/delete-account/email`
   pre-filled mailto). Play privacy URL = `/privacy`, deletion URL = `/delete-account`.
+- **Installable PWA / TWA:** `apps/web/public/manifest.webmanifest` (start_url
+  `/dashboard?source=twa`, standalone, theme #1f4d3a), icons in `apps/web/public/icons/`
+  (192/512 + maskable 512; generated from the brand mark), `sw.js` (offline page only —
+  never caches pages/API), `/.well-known/assetlinks.json` → `/api/assetlinks` from env
+  `ANDROID_CERT_FINGERPRINTS` for package `ke.stawi.app` (core `android.ts`, tested).
 
 > **RESUME HERE (2026-08-14, end of session 3):** Auth migrated Clerk → **Supabase
 > phone-OTP** across web + mobile (OTP SMS via Africa's Talking); web+mobile now one
