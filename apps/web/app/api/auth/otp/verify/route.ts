@@ -3,6 +3,7 @@ import { toE164, otpExpired, isOtpShape, isReviewLogin } from '@stawi/core';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { throttles, clientIp } from '@/lib/auth-throttle';
 import { signInReviewer } from '@/lib/review-sign-in';
+import { markSmsVerified } from '@/lib/pin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -33,6 +34,7 @@ export async function POST(req: Request) {
   if (isReviewLogin(process.env, phone, code)) {
     const r = await signInReviewer(phone);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    if (r.userId) await markSmsVerified(r.userId);
     t.otpSentAt.delete(phone);
     return NextResponse.json({ ok: true, review: true });
   }
@@ -43,7 +45,8 @@ export async function POST(req: Request) {
   }
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.verifyOtp({ phone, token: code, type: 'sms' });
+  const { data, error } = await supabase.auth.verifyOtp({ phone, token: code, type: 'sms' });
+  if (!error && data.user) await markSmsVerified(data.user.id);
   if (error) return NextResponse.json({ error: 'That code is not right. Check the SMS and try again.' }, { status: 400 });
 
   // Single use: forget the code window and reset this number's attempt counter.

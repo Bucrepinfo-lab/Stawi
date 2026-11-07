@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { resolveTenantSlug, isSaccoPlusEnabled, isSaccoPlusPath } from '@stawi/core';
+import { resolveTenantSlug, isSaccoPlusEnabled, isSaccoPlusPath, DEVICE_COOKIE, PIN_SKIP_COOKIE } from '@stawi/core';
 import { updateSupabaseSession } from '@/lib/supabase/middleware';
 
 const PUBLIC: RegExp[] = [
@@ -19,6 +19,7 @@ const PUBLIC: RegExp[] = [
   /^\/api\/webhooks\/clerk/,
   /^\/api\/auth\/send-sms/,
   /^\/api\/auth\/otp\/(send|verify)$/,
+  /^\/api\/auth\/pin\/(status|sign-in)$/,
   /^\/api\/mobile/,
 ];
 
@@ -55,6 +56,27 @@ export async function middleware(request: NextRequest) {
   if (!isPublic(pathname) && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/sign-in';
+    url.searchParams.set('next', pathname);
+    return NextResponse.redirect(url);
+  }
+
+  // Owner rule 07/11/26: after the first verified SMS sign-in on a device the
+  // user sets a 4-digit PIN (which trusts this device). Until then, app pages
+  // send them to /pin/setup. Only when the PIN feature is configured.
+  const pinOn = !!(process.env.DATABASE_URL && process.env.AUTH_DEVICE_SECRET && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  if (
+    pinOn &&
+    user &&
+    !isPublic(pathname) &&
+    !pathname.startsWith('/api/') &&
+    !pathname.startsWith('/pin/') &&
+    !pathname.startsWith('/account/') &&
+    !request.cookies.get(DEVICE_COOKIE) &&
+    !request.cookies.get(PIN_SKIP_COOKIE)
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/pin/setup';
+    url.search = '';
     url.searchParams.set('next', pathname);
     return NextResponse.redirect(url);
   }

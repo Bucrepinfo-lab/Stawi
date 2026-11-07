@@ -7,7 +7,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
  * already checked by the caller). Provisions the reviewer's Supabase login with
  * the admin API and a server-derived password, then signs in (session cookies).
  */
-export async function signInReviewer(phone: string): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+export async function signInReviewer(phone: string): Promise<{ ok: true; userId?: string } | { ok: false; status: number; error: string }> {
   const admin = createSupabaseAdminClient();
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!admin || !serviceKey) return { ok: false, status: 503, error: 'review_access_not_configured' };
@@ -33,7 +33,7 @@ export async function signInReviewer(phone: string): Promise<{ ok: true } | { ok
   }
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithPassword({ phone, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ phone, password });
   if (error) return { ok: false, status: 503, error: 'review_sign_in_failed' };
-  return { ok: true };
+  return { ok: true, userId: data.user?.id };
 }

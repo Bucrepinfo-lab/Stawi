@@ -793,3 +793,73 @@ export async function getGroupsByPhone(prisma: PrismaClient, phone: string, tena
     return { id: g.id, name: g.name, myRole: titleRole(m.role), flag: g.flagEmoji, type: mapKind(g.type), members };
   });
 }
+
+// ───────────────────────── Sign-in: PIN + trusted devices ─────────────────────
+
+export async function getAuthPin(prisma: PrismaClient, userId: string) {
+  return prisma.authPin.findUnique({ where: { userId } });
+}
+
+/** Set (or reset after a verified SMS code) the user's PIN hash; clears lockout. */
+export async function setAuthPin(prisma: PrismaClient, userId: string, pinHash: string) {
+  return prisma.authPin.upsert({
+    where: { userId },
+    create: { userId, pinHash },
+    update: { pinHash, failedCount: 0, lockedAt: null },
+  });
+}
+
+export async function savePinAttempt(prisma: PrismaClient, userId: string, state: { failedCount: number; lockedAt: Date | null }) {
+  await prisma.authPin.update({ where: { userId }, data: { failedCount: state.failedCount, lockedAt: state.lockedAt } });
+}
+
+export async function createTrustedDevice(
+  prisma: PrismaClient,
+  input: { userId: string; tokenHash: string; phone: string; userAgent?: string | null },
+) {
+  return prisma.trustedDevice.create({
+    data: { userId: input.userId, tokenHash: input.tokenHash, phone: input.phone, userAgent: input.userAgent?.slice(0, 200) ?? null },
+    select: { id: true },
+  });
+}
+
+/** Rebind a freshly created device row to its final token hash. */
+export async function setTrustedDeviceHash(prisma: PrismaClient, id: string, tokenHash: string) {
+  await prisma.trustedDevice.update({ where: { id }, data: { tokenHash } });
+}
+
+export async function findTrustedDevice(prisma: PrismaClient, id: string) {
+  return prisma.trustedDevice.findUnique({ where: { id } });
+}
+
+export async function touchTrustedDevice(prisma: PrismaClient, id: string) {
+  await prisma.trustedDevice.update({ where: { id }, data: { lastUsedAt: new Date() } }).catch(() => undefined);
+}
+
+export async function listTrustedDevices(prisma: PrismaClient, userId: string) {
+  return prisma.trustedDevice.findMany({
+    where: { userId, revokedAt: null },
+    orderBy: { lastUsedAt: 'desc' },
+    select: { id: true, userAgent: true, createdAt: true, lastUsedAt: true },
+  });
+}
+
+/** Revoke one device (only the owner's) or all of them. Returns the new session epoch when all are revoked. */
+export async function revokeTrustedDevices(prisma: PrismaClient, userId: string, deviceId?: string): Promise<number | null> {
+  await prisma.trustedDevice.updateMany({
+    where: { userId, revokedAt: null, ...(deviceId ? { id: deviceId } : {}) },
+    data: { revokedAt: new Date() },
+  });
+  if (deviceId) return null;
+  const pin = await prisma.authPin.findUnique({ where: { userId }, select: { sessionEpoch: true } });
+  if (!pin) return null;
+  const next = pin.sessionEpoch + 1;
+  await prisma.authPin.update({ where: { userId }, data: { sessionEpoch: next } });
+  return next;
+}
+
+/** Account deletion: remove the PIN and every trusted device. */
+export async function deleteAuthData(prisma: PrismaClient, userId: string) {
+  await prisma.trustedDevice.deleteMany({ where: { userId } });
+  await prisma.authPin.deleteMany({ where: { userId } });
+}

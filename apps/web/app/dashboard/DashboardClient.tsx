@@ -20,6 +20,7 @@ export function DashboardClient({ groups }: { groups: GroupAccount[] }) {
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <GroupSwitcher groups={groups} activeId={activeId} onSwitch={setActiveId} />
+          <a href="/account/security" style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--paper)', color: 'var(--ink-2)', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>Account</a>
           <a href="/groups/new" style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--paper)', color: 'var(--forest-deep)', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>＋ New group</a>
         </div>
       </div>

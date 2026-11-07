@@ -21,12 +21,13 @@ export default function PrivacyPage() {
 
       <LegalSection h="2. What we collect">
         <ul style={ul}>
-          <li><b>Phone number</b> — your sign-in identity (verified by a one-time SMS code) and the number used for M-Pesa contribution requests.</li>
+          <li><b>Phone number</b> — your sign-in identity and the number used for M-Pesa contribution requests. The first time you sign in on a phone we verify it with a 6-digit SMS code (valid 5 minutes, used once); after that you sign in on that phone with a 4-digit PIN.</li>
+          <li><b>PIN and trusted devices</b> — your PIN is stored only as a one-way (bcrypt) hash, never in readable form. Each phone you trust gets a secure sign-in cookie, and we keep a hashed copy of it with its browser type and last-used date so you can see and sign out of your devices. Five wrong PINs lock PIN sign-in until you verify a new SMS code.</li>
           <li><b>Name</b> and, if your group adds them, your <b>role</b> (e.g. treasurer) and <b>photo</b>, plus the group&apos;s <b>logo</b> an official uploads. A photo of written meeting notes is read on your device to fill in the minutes.</li>
           <li><b>Group membership</b> — which groups you belong to and the group&apos;s charter, roster and meeting minutes that officials record (officials may enter a member&apos;s ID number in the roster for registration paperwork).</li>
           <li><b>Contributions</b> — amounts, dates and channel (cash or M-Pesa) recorded for you, fines and payouts, and the month-end statements built from them.</li>
           <li><b>M-Pesa transaction metadata</b> — for treasurer-initiated payment requests: the paying phone number, amount, M-Pesa receipt number, request IDs and result status returned by Safaricom. We never see or store your M-Pesa PIN.</li>
-          <li><b>Technical data</b> — a sign-in session cookie and standard server logs (IP address, time, page) used for security and troubleshooting.</li>
+          <li><b>Technical data</b> — sign-in session and trusted-device cookies, and standard server logs (IP address, time, page) used for security, rate limiting and troubleshooting.</li>
         </ul>
         <p style={{ margin: '8px 0 0' }}>We do not collect your contacts, location, SMS inbox, photos library or device identifiers, and we show no advertising.</p>
       </LegalSection>
@@ -74,7 +75,7 @@ export default function PrivacyPage() {
         <p style={{ margin: 0 }}>
           Sign in and open <a href="/account/delete">Account → Delete account</a>, or follow the steps at{' '}
           <a href="/delete-account">/delete-account</a> (including how to ask by email if you can no longer sign in).
-          Deletion removes your sign-in and your name, phone number and photo from your groups; the group&apos;s
+          Deletion removes your sign-in, your PIN and trusted devices, and your name, phone number and photo from your groups; the group&apos;s
           shared financial records stay with the group without your personal details.
         </p>
       </LegalSection>
