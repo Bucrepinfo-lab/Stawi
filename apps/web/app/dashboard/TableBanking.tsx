@@ -40,7 +40,7 @@ export function TableBanking({
   const [receipt, setReceipt] = useState<LastReceipt | null>(null);
   const [selected, setSelected] = useState(seed[0]?.memberId ?? '');
   const [amount, setAmount] = useState('5000');
-  const [phone, setPhone] = useState('0708374149'); // Daraja sandbox test MSISDN
+  const [phone, setPhone] = useState(''); // payer's M-Pesa number (no sandbox default in production paths)
   const [stkBusy, setStkBusy] = useState(false);
 
   const snapshot = useMemo(() => computeCapitalShares(members), [members]);
@@ -81,7 +81,7 @@ export function TableBanking({
       const res = await fetch('/api/mpesa/stk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amountCents: cents, payerPhone: phone, accountReference: 'Umoja', description: 'Contribution', membershipId: selected, groupId }),
+        body: JSON.stringify({ amountCents: cents, payerPhone: phone, accountReference: groupName.slice(0, 12), description: 'Contribution', membershipId: selected, groupId }),
       });
       const data = await res.json();
       setFlash(data.ok ? `STK sent — check ${phone} for the M-Pesa prompt` : `M-Pesa: ${data.error ?? 'request failed'}`);
