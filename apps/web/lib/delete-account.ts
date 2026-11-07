@@ -4,6 +4,8 @@ import { getUserId, getUserPhone } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { dbEnabled } from "@/lib/data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
+import { DEVICE_COOKIE } from "@stawi/core";
 
 /**
  * Google Play requires an in-app + web account-deletion path. Stawi keys records by
@@ -47,8 +49,14 @@ export async function deleteMyAccount(): Promise<{ ok: boolean }> {
     }
   }
 
+  if (dbEnabled()) {
+    const { prisma, deleteAuthData } = await import("@stawi/db");
+    await deleteAuthData(prisma, userId).catch(() => undefined); // PIN + trusted devices
+  }
+  (await cookies()).delete(DEVICE_COOKIE);
+
   const supabase = await createSupabaseServerClient();
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: "global" });
   // Remove the login itself (needs SUPABASE_SERVICE_ROLE_KEY; otherwise the
   // account is signed out and anonymised, and support completes it on request).
   const admin = createSupabaseAdminClient();

@@ -90,6 +90,12 @@ deletion** in-app and at `/delete-account`; no data is sold):
 
 Ephemeral processing: No. Data collection is not optional for phone and name (needed to sign in).
 
+Sign-in (owner rule 07/11/26): phone number + 6-digit SMS code on a new device (valid 5 minutes,
+single use, rate-limited per number and IP), then a 4-digit PIN on that trusted device; 5 wrong
+PINs, a forgotten PIN or a new device need a new SMS code. The PIN is stored only as a bcrypt
+hash; trusted devices can be signed out from Account → Sign out of all devices. No email needed.
+These are authentication credentials, not a separate Data safety data type.
+
 ## Financial features declaration
 
 - Select the option for **record keeping / group savings management** (support
@@ -114,8 +120,9 @@ Instructions to paste into Play Console:
 > 1. Open the app and tap **Sign in**.
 > 2. Enter phone number **<PLAY_REVIEW_PHONE>** and tap **Send code** (no SMS is sent to this test number).
 > 3. Enter code **<PLAY_REVIEW_CODE>** and tap **Verify & continue**.
-> 4. You are the treasurer of the demo group "<demo group name>": record a contribution on the dashboard, open **Open group workspace** for the charter, minutes and **Month-End** statement.
-> 5. Account deletion: **/account/delete** (or the public page /delete-account).
+> 4. When asked to choose a 4-digit PIN, either set any PIN (e.g. 2580) for faster sign-in on this device, or tap **Skip for the demo account**.
+> 5. You are the treasurer of the demo group "<demo group name>": record a contribution on the dashboard, open **Open group workspace** for the charter, minutes and **Month-End** statement.
+> 6. Account → **Sign out of all devices**, and **Delete my account** (/account/delete; public steps at /delete-account).
 
 Remove `PLAY_REVIEW_PHONE` / `PLAY_REVIEW_CODE` after review (`fly secrets unset`).
 

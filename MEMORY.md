@@ -47,6 +47,13 @@
   is required in production, groups come from the session's own phone, routes check the
   per-group role. OTP send/verify moved server-side (`/api/auth/otp/send|verify`): 5-minute,
   single-use window, rate limits per number and per IP (core `auth-policy.ts`, tested).
+- **4-digit PIN + trusted devices:** tables `AuthPin` (bcrypt hash, failedCount, lockedAt,
+  sessionEpoch) + `TrustedDevice` (sha256 of cookie secret, revokedAt) — additive. Cookie
+  `stawi_device` = `<id>.<secret>.<hmac>` (httpOnly, 1 year, AUTH_DEVICE_SECRET). PIN set only
+  within 15 min of a verified SMS code (`stawi_sms_ok`); middleware sends signed-in users with
+  no trusted device to `/pin/setup`; 5 wrong → locked until new SMS; `/account/security` =
+  devices + sign out of all devices (revoke + rotate server-held password + global sign-out).
+  Reviewer may skip PIN. Needs `AUTH_DEVICE_SECRET` + `SUPABASE_SERVICE_ROLE_KEY` + DB, else SMS-only.
 
 > **RESUME HERE (2026-08-14, end of session 3):** Auth migrated Clerk → **Supabase
 > phone-OTP** across web + mobile (OTP SMS via Africa's Talking); web+mobile now one

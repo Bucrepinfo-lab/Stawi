@@ -34,6 +34,7 @@ export * from './android';
 export * from './mpesa-config';
 export * from './review-access';
 export * from './auth-policy';
+export * from './pin-policy';
 
 // `CountryCode` is declared in both ./tax ('KE') and ./compliance (multi-country).
 // Expose the broader compliance definition explicitly to resolve the star-export

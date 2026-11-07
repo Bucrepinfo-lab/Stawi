@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "echo \"(lint: web — ESLint not configured yet; typecheck + build are the gates)\"",
+    "lint": "echo \"(lint: web \u2014 ESLint not configured yet; typecheck + build are the gates)\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -17,7 +17,8 @@
     "react-dom": "^18.3.1",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.4",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^3.0.2"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.6",

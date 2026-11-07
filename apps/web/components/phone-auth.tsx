@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toE164 } from "@stawi/core";
 
@@ -14,7 +14,49 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard" }: { afterAuthUrl?: stri
   const params = useSearchParams();
   const next = params.get("next") || afterAuthUrl;
 
-  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [step, setStep] = useState<"phone" | "otp" | "pin">("phone");
+  const [pinHint, setPinHint] = useState<string | null>(null);
+  const [pin, setPin] = useState("");
+
+  // Trusted device? Offer the 4-digit PIN first (server decides; no account data here).
+  useEffect(() => {
+    if (params.get("sms") === "1") {
+      setError("Confirm it's you with an SMS code, then choose a 4-digit PIN.");
+      return;
+    }
+    fetch("/api/auth/pin/status")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.device && !d.device.locked) {
+          setPinHint(d.device.phoneHint);
+          setStep("pin");
+        } else if (d?.device?.locked) {
+          setError("Too many wrong PINs. Sign in with an SMS code to set a new PIN.");
+        }
+      })
+      .catch(() => undefined);
+  }, []);
+
+  async function signInWithPin(event: FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setLoading(true);
+    const res = await fetch("/api/auth/pin/sign-in", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin }),
+    }).catch(() => null);
+    const data = res ? await res.json().catch(() => ({})) : {};
+    setLoading(false);
+    setPin("");
+    if (res?.ok) {
+      router.push(next);
+      router.refresh();
+      return;
+    }
+    setError(data.error ?? "Could not sign in. Try again.");
+    if (data.needSms) setStep("phone");
+  }
   const [phoneInput, setPhoneInput] = useState("");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
@@ -62,7 +104,8 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard" }: { afterAuthUrl?: stri
       setError(data.error ?? "Could not check the code. Try again.");
       return;
     }
-    router.push(next);
+    // First verified sign-in on this device (or forgotten/locked PIN): choose a PIN.
+    router.push(`/pin/setup?next=${encodeURIComponent(next)}`);
     router.refresh();
   }
 
@@ -87,6 +130,41 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard" }: { afterAuthUrl?: stri
     background: "var(--forest-deep)",
     cursor: "pointer",
   };
+
+  if (step === "pin") {
+    return (
+      <form onSubmit={signInWithPin} style={{ display: "grid", gap: 12, textAlign: "left" }}>
+        <p style={{ fontSize: 13.5, color: "var(--ink-2)", margin: 0 }}>
+          Enter your 4-digit PIN for <b>{pinHint}</b>.
+        </p>
+        <input
+          type="password"
+          inputMode="numeric"
+          autoComplete="current-password"
+          maxLength={4}
+          placeholder="••••"
+          value={pin}
+          onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 4))}
+          style={{ ...inputStyle, textAlign: "center", letterSpacing: "0.6em", fontWeight: 600 }}
+          autoFocus
+        />
+        {error && <p style={{ fontSize: 13.5, color: "#b3261e", margin: 0 }}>{error}</p>}
+        <button type="submit" disabled={loading || pin.length < 4} style={{ ...btnStyle, opacity: loading || pin.length < 4 ? 0.6 : 1 }}>
+          {loading ? "Checking…" : "Sign in"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setStep("phone");
+            setError(null);
+          }}
+          style={{ background: "none", border: 0, color: "var(--ink-2)", fontSize: 13, textDecoration: "underline", cursor: "pointer" }}
+        >
+          Forgot PIN or different number? Get an SMS code
+        </button>
+      </form>
+    );
+  }
 
   if (step === "phone") {
     return (
