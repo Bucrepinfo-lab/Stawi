@@ -307,9 +307,12 @@ export function Landing({ saccoPlus }: { saccoPlus: boolean }) {
   const [dark, setDark] = useState(false);
   const [valOpen, setValOpen] = useState<number | null>(null);
   const neutral = { ...NEUTRAL.en, ...(NEUTRAL[lang] ?? {}) };
-  const t = saccoPlus
-    ? { ...T.en, ...(T[lang] ?? {}) }
-    : { ...T.en, ...(T[lang] ?? {}), sub: neutral.sub!, mission: neutral.mission!, nicheH: neutral.nicheH! };
+  const t: Record<string, string> = { ...T.en, ...(T[lang] ?? {}) };
+  if (!saccoPlus) {
+    t.sub = neutral.sub ?? t.sub ?? '';
+    t.mission = neutral.mission ?? t.mission ?? '';
+    t.nicheH = neutral.nicheH ?? t.nicheH ?? '';
+  }
   const pillars = (PILLARS[lang] ?? PILLARS.en).slice(0, saccoPlus ? 4 : 3);
   const gaps = saccoPlus ? FAILURE_GAPS : FAILURE_GAPS.filter((g) => NEUTRAL_GAP_IDS.has(g.id));
   const valueLinks = saccoPlus ? VALUE_LINKS : VALUE_LINKS_NEUTRAL;
