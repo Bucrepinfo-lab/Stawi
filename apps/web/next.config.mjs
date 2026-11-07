@@ -5,7 +5,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Required for DigitalOcean App Platform Node.js runtime.
+  // Standalone server for the Fly.io Docker image (see /Dockerfile).
   output: 'standalone',
   reactStrictMode: true,
   // Pin the monorepo root so Next never infers a stray parent directory
@@ -15,8 +15,7 @@ const nextConfig = {
   transpilePackages: ['@stawi/core', '@stawi/db'],
   images: {
     remotePatterns: [
-      // Add your DO Spaces CDN hostname here, e.g.
-      // { protocol: 'https', hostname: 'stawi.fra1.cdn.digitaloceanspaces.com' },
+      // Add an object-storage/CDN hostname here when receipts move off-box.
     ],
   },
 };

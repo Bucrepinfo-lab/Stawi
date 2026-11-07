@@ -38,7 +38,7 @@ jobs:
           report() { echo "::error::$1"; fail=1; }
 
           # 1. Protected paths (docs/STANDING_RULES.md §3).
-          protected='^(\.github/|\.do/|docker-compose\.yml$|(.*/)?Dockerfile|(.*/)?\.env|apps/web/lib/(mpesa|billing|auth)\.ts$|apps/web/app/api/(mpesa|billing|auth)/|packages/core/src/(mpesa|payments|plans|savings|credit|capital|accounting|statement|receipt|rotation|pos|tiers|tax|compliance|identity|formalization|graduation|sacco-activation|charter|tenancy)\.ts$|packages/db/|legal/|COMPLIANCE\.md$|TENANCY\.md$|\.claude/skills/(money-movement-testing|kyc-aml-onboarding|compliance-pack|tenant-isolation-guard|sacco-graduation-domain)/)'
+          protected='^(\.github/|fly\.toml$|docker-compose\.yml$|(.*/)?Dockerfile|(.*/)?\.env|apps/web/lib/(mpesa|billing|auth)\.ts$|apps/web/app/api/(mpesa|billing|auth)/|packages/core/src/(mpesa|payments|plans|savings|credit|capital|accounting|statement|receipt|rotation|pos|tiers|tax|compliance|identity|formalization|graduation|sacco-activation|charter|tenancy)\.ts$|packages/db/|legal/|COMPLIANCE\.md$|TENANCY\.md$|\.claude/skills/(money-movement-testing|kyc-aml-onboarding|compliance-pack|tenant-isolation-guard|sacco-graduation-domain)/)'
           approval=''
           while IFS= read -r line; do
             name=$(echo "$line" | jq -r '.[0]')

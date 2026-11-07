@@ -2,8 +2,8 @@
  * In-process pub/sub for live-dashboard push (server-only).
  *
  * Server actions publish after successful writes; /api/events streams to
- * browsers over SSE. Works on any single persistent Node process (DigitalOcean
- * App Platform web service). For multi-instance scale-out, swap the bus for
+ * browsers over SSE. Works on any single persistent Node process (one Fly.io
+ * machine). For multi-instance scale-out, swap the bus for
  * Redis pub/sub behind the same two functions — callers won't change.
  */
 

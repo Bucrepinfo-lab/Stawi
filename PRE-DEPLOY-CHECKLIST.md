@@ -27,7 +27,7 @@ _Last run: 2026-06-21_
 Follow `DEPLOYMENT-RUNBOOK.md`. In short:
 
 1. **Push to GitHub** (`Bucrepinfo-lab/Stawi`).
-2. **Provision** DigitalOcean Managed Postgres (fra1) → set `DATABASE_URL`.
+2. **Provision** managed Postgres (EU) → `fly secrets set DATABASE_URL=...`.
 3. **Migrate + seed**: `npm i && npm -w @stawi/db run generate && migrate && seed`,
    then apply RLS: `psql "$DATABASE_URL" -f packages/db/prisma/rls.sql`.
 4. **Clerk**: set publishable/secret keys; register webhook `/api/webhooks/clerk`.
@@ -36,13 +36,13 @@ Follow `DEPLOYMENT-RUNBOOK.md`. In short:
 6. **Stripe**: set `STRIPE_SECRET_KEY`; register webhook endpoint
    `https://<app>/api/billing/webhook` → set `STRIPE_WEBHOOK_SECRET`. Checkout goes
    live automatically (subscription mode, 30-day trial = first month free).
-7. **DO Spaces** (fra1, CDN) for receipts; add CDN host to `next.config.mjs`.
+7. **Object storage** — not needed for v1 (receipts render on demand).
 8. **Africa's Talking** (optional) for SMS acknowledgements.
 9. **Domain**: `NEXT_PUBLIC_ROOT_DOMAIN=stawi.app`; GoDaddy CNAME → DO app; wildcard
    `*.stawi.app` for per-tenant subdomains. SSL auto-issued.
-10. **Create the app**: `doctl apps create --spec .do/app.yaml`; add all SECRET env
-    values in the DO dashboard. Set GitHub Actions secrets
-    `DIGITALOCEAN_ACCESS_TOKEN` + `DO_APP_ID` for auto-deploy.
+10. **Create the app**: `fly apps create stawi`; set secrets with `fly secrets set`
+    (names in DEPLOYMENT-RUNBOOK.md); add the `FLY_API_TOKEN` repo secret to arm
+    auto-deploy.
 11. **Verify**: `https://<app>/api/health` → `{"status":"ok"}`.
 12. **Cron**: set `CRON_SECRET` env + GitHub repo secrets `CRON_URL`
     (`https://<app>/api/cron`) and `CRON_SECRET` — `.github/workflows/cron.yml`

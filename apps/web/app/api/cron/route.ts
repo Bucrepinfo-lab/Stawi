@@ -5,7 +5,7 @@ export const runtime = 'nodejs';
 
 /**
  * GET/POST /api/cron — scheduled maintenance, called daily by a scheduler
- * (DigitalOcean App Platform job, GitHub Actions cron, or cron-job.org).
+ * (GitHub Actions cron — .github/workflows/cron.yml — or cron-job.org).
  * Guarded by CRON_SECRET (Authorization: Bearer <secret> or ?key=).
  *
  * Jobs:

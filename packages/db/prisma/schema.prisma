@@ -1,6 +1,6 @@
 // Stawi data model — global multi-tenant SaaS. Pillars 1–3 + tenancy.
-// Postgres on DigitalOcean Managed DB. Auth identities come from Clerk
-// (clerkUserId / clerkOrgId); this schema holds domain data.
+// Managed Postgres (app on Fly.io). Auth identities come from Supabase phone-OTP,
+// stored in the legacy-named clerkUserId / clerkOrgId columns; this schema holds domain data.
 
 generator client {
   provider = "prisma-client-js"

@@ -22,7 +22,7 @@ Stop and ask the owner instead of fixing when a fix would touch any of:
 - tax, compliance, KYC and SACCO rules: `packages/core/src/{tax,compliance,identity,formalization,graduation,sacco-activation,charter}.ts`, `legal/`, `COMPLIANCE.md`
 - sign-in and tenancy: `apps/web/lib/auth.ts`, `apps/web/app/api/auth/`, `packages/core/src/tenancy.ts`, `TENANCY.md`
 - database and RLS: `packages/db/` (schema, `rls.sql`)
-- deploy config and secrets: `.github/`, `.do/`, `docker-compose.yml`, any `Dockerfile`, any `.env*`
+- deploy config and secrets: `.github/`, `fly.toml`, `docker-compose.yml`, any `Dockerfile`, any `.env*`
 
 …or a policy or approval decision, a risky (non-additive) database change, or
 after **three** failed fix attempts. Automated fixes go on a
@@ -39,7 +39,7 @@ pass. Fix the code, or escalate.
 ## 5. Ship small, ship proven
 - One fix per PR; P0 (safety, money, data) before P1. No line-ending-only churn.
 - Merge only when every check is green **at the exact head SHA**.
-- Deploy: CI deploys to DigitalOcean App Platform only on `main` with `DEPLOY_ENABLED == 'true'` (see `do-deploy-runbook`). Confirm it is serving: `/api/health` on the web app returns `{"status":"ok"}`. A skipped deploy is not
+- Deploy: `deploy.yml` deploys to Fly.io only on `main` and only when the `FLY_API_TOKEN` secret exists (see `fly-deploy-runbook`). Confirm it is serving: `/api/health` on the web app returns `{"status":"ok"}`. A skipped deploy is not
   "shipped" — say so plainly.
 - Name the exact screens a human should retest (and at 375 px phone width).
 - Update `MEMORY.md` (and the current `HANDOFF-*.md`) in the same change.

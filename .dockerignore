@@ -1,0 +1,15 @@
+**/node_modules
+**/.next
+**/.turbo
+**/dist
+.git
+.github
+.env
+.env.*
+!.env.example
+apps/mobile
+design
+docs
+legal
+*.md
+!apps/web/**/*.md
