@@ -11,6 +11,9 @@ const PUBLIC: RegExp[] = [
   /^\/delete-account(?:\/|$)/,
   /^\/subscribe/,
   /^\/api\/health/,
+  /^\/\.well-known\//,
+  /^\/api\/assetlinks/,
+  /^\/offline\.html$/,
   /^\/api\/mpesa\/callback/,
   /^\/api\/billing\/webhook/,
   /^\/api\/webhooks\/clerk/,
@@ -24,6 +27,10 @@ export async function middleware(request: NextRequest) {
   // Liveness probe (Fly health check + deploy workflow): answer without touching
   // Supabase, so health reflects the server itself, not an auth provider.
   if (request.nextUrl.pathname === '/api/health') return NextResponse.next();
+  // Digital Asset Links must be served to Google's verifier without auth.
+  if (request.nextUrl.pathname === '/.well-known/assetlinks.json' || request.nextUrl.pathname === '/api/assetlinks') {
+    return NextResponse.next();
+  }
 
   // SACCO+ (loans, interest, scoring) is off unless SACCO_PLUS_ENABLED=true:
   // its routes answer 404 for everyone. The pages, server actions and db repo
