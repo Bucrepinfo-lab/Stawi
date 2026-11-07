@@ -1,6 +1,10 @@
 # Stawi — session memory / start-here
 
 ## Session 4 (07/11/26) — Google Play readiness (closed testing ~28/11/26)
+> **RESUME HERE (07/11/26):** code side for Play is done (PRs #6–#13). Next = owner/Chrome:
+> `fly apps create stawi` + secrets (DEPLOYMENT-RUNBOOK.md), `FLY_API_TOKEN` repo secret,
+> confirm `/api/health`, build the TWA for `ke.stawi.app`, set `ANDROID_CERT_FINGERPRINTS`,
+> reviewer env + `seed-demo.ts`, then the listing in `docs/PLAY-LISTING.md`.
 - **SACCO+ behind `SACCO_PLUS_ENABLED` (default OFF).** Owner approved launching v1
   without lending (Play bans Kenyan loan apps without a CBK digital-credit licence).
   Off ⇒ `/sacco` + SACCO+ APIs 404 (middleware + page), SACCO+ server actions refuse,

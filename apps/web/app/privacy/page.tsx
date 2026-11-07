@@ -22,7 +22,7 @@ export default function PrivacyPage() {
       <LegalSection h="2. What we collect">
         <ul style={ul}>
           <li><b>Phone number</b> — your sign-in identity (verified by a one-time SMS code) and the number used for M-Pesa contribution requests.</li>
-          <li><b>Name</b> and, if your group adds them, your <b>role</b> (e.g. treasurer) and <b>photo</b>.</li>
+          <li><b>Name</b> and, if your group adds them, your <b>role</b> (e.g. treasurer) and <b>photo</b>, plus the group&apos;s <b>logo</b> an official uploads. A photo of written meeting notes is read on your device to fill in the minutes.</li>
           <li><b>Group membership</b> — which groups you belong to and the group&apos;s charter, roster and meeting minutes that officials record (officials may enter a member&apos;s ID number in the roster for registration paperwork).</li>
           <li><b>Contributions</b> — amounts, dates and channel (cash or M-Pesa) recorded for you, fines and payouts, and the month-end statements built from them.</li>
           <li><b>M-Pesa transaction metadata</b> — for treasurer-initiated payment requests: the paying phone number, amount, M-Pesa receipt number, request IDs and result status returned by Safaricom. We never see or store your M-Pesa PIN.</li>
