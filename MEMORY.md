@@ -25,6 +25,10 @@
   keys, callback all env (core `mpesa-config.ts`, tested; production rejects 174379 and
   non-https callbacks; timestamp in EAT). `/api/mpesa/stk` is TREASURER-only per group
   (server-side, `lib/group-access.ts`); optional `MPESA_CALLBACK_TOKEN`. No B2C.
+- **Play reviewer access:** env pair `PLAY_REVIEW_PHONE` + `PLAY_REVIEW_CODE` (both required;
+  core `review-access.ts`, tested). `/api/auth/review-sign-in` provisions/signs in that one
+  number via the Supabase admin API (`SUPABASE_SERVICE_ROLE_KEY`, derived server-only
+  password); the SMS hook skips that number. `seed-demo.ts` adds it as TREASURER of the demo group only.
 
 > **RESUME HERE (2026-08-14, end of session 3):** Auth migrated Clerk → **Supabase
 > phone-OTP** across web + mobile (OTP SMS via Africa's Talking); web+mobile now one

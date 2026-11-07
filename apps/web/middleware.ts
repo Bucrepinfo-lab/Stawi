@@ -18,6 +18,7 @@ const PUBLIC: RegExp[] = [
   /^\/api\/billing\/webhook/,
   /^\/api\/webhooks\/clerk/,
   /^\/api\/auth\/send-sms/,
+  /^\/api\/auth\/review-sign-in/,
   /^\/api\/mobile/,
 ];
 

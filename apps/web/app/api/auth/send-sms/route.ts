@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'node:crypto';
+import { isReviewPhone } from '@stawi/core';
 import { sendSms } from '@/lib/sms';
 
 /** Supabase Send-SMS hook → Africa's Talking (Standard-Webhooks HMAC verified). */
@@ -37,6 +38,9 @@ export async function POST(req: Request) {
   const phone = payload.user?.phone;
   const otp = payload.sms?.otp;
   if (!phone || !otp) return NextResponse.json({ error: 'missing phone or otp' }, { status: 400 });
+  // Play reviewer number (PLAY_REVIEW_PHONE + PLAY_REVIEW_CODE both set): no SMS —
+  // the reviewer signs in with the fixed code via /api/auth/review-sign-in.
+  if (isReviewPhone(process.env, phone)) return NextResponse.json({});
   const result = await sendSms(phone, `${otp} is your Stawi verification code. It expires in 10 minutes. Do not share it.`);
   if (!result.ok) return NextResponse.json({ error: 'sms_send_failed', detail: result.raw }, { status: 502 });
   return NextResponse.json({});

@@ -1,13 +1,14 @@
 /**
  * Fast, standalone Play-reviewer demo member for Stawi.
- * Run (from repo root, with DATABASE_URL available):
+ * Run (from repo root, with DATABASE_URL and PLAY_REVIEW_PHONE available):
  *   npx tsx packages/db/prisma/seed-demo.ts
- * Login: phone 0700000002 → confirm → the member's profile + the demo group.
- * Uses a canonical E.164 phone so it matches toE164() from the sign-in form (the
- * main seed's local-format phones like 0712345678 won't match phone-login).
+ * Adds PLAY_REVIEW_PHONE as TREASURER of the demo group ONLY (so the reviewer
+ * can exercise contribution recording there; no rights in any other group). With PLAY_REVIEW_CODE also set on the server, that number signs in
+ * with the fixed code (no SMS). Nothing about the reviewer is hard-coded.
  */
 import { existsSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
+import { toE164 } from "@stawi/core";
 
 // Load DATABASE_URL from a .env if it isn't already in the environment (Node 20.12+).
 if (!process.env.DATABASE_URL && typeof process.loadEnvFile === "function") {
@@ -26,6 +27,12 @@ if (!process.env.DATABASE_URL && typeof process.loadEnvFile === "function") {
 const prisma = new PrismaClient();
 
 async function main() {
+  const reviewPhone = toE164(process.env.PLAY_REVIEW_PHONE ?? "");
+  if (!reviewPhone) {
+    console.error("Set PLAY_REVIEW_PHONE (e.g. in .env) to the reviewer's phone number first.");
+    process.exit(1);
+  }
+
   const group =
     (await prisma.group.findUnique({ where: { clerkOrgId: "org_umoja" } })) ??
     (await prisma.group.findFirst());
@@ -36,17 +43,17 @@ async function main() {
 
   await prisma.membership.upsert({
     where: { groupId_clerkUserId: { groupId: group.id, clerkUserId: "seed_demo_member" } },
-    update: { phone: "+254700000002", fullName: "Demo Member" },
+    update: { phone: reviewPhone, fullName: "Demo Member", role: "TREASURER" },
     create: {
       groupId: group.id,
       clerkUserId: "seed_demo_member",
       fullName: "Demo Member",
-      phone: "+254700000002",
-      role: "MEMBER",
+      phone: reviewPhone,
+      role: "TREASURER",
     },
   });
 
-  console.log(`✅ Stawi demo reviewer ready: phone 0700000002 → group "${group.name}"`);
+  console.log(`✅ Stawi demo reviewer ready: PLAY_REVIEW_PHONE → group "${group.name}" (TREASURER of the demo group only)`);
 }
 
 main()
