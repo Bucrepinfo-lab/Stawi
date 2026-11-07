@@ -46,6 +46,23 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard" }: { afterAuthUrl?: stri
     event.preventDefault();
     setError(null);
     setLoading(true);
+    // Play reviewer access: the server accepts a fixed code for one configured
+    // number only (PLAY_REVIEW_PHONE + PLAY_REVIEW_CODE); anything else → 404 → normal OTP.
+    try {
+      const review = await fetch("/api/auth/review-sign-in", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, code: code.trim() }),
+      });
+      if (review.ok) {
+        setLoading(false);
+        router.push(next);
+        router.refresh();
+        return;
+      }
+    } catch {
+      /* fall through to the normal OTP check */
+    }
     const { error } = await supabase.auth.verifyOtp({ phone, token: code.trim(), type: "sms" });
     setLoading(false);
     if (error) {
