@@ -42,6 +42,7 @@ export async function POST(req: Request) {
         await sendSms(
           result.phone,
           `Stawi: payment of KES ${formatMoney((result.amount ?? 0) * 100)} received. Ref ${result.mpesaReceipt ?? '-'}. Asante!`,
+          'transactional',
         );
       }
       console.info('[mpesa] confirmed', result.checkoutRequestId, note.title);

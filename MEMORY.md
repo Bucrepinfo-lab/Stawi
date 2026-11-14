@@ -1,5 +1,8 @@
 # Stawi — session memory / start-here
 
+## 14/11/26 — SMS is transactional only (TELPEN sender)
+- Owner: the "TELPEN" Africa's Talking sender ID is for transactional SMS only (sign-in codes, payment receipts). `sendSms(…, purpose)` in `apps/web/lib/sms.ts` and `lib/notify.ts` requires `'otp' | 'transactional'` and refuses anything else; promotion goes to members via in-app messaging. Guard: `packages/core/test/sms-transactional.test.ts`.
+
 ## Session 5 (07/11/26) — pickers scoped, dates day-first, filters in the URL
 > **RESUME HERE (07/11/26):** sweep of the Telpen Edu bugs (a)–(e) fixed on 07/11/26, applied
 > here (PR "fix: scoped pickers, day-first dates, consistent filters"). Owner/Chrome next steps
