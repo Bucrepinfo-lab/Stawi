@@ -1,3 +1,5 @@
+import { SMS_PURPOSES, type SmsPurpose } from './sms';
+
 /**
  * Server-side notification delivery — SMS via Africa's Talking.
  *
@@ -8,8 +10,8 @@
 const smsEnabled = () => !!(process.env.AT_USERNAME && process.env.AT_API_KEY);
 
 /** Send an SMS to one or more Kenyan numbers (254...). Best-effort. */
-export async function sendSms(to: string | string[], message: string): Promise<{ sent: boolean }> {
-  if (!smsEnabled()) return { sent: false };
+export async function sendSms(to: string | string[], message: string, purpose: SmsPurpose): Promise<{ sent: boolean }> {
+  if (!smsEnabled() || !SMS_PURPOSES.includes(purpose)) return { sent: false };
   const recipients = Array.isArray(to) ? to.join(',') : to;
   try {
     const res = await fetch('https://api.africastalking.com/version1/messaging', {
