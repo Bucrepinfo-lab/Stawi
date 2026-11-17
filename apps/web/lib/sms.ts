@@ -1,3 +1,5 @@
+import { toSmsRecipient } from '@stawi/core';
+
 /**
  * Africa's Talking SMS — delivers the phone-login OTP (Supabase Send-SMS hook).
  * Sandbox endpoint when AT_USERNAME === 'sandbox'. Env: AT_USERNAME, AT_API_KEY, AT_SENDER_ID.
@@ -17,8 +19,11 @@ export async function sendSms(to: string, message: string, purpose: SmsPurpose):
   const username = process.env.AT_USERNAME;
   const apiKey = process.env.AT_API_KEY;
   if (!username || !apiKey) return { ok: false, raw: { error: 'africastalking_not_configured' } };
+  // Africa's Talking needs "+<country><number>"; Supabase passes "2547…" (no +).
+  const recipient = toSmsRecipient(to);
+  if (!recipient) return { ok: false, raw: { error: 'invalid_phone' } };
   const base = username === 'sandbox' ? 'https://api.sandbox.africastalking.com' : 'https://api.africastalking.com';
-  const body = new URLSearchParams({ username, to, message });
+  const body = new URLSearchParams({ username, to: recipient, message });
   const from = process.env.AT_SENDER_ID;
   if (from) body.set('from', from);
   const res = await fetch(`${base}/version1/messaging`, {

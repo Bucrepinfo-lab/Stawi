@@ -12,6 +12,9 @@
 - First GitHub deploy (run #27) failed in release.sh: rls.sql listed `SavedVenture` with the groupId tables, but it has
   `businessId`. Fix: move it to the Business-chained loop (every other table/column in rls.sql checked against the schema).
   Database/RLS is a protected area — PR opened for owner approval.
+- First live sign-in (17/11/26) failed: Supabase's Send-SMS hook passes the phone as `2547…` (no +) and Africa's
+  Talking rejects it before sending (outbox empty, hook → 502). Fix: `toSmsRecipient` (core, tested) in both AT senders
+  (`lib/sms.ts`, `lib/notify.ts`). Sign-in is a protected area — PR for owner approval.
 - Do NOT press Fly's "merge new files" (Launch UI) — it would replace this repo's fly.toml.
 
 ## 14/11/26 — SMS is transactional only (TELPEN sender)
