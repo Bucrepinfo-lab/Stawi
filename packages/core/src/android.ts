@@ -38,3 +38,33 @@ export function buildAssetLinks(csv: string | undefined, packageName: string = A
     },
   ];
 }
+
+/**
+ * Google Play payments policy (owner instruction 17/11/26: "streamline each to
+ * comply with Play Store policies") — PURE. Inside the Play app (TWA), Stawi
+ * does not sell its own subscription plans: Kenya is not in Play's
+ * alternative-billing programmes, so plans are bought on the web only, with no
+ * in-app link steering there. Group M-Pesa contributions (real money between
+ * members and their group's own paybill) are not Stawi's digital service and
+ * are unaffected. Same approach as HarvestHub and Telpen Edu.
+ *
+ * Signal: the TWA's launch request carries `Referer: android-app://ke.stawi.app`;
+ * the middleware remembers it in a session cookie.
+ */
+export const PLAY_APP_COOKIE = 'stawi_play_app';
+export const PLAY_APP_REFERRER_PREFIX = 'android-app://';
+export const PLAY_APP_PURCHASE_UNAVAILABLE = "Stawi plans can't be bought in the Android app.";
+
+export function isPlayAppSignal(s: { cookie?: string | null; referrer?: string | null }): boolean {
+  if (s.cookie === '1') return true;
+  return (s.referrer ?? '').startsWith(PLAY_APP_REFERRER_PREFIX);
+}
+
+export function shouldMarkPlayApp(referrer: string | null | undefined, cookie: string | null | undefined): boolean {
+  return cookie !== '1' && (referrer ?? '').startsWith(PLAY_APP_REFERRER_PREFIX);
+}
+
+/** Stawi's own plan purchases are allowed only outside the Play app. */
+export function planPurchasesAllowed(s: { cookie?: string | null; referrer?: string | null }): boolean {
+  return !isPlayAppSignal(s);
+}

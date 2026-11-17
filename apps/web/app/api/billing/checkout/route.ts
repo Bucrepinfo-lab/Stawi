@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getUserId } from '@/lib/auth';
-import { getPlan, getCountryProfile, buildSubscriptionCheckout, type PlanTier, type CountryCode } from '@stawi/core';
+import { getPlan, getCountryProfile, buildSubscriptionCheckout, planPurchasesAllowed, PLAY_APP_COOKIE, PLAY_APP_PURCHASE_UNAVAILABLE, type PlanTier, type CountryCode } from '@stawi/core';
 import { startCheckout } from '@/lib/billing';
 
 export const runtime = 'nodejs';
@@ -12,6 +12,11 @@ export const runtime = 'nodejs';
 export async function POST(req: Request) {
   const userId = await getUserId();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Play payments policy: no Stawi plan purchases inside the Play app (TWA).
+  const playCookie = req.headers.get('cookie')?.match(new RegExp(`(?:^|;\\s*)${PLAY_APP_COOKIE}=([^;]*)`))?.[1] ?? null;
+  if (!planPurchasesAllowed({ cookie: playCookie, referrer: req.headers.get('referer') })) {
+    return NextResponse.json({ error: PLAY_APP_PURCHASE_UNAVAILABLE }, { status: 403 });
+  }
 
   let body: { tier?: PlanTier; country?: string; tenantRef?: string };
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }

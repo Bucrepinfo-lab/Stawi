@@ -1,6 +1,11 @@
+import { cookies, headers } from 'next/headers';
+import { PLAY_APP_COOKIE, PLAY_APP_PURCHASE_UNAVAILABLE, planPurchasesAllowed } from '@stawi/core';
 import { SubscribeGate } from './SubscribeGate';
 
-export default function SubscribePage() {
+export default async function SubscribePage() {
+  // Play payments policy (17/11/26): plans are not sold inside the Play app (TWA).
+  const [jar, h] = await Promise.all([cookies(), headers()]);
+  const allowed = planPurchasesAllowed({ cookie: jar.get(PLAY_APP_COOKIE)?.value ?? null, referrer: h.get('referer') });
   return (
     <main style={{ maxWidth: 980, margin: '0 auto', padding: '28px 24px 80px' }}>
       <p style={{ fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700 }}>Pricing</p>
@@ -9,7 +14,11 @@ export default function SubscribePage() {
         Every paid plan starts with a free first month. Prices show in your local
         currency at checkout. You must accept the Subscription Terms to continue.
       </p>
-      <SubscribeGate />
+      {allowed ? (
+        <SubscribeGate />
+      ) : (
+        <p style={{ marginTop: 18, color: 'var(--ink-2)' }}>{PLAY_APP_PURCHASE_UNAVAILABLE}</p>
+      )}
     </main>
   );
 }
