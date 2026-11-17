@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { resolveTenantSlug, isSaccoPlusEnabled, isSaccoPlusPath, DEVICE_COOKIE, PIN_SKIP_COOKIE } from '@stawi/core';
+import { resolveTenantSlug, isSaccoPlusEnabled, isSaccoPlusPath, DEVICE_COOKIE, PIN_SKIP_COOKIE, PLAY_APP_COOKIE, shouldMarkPlayApp } from '@stawi/core';
 import { updateSupabaseSession } from '@/lib/supabase/middleware';
 
 const PUBLIC: RegExp[] = [
@@ -26,6 +26,16 @@ const PUBLIC: RegExp[] = [
 const isPublic = (pathname: string) => PUBLIC.some((re) => re.test(pathname));
 
 export async function middleware(request: NextRequest) {
+  const res = await route(request);
+  // Play payments policy (17/11/26): remember the Play app (TWA) for this
+  // browser session so Stawi plans are not sold there (packages/core android.ts).
+  if (shouldMarkPlayApp(request.headers.get('referer'), request.cookies.get(PLAY_APP_COOKIE)?.value)) {
+    res.cookies.set(PLAY_APP_COOKIE, '1', { path: '/', httpOnly: true, secure: true, sameSite: 'lax' });
+  }
+  return res;
+}
+
+async function route(request: NextRequest): Promise<NextResponse> {
   // Liveness probe (Fly health check + deploy workflow): answer without touching
   // Supabase, so health reflects the server itself, not an auth provider.
   if (request.nextUrl.pathname === '/api/health') return NextResponse.next();

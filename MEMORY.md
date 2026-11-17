@@ -1,5 +1,8 @@
 # Stawi — session memory / start-here
 
+## 17/11/26 — Play payments policy: no Stawi plan purchases inside the Play app (awaiting owner merge)
+- Owner instruction 17/11/26 ("streamline each to comply with Play Store policies"). Inside the Play app (TWA, package `ke.stawi.app`) Stawi plans are not sold: Kenya is not in Play's alternative-billing programmes. The TWA launch request's `Referer: android-app://…` sets a session cookie `stawi_play_app=1` in the middleware; `/api/billing/checkout` answers 403 and `/subscribe` shows "Stawi plans can't be bought in the Android app." No in-app link steers to outside payment. Group M-Pesa contributions are unaffected (not Stawi's digital service). Helpers in `packages/core/src/android.ts`; tests `packages/core/test/play-app-purchases.test.ts`. Same approach as HarvestHub and Telpen Edu. Payments is protected: PR left for the owner to merge.
+
 ## 17/11/26 — first production deploy (Fly app `stawi`, getstawi.com)
 > **RESUME HERE (17/11/26):** provisioned live: Fly app `stawi` (fra, 512 MB), Neon `stawi` (Frankfurt, direct
 > connection), Supabase `stawi` under the free org **Telpen Systems Ltd** (telpensystems@gmail.com account;
