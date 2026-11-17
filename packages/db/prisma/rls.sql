@@ -37,7 +37,7 @@ CREATE POLICY tenantmember_isolation ON "TenantMember"
 DO $$
 DECLARE t text;
 BEGIN
-  FOREACH t IN ARRAY ARRAY['Membership','Cycle','Contribution','Subscription','Business','SavedVenture','GroupCharter','Meeting','MonthlyStatement']
+  FOREACH t IN ARRAY ARRAY['Membership','Cycle','Contribution','Subscription','Business','GroupCharter','Meeting','MonthlyStatement']
   LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
     EXECUTE format('DROP POLICY IF EXISTS %s_tenant_isolation ON %I', lower(t), t);
@@ -54,10 +54,12 @@ BEGIN
 END $$;
 
 -- ── Business-chained children (tenant inherited via Business → Group) ────
+-- SavedVenture belongs here: it has businessId, not groupId (17/11/26: listing it
+-- with the group-chained tables made the first production release fail).
 DO $$
 DECLARE t text;
 BEGIN
-  FOREACH t IN ARRAY ARRAY['StockItem','LedgerEntry']
+  FOREACH t IN ARRAY ARRAY['StockItem','LedgerEntry','SavedVenture']
   LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
     EXECUTE format('DROP POLICY IF EXISTS %s_tenant_isolation ON %I', lower(t), t);
