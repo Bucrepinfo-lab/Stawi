@@ -1,3 +1,4 @@
+import { toSmsRecipient } from '@stawi/core';
 import { SMS_PURPOSES, type SmsPurpose } from './sms';
 
 /**
@@ -9,10 +10,15 @@ import { SMS_PURPOSES, type SmsPurpose } from './sms';
 
 const smsEnabled = () => !!(process.env.AT_USERNAME && process.env.AT_API_KEY);
 
-/** Send an SMS to one or more Kenyan numbers (254...). Best-effort. */
+/** Send an SMS to one or more numbers (any of 254…, +254…, 07…). Best-effort. */
 export async function sendSms(to: string | string[], message: string, purpose: SmsPurpose): Promise<{ sent: boolean }> {
   if (!smsEnabled() || !SMS_PURPOSES.includes(purpose)) return { sent: false };
-  const recipients = Array.isArray(to) ? to.join(',') : to;
+  // Africa's Talking needs "+<country><number>"; stored numbers are often "2547…" or "07…".
+  const recipients = (Array.isArray(to) ? to : [to])
+    .map((n) => toSmsRecipient(n))
+    .filter((n): n is string => n !== null)
+    .join(',');
+  if (!recipients) return { sent: false };
   try {
     const res = await fetch('https://api.africastalking.com/version1/messaging', {
       method: 'POST',
