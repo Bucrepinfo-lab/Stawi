@@ -1,5 +1,19 @@
 # Stawi — session memory / start-here
 
+## 17/11/26 — first production deploy (Fly app `stawi`, getstawi.com)
+> **RESUME HERE (17/11/26):** provisioned live: Fly app `stawi` (fra, 512 MB), Neon `stawi` (Frankfurt, direct
+> connection), Supabase `stawi` under the free org **Telpen Systems Ltd** (telpensystems@gmail.com account;
+> the bucrepinfo org was at its 2-free-project limit), Africa's Talking team/app `Stawi` (username `stawi`,
+> wallet KES 0 until topped up), domain **getstawi.com** (GoDaddy, 3 yrs; A/AAAA @ and *, `_acme-challenge`
+> CNAME; Fly certs for getstawi.com + *.getstawi.com). Supabase: Send SMS hook → `https://stawi.fly.dev/api/auth/send-sms`,
+> Phone provider on, OTP expiry 300 s, Site URL https://getstawi.com. Fly secrets: DATABASE_URL, Supabase URL/anon/
+> service-role/SMS-hook secret, AT_USERNAME/AT_API_KEY, CRON_SECRET, NEXT_PUBLIC_APP_URL/ROOT_DOMAIN. GitHub:
+> FLY_API_TOKEN, CRON_SECRET, CRON_URL + the four NEXT_PUBLIC_* variables. Supabase JWT secret is not used by the code.
+- First GitHub deploy (run #27) failed in release.sh: rls.sql listed `SavedVenture` with the groupId tables, but it has
+  `businessId`. Fix: move it to the Business-chained loop (every other table/column in rls.sql checked against the schema).
+  Database/RLS is a protected area — PR opened for owner approval.
+- Do NOT press Fly's "merge new files" (Launch UI) — it would replace this repo's fly.toml.
+
 ## 14/11/26 — SMS is transactional only (TELPEN sender)
 - Owner: the "TELPEN" Africa's Talking sender ID is for transactional SMS only (sign-in codes, payment receipts). `sendSms(…, purpose)` in `apps/web/lib/sms.ts` and `lib/notify.ts` requires `'otp' | 'transactional'` and refuses anything else; promotion goes to members via in-app messaging. Guard: `packages/core/test/sms-transactional.test.ts`.
 
