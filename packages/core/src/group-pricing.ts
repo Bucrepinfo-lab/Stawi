@@ -46,13 +46,15 @@ const row = (country: string, currency: string, monthly: number, small: number, 
   approved,
 });
 
+const US_PRICES = row('US', 'USD', 299, 149);
+
 /** The founding price list. Changing a founding price breaks the lock: don't. */
 export const FOUNDING_GROUP_PRICES: Record<string, GroupPriceList> = {
   KE: row('KE', 'KES', 29_900, 14_900, true),
   NG: row('NG', 'NGN', 350_000, 175_000),
   ZA: row('ZA', 'ZAR', 4_500, 2_200),
   GH: row('GH', 'GHS', 3_000, 1_500),
-  US: row('US', 'USD', 299, 149),
+  US: US_PRICES,
   GB: row('GB', 'GBP', 249, 119),
   DE: row('DE', 'EUR', 279, 139),
   IN: row('IN', 'INR', 19_900, 9_900),
@@ -75,10 +77,11 @@ export function parsePriceOverrides(raw: string | undefined): Record<string, { m
   const out: Record<string, { monthlyCents: number; smallMonthlyCents: number }> = {};
   for (const part of (raw ?? '').split(',')) {
     const m = part.trim().match(/^([A-Z]{2}):(\d+)\/(\d+)$/);
-    if (!m) continue;
-    const monthly = Number(m[2]);
-    const small = Number(m[3]);
-    if (monthly > 0 && small > 0) out[m[1]] = { monthlyCents: monthly, smallMonthlyCents: small };
+    const [, code, a, b] = m ?? [];
+    if (!code || !a || !b) continue;
+    const monthly = Number(a);
+    const small = Number(b);
+    if (monthly > 0 && small > 0) out[code] = { monthlyCents: monthly, smallMonthlyCents: small };
   }
   return out;
 }
@@ -137,7 +140,7 @@ export function quoteGroup(input: {
   const now = input.now ?? new Date();
   const period = input.period ?? 'MONTH';
   const code = getCountryProfile(input.country).code;
-  const founding = FOUNDING_GROUP_PRICES[code] ?? FOUNDING_GROUP_PRICES.US;
+  const founding: GroupPriceList = FOUNDING_GROUP_PRICES[code] ?? US_PRICES;
   const small = isSmallGroup(input.members);
 
   const existing = input.subscribedAt != null && lockHolds(input.status);
