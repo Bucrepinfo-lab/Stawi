@@ -1,5 +1,10 @@
 # Stawi — session memory / start-here
 
+## 18/11/26 — group prices and founding price lock (awaiting owner merge)
+- Owner approved 18/11/26 ("Agreed, go ahead and fix"): KES 299/month or KES 2,990/year per group; groups of 10 members or fewer KES 149/1,490; first month free; a year ahead = 10 months; founding price locked for groups joining in the first 12 months while they stay subscribed (cancelling ends it); other countries indicative until approved.
+- Code: `packages/core/src/group-pricing.ts` (`quoteGroup`, `FOUNDING_GROUP_PRICES`, `lockHolds`, `isFoundingGroup`), tests `packages/core/test/group-pricing.test.ts`. Plans now carry `billing: PER_GROUP | CUSTOM` (no USD price); the FREE tier is the "Small group" plan (DB enum unchanged). `/api/billing/checkout` sets the amount on the server in the country's currency, takes `period: MONTH | YEAR`, and Stripe uses a yearly interval for YEAR. `subscriptionDueCents` default is KES 29,900.
+- Owner env once launched: `STAWI_FOUNDING_UNTIL` (ISO date, launch + 12 months; unset = window open). Later prices for non-founding groups: `STAWI_GROUP_PRICES="KE:34900/17900"` (monthly/small, cents). Payments is protected: PR left for the owner to merge.
+
 ## 17/11/26 — Play payments policy: no Stawi plan purchases inside the Play app (awaiting owner merge)
 - Owner instruction 17/11/26 ("streamline each to comply with Play Store policies"). Inside the Play app (TWA, package `ke.stawi.app`) Stawi plans are not sold: Kenya is not in Play's alternative-billing programmes. The TWA launch request's `Referer: android-app://…` sets a session cookie `stawi_play_app=1` in the middleware; `/api/billing/checkout` answers 403 and `/subscribe` shows "Stawi plans can't be bought in the Android app." No in-app link steers to outside payment. Group M-Pesa contributions are unaffected (not Stawi's digital service). Helpers in `packages/core/src/android.ts`; tests `packages/core/test/play-app-purchases.test.ts`. Same approach as HarvestHub and Telpen Edu. Payments is protected: PR left for the owner to merge.
 

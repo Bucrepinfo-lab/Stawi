@@ -10,6 +10,7 @@ export * from './notifications';
 export * from './compliance';
 export * from './moderation';
 export * from './plans';
+export * from './group-pricing';
 export * from './tenancy';
 export * from './payments';
 export * from './savings';

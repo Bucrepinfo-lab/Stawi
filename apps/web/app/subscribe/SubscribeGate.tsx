@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { PLAN_ORDER, getPlan, formatCurrencyFor, type PlanTier } from '@stawi/core';
+import { PLAN_ORDER, getPlan, quoteGroup, formatPrice, YEAR_PLAN_MONTHS_PAID, SMALL_GROUP_MAX_MEMBERS, type PlanTier, type BillingPeriod } from '@stawi/core';
 
 export function SubscribeGate() {
   const [country, setCountry] = useState('KE');
   const [selected, setSelected] = useState<PlanTier>('STARTER');
+  const [period, setPeriod] = useState<BillingPeriod>('MONTH');
   const [accepted, setAccepted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
@@ -16,18 +17,24 @@ export function SubscribeGate() {
     ['DE', '🇩🇪 Germany'], ['BR', '🇧🇷 Brazil'],
   ];
 
+  // Display only: the server sets the amount at checkout.
+  function quoteFor(tier: PlanTier) {
+    return quoteGroup({ country, members: tier === 'FREE' ? SMALL_GROUP_MAX_MEMBERS : SMALL_GROUP_MAX_MEMBERS + 1, period });
+  }
+
   function priceLabel(tier: PlanTier): string {
     const p = getPlan(tier);
-    if (p.monthlyUsdCents == null) return 'Custom';
-    if (p.monthlyUsdCents === 0) return 'Free';
-    return `${formatCurrencyFor(p.monthlyUsdCents, country)}/mo`;
+    if (p.billing === 'CUSTOM') return 'Custom';
+    const q = quoteFor(tier);
+    return `${formatPrice(q.amountCents, q.currency)}${period === 'YEAR' ? '/yr' : '/mo'}`;
   }
+
+  const sample = quoteFor('STARTER');
 
   async function activate() {
     if (!accepted) return;
     const p = getPlan(selected);
-    if (p.monthlyUsdCents == null) { setDone('Enterprise is invoiced — our team will be in touch.'); return; }
-    if (p.monthlyUsdCents === 0) { setDone('Free plan activated.'); return; }
+    if (p.billing === 'CUSTOM') { setDone('Enterprise is invoiced — our team will be in touch.'); return; }
 
     setBusy(true);
     setDone(null);
@@ -35,7 +42,7 @@ export function SubscribeGate() {
       const res = await fetch('/api/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tier: selected, country }),
+        body: JSON.stringify({ tier: selected, country, period }),
       });
       const data = await res.json();
       if (data.url) {
@@ -63,6 +70,19 @@ export function SubscribeGate() {
         </select>
       </label>
 
+      <div role="radiogroup" aria-label="Billing period" style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+        {(['MONTH', 'YEAR'] as const).map((p) => (
+          <button key={p} type="button" role="radio" aria-checked={period === p} onClick={() => setPeriod(p)} style={{ padding: '8px 14px', borderRadius: 999, border: `2px solid ${period === p ? 'var(--forest)' : 'var(--line)'}`, background: 'var(--paper)', fontFamily: 'inherit', fontWeight: 600, fontSize: 13, cursor: 'pointer', color: 'var(--ink)' }}>
+            {p === 'MONTH' ? 'Pay monthly' : `Pay a year ahead (${YEAR_PLAN_MONTHS_PAID} months' price)`}
+          </button>
+        ))}
+      </div>
+      <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: '0 0 14px', maxWidth: 640 }}>
+        Priced per group. Groups of {SMALL_GROUP_MAX_MEMBERS} members or fewer pay the small-group price. Groups that join
+        in our first 12 months keep this founding price for as long as they stay subscribed.
+        {sample.approved ? '' : ' Prices for this country are indicative until confirmed.'}
+      </p>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px,1fr))', gap: 14 }}>
         {PLAN_ORDER.map((tier) => {
           const p = getPlan(tier);
@@ -74,7 +94,7 @@ export function SubscribeGate() {
                 {on && <span style={{ color: 'var(--forest)', fontWeight: 700 }}>✓</span>}
               </div>
               <div className="mono" style={{ fontSize: 20, fontWeight: 600, color: 'var(--forest-deep)', marginTop: 6 }}>{priceLabel(tier)}</div>
-              {p.trialDays > 0 && p.monthlyUsdCents ? <div style={{ fontSize: 11.5, color: 'var(--gold-deep)', fontWeight: 700, marginTop: 2 }}>First month free</div> : <div style={{ height: 16 }} />}
+              {p.trialDays > 0 && p.billing === 'PER_GROUP' ? <div style={{ fontSize: 11.5, color: 'var(--gold-deep)', fontWeight: 700, marginTop: 2 }}>First month free</div> : <div style={{ height: 16 }} />}
               <ul style={{ marginTop: 10, paddingLeft: 16, fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.6 }}>
                 {p.features.map((f) => <li key={f}>{f}</li>)}
               </ul>
@@ -93,7 +113,7 @@ export function SubscribeGate() {
       </label>
 
       <button onClick={activate} disabled={!accepted || busy} style={{ marginTop: 18, padding: '14px 26px', borderRadius: 12, border: 'none', background: accepted && !busy ? 'var(--gold)' : 'var(--bone-2)', color: accepted && !busy ? 'var(--forest-deep)' : 'var(--dim)', fontWeight: 700, fontSize: 15, cursor: accepted && !busy ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
-        {busy ? 'Opening secure checkout…' : getPlan(selected).monthlyUsdCents ? 'Start free month' : 'Activate plan'}
+        {busy ? 'Opening secure checkout…' : getPlan(selected).billing === 'PER_GROUP' ? 'Start free month' : 'Contact sales'}
       </button>
 
       {done && (

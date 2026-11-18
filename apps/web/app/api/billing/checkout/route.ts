@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
 import { getUserId } from '@/lib/auth';
-import { getPlan, getCountryProfile, buildSubscriptionCheckout, planPurchasesAllowed, PLAY_APP_COOKIE, PLAY_APP_PURCHASE_UNAVAILABLE, type PlanTier, type CountryCode } from '@stawi/core';
+import { getPlan, getCountryProfile, buildSubscriptionCheckout, quoteGroup, SMALL_GROUP_MAX_MEMBERS, planPurchasesAllowed, PLAY_APP_COOKIE, PLAY_APP_PURCHASE_UNAVAILABLE, type PlanTier, type CountryCode } from '@stawi/core';
 import { startCheckout } from '@/lib/billing';
 
 export const runtime = 'nodejs';
 
 /**
- * POST /api/billing/checkout  Body: { tier, country, tenantRef? }
+ * POST /api/billing/checkout  Body: { tier, country, period?, tenantRef? }
  * Creates a hosted checkout session (Stripe when configured) and returns its URL.
+ * The price is set here on the server from group-pricing.ts (per group, in the
+ * country's currency; the small-group plan pays the small-group price; a year
+ * ahead = 10 months; founding price while the founding window is open).
  */
 export async function POST(req: Request) {
   const userId = await getUserId();
@@ -18,24 +21,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: PLAY_APP_PURCHASE_UNAVAILABLE }, { status: 403 });
   }
 
-  let body: { tier?: PlanTier; country?: string; tenantRef?: string };
+  let body: { tier?: PlanTier; country?: string; period?: string; tenantRef?: string };
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
 
   const tier = (body.tier ?? 'STARTER') as PlanTier;
   const plan = getPlan(tier);
-  if (plan.monthlyUsdCents == null) {
+  if (!plan) return NextResponse.json({ error: 'Unknown plan' }, { status: 400 });
+  if (plan.billing === 'CUSTOM') {
     return NextResponse.json({ error: 'Enterprise is invoiced — contact sales.' }, { status: 400 });
   }
-  if (plan.monthlyUsdCents === 0) {
-    return NextResponse.json({ ok: true, free: true, message: 'Free plan — no payment needed.' });
-  }
 
-  const country = (body.country ?? 'KE') as CountryCode;
-  // Charge in USD (base) for global card processing; localize display elsewhere.
-  const currency = 'USD';
-  void getCountryProfile(country); // validates the code
+  const country = getCountryProfile(body.country ?? 'KE').code as CountryCode;
+  const period = body.period === 'YEAR' ? 'YEAR' : 'MONTH';
+  // The small-group plan is capped at 10 members, so it pays the small-group price.
+  const members = tier === 'FREE' ? SMALL_GROUP_MAX_MEMBERS : SMALL_GROUP_MAX_MEMBERS + 1;
+  const quote = quoteGroup({ country, members, period, env: process.env });
 
-  const checkout = buildSubscriptionCheckout(tier, country, currency, plan.monthlyUsdCents, body.tenantRef ?? userId);
+  const checkout = buildSubscriptionCheckout(tier, country, quote.currency, quote.amountCents, body.tenantRef ?? userId, period === 'YEAR' ? 'year' : 'month');
   const result = await startCheckout(checkout);
 
   if (result.url) return NextResponse.json({ ok: true, url: result.url, reference: result.reference });

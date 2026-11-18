@@ -24,7 +24,7 @@ async function stripeCheckout(req: CheckoutRequest): Promise<CheckoutResult> {
   form.set('line_items[0][quantity]', '1');
   form.set('line_items[0][price_data][currency]', req.currency.toLowerCase());
   form.set('line_items[0][price_data][unit_amount]', String(req.amountCents));
-  form.set('line_items[0][price_data][recurring][interval]', 'month');
+  form.set('line_items[0][price_data][recurring][interval]', req.interval ?? 'month');
   form.set('line_items[0][price_data][product_data][name]', req.description);
 
   const res = await fetch('https://api.stripe.com/v1/checkout/sessions', {
