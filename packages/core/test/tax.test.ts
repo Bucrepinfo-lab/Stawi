@@ -73,7 +73,7 @@ describe('subscription (first month free)', () => {
   it('charges nothing in month 1', () => {
     expect(subscriptionDueCents(1)).toBe(0);
   });
-  it('charges 10 units from month 2', () => {
-    expect(subscriptionDueCents(2)).toBe(10 * 100);
+  it('charges the Kenya group price (KES 299) from month 2', () => {
+    expect(subscriptionDueCents(2)).toBe(29_900);
   });
 });

@@ -126,10 +126,14 @@ export function computeBusinessTaxes(input: BusinessTaxInput): TaxLine[] {
   return lines;
 }
 
-/** Subscription price: 10 currency units/month, first month free. */
+/**
+ * Subscription due this month, first month free. The default is Kenya's group
+ * price (KES 299 = 29,900 cents); see group-pricing.ts for size, year plan,
+ * other countries and the founding lock.
+ */
 export function subscriptionDueCents(
   monthsActive: number,
-  unitPriceCents = 10 * 100,
+  unitPriceCents = 29_900,
 ): number {
   if (monthsActive <= 1) return 0; // first month free
   return unitPriceCents;

@@ -1,0 +1,179 @@
+/**
+ * Stawi group subscription prices (owner decision 18/11/26).
+ *
+ * - Priced per group, in the country's own currency.
+ * - Kenya: KES 299 a month, or KES 2,990 a year paid ahead (a year = 10 months'
+ *   price). A group of 10 members or fewer pays KES 149 (KES 1,490 a year).
+ * - The first month is always free.
+ * - Founding price lock: a group that joins in the first 12 months after launch
+ *   keeps the founding price below for as long as it stays subscribed (its
+ *   subscription is never CANCELLED). Later price changes apply only to groups
+ *   that join after the founding window, through STAWI_GROUP_PRICES.
+ * - Kenya is approved. Every other country is INDICATIVE (near the same value)
+ *   until the owner approves it.
+ *
+ * Money is integer minor units (cents). Nothing here moves money: it only says
+ * what a group would be asked to pay.
+ */
+
+import { getCountryProfile } from './compliance';
+
+/** A group of this many members or fewer pays the small-group price. */
+export const SMALL_GROUP_MAX_MEMBERS = 10;
+/** A year paid ahead costs this many months' price (two months free). */
+export const YEAR_PLAN_MONTHS_PAID = 10;
+/** Groups that join within this many months after launch keep the founding price. */
+export const FOUNDING_MONTHS = 12;
+
+export type BillingPeriod = 'MONTH' | 'YEAR';
+
+export interface GroupPriceList {
+  country: string;
+  currency: string;
+  /** Monthly price for a group of more than 10 members. */
+  monthlyCents: number;
+  /** Monthly price for a group of 10 members or fewer. */
+  smallMonthlyCents: number;
+  /** True once the owner has approved this country's price. */
+  approved: boolean;
+}
+
+const row = (country: string, currency: string, monthly: number, small: number, approved = false): GroupPriceList => ({
+  country,
+  currency,
+  monthlyCents: monthly,
+  smallMonthlyCents: small,
+  approved,
+});
+
+/** The founding price list. Changing a founding price breaks the lock: don't. */
+export const FOUNDING_GROUP_PRICES: Record<string, GroupPriceList> = {
+  KE: row('KE', 'KES', 29_900, 14_900, true),
+  NG: row('NG', 'NGN', 350_000, 175_000),
+  ZA: row('ZA', 'ZAR', 4_500, 2_200),
+  GH: row('GH', 'GHS', 3_000, 1_500),
+  US: row('US', 'USD', 299, 149),
+  GB: row('GB', 'GBP', 249, 119),
+  DE: row('DE', 'EUR', 279, 139),
+  IN: row('IN', 'INR', 19_900, 9_900),
+  AU: row('AU', 'AUD', 449, 219),
+  CA: row('CA', 'CAD', 399, 199),
+  AE: row('AE', 'AED', 1_099, 549),
+  BR: row('BR', 'BRL', 1_490, 740),
+};
+
+export function isSmallGroup(members: number): boolean {
+  return members <= SMALL_GROUP_MAX_MEMBERS;
+}
+
+/**
+ * Optional later prices for groups that joined after the founding window:
+ * STAWI_GROUP_PRICES="KE:34900/17900,NG:400000/200000" (monthly/small, cents).
+ * Bad entries are ignored. Founding groups never see these.
+ */
+export function parsePriceOverrides(raw: string | undefined): Record<string, { monthlyCents: number; smallMonthlyCents: number }> {
+  const out: Record<string, { monthlyCents: number; smallMonthlyCents: number }> = {};
+  for (const part of (raw ?? '').split(',')) {
+    const m = part.trim().match(/^([A-Z]{2}):(\d+)\/(\d+)$/);
+    if (!m) continue;
+    const monthly = Number(m[2]);
+    const small = Number(m[3]);
+    if (monthly > 0 && small > 0) out[m[1]] = { monthlyCents: monthly, smallMonthlyCents: small };
+  }
+  return out;
+}
+
+/** End of the founding window (STAWI_FOUNDING_UNTIL, an ISO date). Unset = still open. */
+export function foundingUntil(env: Record<string, string | undefined> = {}): Date | null {
+  const raw = env.STAWI_FOUNDING_UNTIL?.trim();
+  if (!raw) return null;
+  const t = Date.parse(raw);
+  return Number.isNaN(t) ? null : new Date(t);
+}
+
+/** A group whose subscription started before the founding window closed is a founding group. */
+export function isFoundingGroup(subscribedAt: Date | null | undefined, env: Record<string, string | undefined> = {}): boolean {
+  const until = foundingUntil(env);
+  if (!until) return true;
+  return !!subscribedAt && subscribedAt.getTime() < until.getTime();
+}
+
+export type SubscriptionStatus = 'TRIAL' | 'ACTIVE' | 'PAST_DUE' | 'CANCELLED';
+
+/** The founding price holds while the group stays subscribed; cancelling ends it. */
+export function lockHolds(status: SubscriptionStatus | null | undefined): boolean {
+  return status === 'TRIAL' || status === 'ACTIVE' || status === 'PAST_DUE';
+}
+
+export interface GroupQuote {
+  country: string;
+  currency: string;
+  period: BillingPeriod;
+  small: boolean;
+  /** Price per month for this group. */
+  monthlyCents: number;
+  /** Price of the chosen period (a month, or a year = 10 months). */
+  amountCents: number;
+  /** True when the founding price lock applies. */
+  locked: boolean;
+  approved: boolean;
+}
+
+/**
+ * The price a group pays. `subscribedAt`/`status` describe the group's
+ * subscription (none yet = a new group, which gets the founding price while the
+ * window is open).
+ */
+export function quoteGroup(input: {
+  country: string;
+  members: number;
+  period?: BillingPeriod;
+  subscribedAt?: Date | null;
+  status?: SubscriptionStatus | null;
+  now?: Date;
+  env?: Record<string, string | undefined>;
+}): GroupQuote {
+  const env = input.env ?? {};
+  const now = input.now ?? new Date();
+  const period = input.period ?? 'MONTH';
+  const code = getCountryProfile(input.country).code;
+  const founding = FOUNDING_GROUP_PRICES[code] ?? FOUNDING_GROUP_PRICES.US;
+  const small = isSmallGroup(input.members);
+
+  const existing = input.subscribedAt != null && lockHolds(input.status);
+  const isFounding = existing ? isFoundingGroup(input.subscribedAt, env) : isFoundingGroup(now, env);
+  const override = isFounding ? undefined : parsePriceOverrides(env.STAWI_GROUP_PRICES)[code];
+  const list = override ? { ...founding, ...override } : founding;
+
+  const monthlyCents = small ? list.smallMonthlyCents : list.monthlyCents;
+  return {
+    country: founding.country,
+    currency: founding.currency,
+    period,
+    small,
+    monthlyCents,
+    amountCents: period === 'YEAR' ? monthlyCents * YEAR_PLAN_MONTHS_PAID : monthlyCents,
+    locked: isFounding,
+    approved: founding.approved,
+  };
+}
+
+/** What is due this month: nothing in the first (free) month, else the quote. */
+export function groupAmountDueCents(monthsActive: number, quote: GroupQuote): number {
+  if (monthsActive <= 1) return 0;
+  return quote.amountCents;
+}
+
+/** "KES 299", "$2.99": whole units when the price is whole, else two decimals. */
+export function formatPrice(cents: number, currency: string): string {
+  const whole = cents % 100 === 0;
+  const n = (cents / 100).toLocaleString('en-US', { minimumFractionDigits: whole ? 0 : 2, maximumFractionDigits: whole ? 0 : 2 });
+  return `${currency} ${n}`;
+}
+
+/** One line for a pricing page: "KES 299 a month or KES 2,990 a year". */
+export function priceLine(quote: GroupQuote): string {
+  const month = formatPrice(quote.monthlyCents, quote.currency);
+  const year = formatPrice(quote.monthlyCents * YEAR_PLAN_MONTHS_PAID, quote.currency);
+  return `${month} a month or ${year} a year`;
+}

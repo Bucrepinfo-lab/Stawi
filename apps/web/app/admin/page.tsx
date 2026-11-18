@@ -38,7 +38,7 @@ export default function AdminPage() {
   const notifications = [
     notifyPaymentConfirmed('Joseph Kamau', 3_800_000, 'SGR7XYZ123'),
     ...notificationsForStock(stock),
-    notifySubscriptionDue('Boda Investors', 1000),
+    notifySubscriptionDue('Boda Investors', 29900),
   ];
 
   return (

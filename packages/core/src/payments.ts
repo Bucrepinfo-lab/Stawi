@@ -55,6 +55,8 @@ export interface CheckoutRequest {
   country: CountryCode;
   description: string;
   customerRef: string; // tenant or group id
+  /** Billing interval for recurring rails (default month). */
+  interval?: 'month' | 'year';
 }
 
 export type CheckoutStatus = 'initiated' | 'pending' | 'succeeded' | 'failed';
@@ -71,9 +73,8 @@ export interface CheckoutResult {
 }
 
 /**
- * Build a checkout request for a subscription plan in a country.
- * The plan's base USD price is used as the charge amount (the app converts to the
- * local currency at the FX rate of record before calling the provider).
+ * Build a checkout request for a subscription plan in a country. The amount is
+ * the group price in the country's currency (see group-pricing.ts).
  */
 export function buildSubscriptionCheckout(
   tier: PlanTier,
@@ -81,9 +82,11 @@ export function buildSubscriptionCheckout(
   currency: string,
   amountCentsInCurrency: number,
   customerRef: string,
+  interval: 'month' | 'year' = 'month',
 ): CheckoutRequest {
   const plan = getPlan(tier);
   return {
+    interval,
     provider: recommendProvider(country),
     amountCents: amountCentsInCurrency,
     currency,

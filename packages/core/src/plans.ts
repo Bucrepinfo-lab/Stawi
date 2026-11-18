@@ -1,9 +1,10 @@
 /**
  * Global subscription plans for the multi-tenant SaaS.
  *
- * Prices are denominated in USD minor units (cents) as the base and converted /
- * localized per country at display time. The legacy "10 units, first month free"
- * maps to the Starter tier. Every paid plan's first month is free (trial).
+ * A plan sets limits and features. The price is per group, in the country's
+ * own currency, from `group-pricing.ts` (owner decision 18/11/26): KES 299 a
+ * month per group, KES 149 for a group of 10 members or fewer, a year ahead =
+ * 10 months, first month free, founding price locked. Enterprise is invoiced.
  */
 
 export type PlanTier = 'FREE' | 'STARTER' | 'GROWTH' | 'ENTERPRISE';
@@ -11,9 +12,9 @@ export type PlanTier = 'FREE' | 'STARTER' | 'GROWTH' | 'ENTERPRISE';
 export interface Plan {
   tier: PlanTier;
   name: string;
-  /** Base monthly price in USD cents. 0 = free. ENTERPRISE = custom (null). */
-  monthlyUsdCents: number | null;
-  /** Max members per tenant (null = unlimited). */
+  /** PER_GROUP = priced per group by group-pricing.ts; CUSTOM = invoiced. */
+  billing: 'PER_GROUP' | 'CUSTOM';
+  /** Max members per group (null = unlimited). */
   memberLimit: number | null;
   /** Max sub-groups/businesses per tenant. */
   groupLimit: number | null;
@@ -22,20 +23,21 @@ export interface Plan {
 }
 
 export const PLANS: Record<PlanTier, Plan> = {
+  // The tier is still called FREE in the database; it is now the small-group plan.
   FREE: {
-    tier: 'FREE', name: 'Free', monthlyUsdCents: 0, memberLimit: 10, groupLimit: 1, trialDays: 0,
+    tier: 'FREE', name: 'Small group', billing: 'PER_GROUP', memberLimit: 10, groupLimit: 1, trialDays: 30,
     features: ['1 group', 'Up to 10 members', 'Table banking', 'Capital-ratio tracking'],
   },
   STARTER: {
-    tier: 'STARTER', name: 'Starter', monthlyUsdCents: 1000, memberLimit: 50, groupLimit: 3, trialDays: 30,
+    tier: 'STARTER', name: 'Group', billing: 'PER_GROUP', memberLimit: 50, groupLimit: 3, trialDays: 30,
     features: ['Up to 3 groups', '50 members', 'M-Pesa & card payments', 'Receipts', 'Business matching'],
   },
   GROWTH: {
-    tier: 'GROWTH', name: 'Growth', monthlyUsdCents: 4900, memberLimit: 250, groupLimit: 15, trialDays: 30,
+    tier: 'GROWTH', name: 'Growth', billing: 'PER_GROUP', memberLimit: 250, groupLimit: 15, trialDays: 30,
     features: ['Up to 15 groups', '250 members', 'Accounting & tax auto-calc', 'Notifications & SMS', 'Formalization wizard'],
   },
   ENTERPRISE: {
-    tier: 'ENTERPRISE', name: 'Enterprise', monthlyUsdCents: null, memberLimit: null, groupLimit: null, trialDays: 30,
+    tier: 'ENTERPRISE', name: 'Enterprise', billing: 'CUSTOM', memberLimit: null, groupLimit: null, trialDays: 30,
     features: ['Unlimited groups & members', 'Multi-tier admin hierarchy', 'SSO & audit logs', 'Dedicated support & SLA', 'Custom compliance packs'],
   },
 };
@@ -44,14 +46,6 @@ export const PLAN_ORDER: PlanTier[] = ['FREE', 'STARTER', 'GROWTH', 'ENTERPRISE'
 
 export function getPlan(tier: PlanTier): Plan {
   return PLANS[tier];
-}
-
-/** Amount due this month: 0 during the trial (first month), else the plan price. */
-export function amountDueUsdCents(tier: PlanTier, monthsActive: number): number {
-  const plan = PLANS[tier];
-  if (plan.monthlyUsdCents == null) return 0; // enterprise = custom/invoiced
-  if (plan.trialDays > 0 && monthsActive <= 1) return 0; // first month free
-  return plan.monthlyUsdCents;
 }
 
 /** Whether a tenant with `count` members/groups is within its plan limit. */

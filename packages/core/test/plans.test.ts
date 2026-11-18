@@ -1,19 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { getPlan, amountDueUsdCents, withinMemberLimit, withinGroupLimit, PLAN_ORDER } from '../src/plans';
+import { getPlan, withinMemberLimit, withinGroupLimit, PLAN_ORDER } from '../src/plans';
 
 describe('plans', () => {
   it('has four tiers in order', () => {
     expect(PLAN_ORDER).toEqual(['FREE', 'STARTER', 'GROWTH', 'ENTERPRISE']);
   });
-  it('first month free, then charges', () => {
-    expect(amountDueUsdCents('STARTER', 1)).toBe(0);
-    expect(amountDueUsdCents('STARTER', 2)).toBe(1000);
+  it('prices every plan per group except Enterprise (invoiced)', () => {
+    expect(getPlan('FREE').billing).toBe('PER_GROUP');
+    expect(getPlan('STARTER').billing).toBe('PER_GROUP');
+    expect(getPlan('GROWTH').billing).toBe('PER_GROUP');
+    expect(getPlan('ENTERPRISE').billing).toBe('CUSTOM');
   });
-  it('free plan is always 0', () => {
-    expect(amountDueUsdCents('FREE', 5)).toBe(0);
+  it('every plan starts with a free month', () => {
+    for (const t of PLAN_ORDER) expect(getPlan(t).trialDays).toBe(30);
   });
-  it('enterprise is custom-billed (0 via app)', () => {
-    expect(amountDueUsdCents('ENTERPRISE', 3)).toBe(0);
+  it('the small-group plan is the FREE tier, up to 10 members', () => {
+    expect(getPlan('FREE').name).toBe('Small group');
+    expect(getPlan('FREE').memberLimit).toBe(10);
   });
   it('enforces limits', () => {
     expect(withinMemberLimit('FREE', 10)).toBe(true);
