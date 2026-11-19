@@ -38,6 +38,7 @@ export async function POST(req: Request) {
         ok: result.ok,
         mpesaRef: result.mpesaReceipt,
         paidKes: result.amount,
+        provider: 'mpesa',
       });
       if (plan) console.info('[mpesa] plan payment', result.checkoutRequestId, plan);
     }

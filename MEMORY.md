@@ -1,5 +1,13 @@
 # Stawi — session memory / start-here
 
+## 19/11/26 — Local way first in every country; card later via Paddle (owner standing order)
+- Owner 19/11/26: "Always, we go for the most convenient mode of payment... Anything to do with the card, it comes later"; when a card is used, Paddle takes it and remits the VAT. Local direct sales carry Telpen's VAT (owner accepted).
+- `packages/core/src/payment-rails.ts` v4: `LOCAL_METHOD` (KE M-Pesa; UG TZ RW GH ZM MW MZ CM CI SN BJ BF CG GA SL mobile money via pawaPay; NG bank transfer/USSD and ZA EFT via Paystack), `subscriptionRails({country, switches, localPriceApproved})` best first, full `PADDLE_BLOCKED_COUNTRIES`.
+- `/api/billing/mpesa` became `/api/billing/local`: GET lists groups (chairman/treasurer) whose country has an open local way, with its name; POST routes by the group's country: Daraja STK, pawaPay deposit to the payer's own phone, or Paystack's page (redirect). `apps/web/lib/local-providers.ts` (same module as SellFindConnect/HarvestHub).
+- New public callbacks `/api/billing/webhook/pawapay` (deposit re-read from pawaPay) and `/api/billing/webhook/paystack` (HMAC-SHA512 signature, then `/transaction/verify`); both settle through `settlePlanPayment` with provider + currency, full amount only, once.
+- `PlanPayment.provider` (default "mpesa"), additive. SubscribeGate shows "Pay by <local way>" first, card second.
+- A local way opens only with its keys (`PAWAPAY_ENABLED`/`PAWAPAY_API_TOKEN`/`PAWAPAY_ENV`, `PAYSTACK_ENABLED`/`PAYSTACK_SECRET_KEY`) AND an owner-approved price for that country (only KE today). Owner: approve the price table, open pawaPay/Paystack accounts.
+
 ## 19/11/26 — M-Pesa for the Stawi plan (owner: "Yes, build M-Pesa for Stawi and merge all")
 - A group's chairman or treasurer pays the plan by M-Pesa (Daraja STK to their own verified phone) from `/subscribe`: in Kenya "Pay by M-Pesa" comes first (group picker when they run more than one), "Pay by card" (Paddle) second.
 - `POST /api/billing/mpesa` sets the price on the server (`quoteGroup` with the group's real member count; small-group plan refused over 10 members; KES whole shillings only) and records a PENDING `PlanPayment`. `GET` lists the Kenyan groups the person may pay for.
