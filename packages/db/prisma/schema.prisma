@@ -197,13 +197,17 @@ model Subscription {
   createdAt    DateTime  @default(now())
 }
 
-/// A plan payment asked of M-Pesa (owner decision 19/11/26: M-Pesa leads in
-/// Kenya). PENDING until Safaricom's callback confirms it; the subscription only
-/// moves on CONFIRMED, once. Additive: a new table, no change to existing ones.
+/// A plan payment asked of the way most people in the group's country pay
+/// (owner standing order 19/11/26): M-Pesa (Daraja), mobile money (pawaPay) or
+/// bank transfer / USSD / EFT (Paystack). PENDING until the provider confirms;
+/// the subscription only moves on CONFIRMED, once. `checkoutRequestId` holds
+/// the provider's reference (Daraja CheckoutRequestID, pawaPay depositId or
+/// Paystack reference).
 model PlanPayment {
   id                String        @id @default(cuid())
   group             Group         @relation(fields: [groupId], references: [id], onDelete: Cascade)
   groupId           String
+  provider          String        @default("mpesa") // mpesa | pawapay | paystack
   checkoutRequestId String        @unique
   tier              PlanTier
   period            String        // MONTH | YEAR

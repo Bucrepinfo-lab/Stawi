@@ -570,9 +570,13 @@ export async function createPlanPayment(
     period: PlanPeriod;
     amountCents: number;
     requestedByUserId: string;
+    provider?: 'mpesa' | 'pawapay' | 'paystack';
+    currency?: string;
   },
 ): Promise<void> {
-  await prisma.planPayment.create({ data: { ...input, currency: 'KES' } });
+  await prisma.planPayment.create({
+    data: { ...input, provider: input.provider ?? 'mpesa', currency: (input.currency ?? 'KES').toUpperCase() },
+  });
 }
 
 /**
@@ -583,14 +587,26 @@ export async function createPlanPayment(
  */
 export async function settlePlanPayment(
   prisma: PrismaClient,
-  input: { checkoutRequestId: string; ok: boolean; mpesaRef?: string; paidKes?: number; now?: Date },
+  input: {
+    checkoutRequestId: string;
+    ok: boolean;
+    mpesaRef?: string;
+    /** Amount the provider confirmed, in major units (shillings, cedis, naira...). */
+    paidKes?: number;
+    /** Currency the provider confirmed; must match the one asked for when given. */
+    paidCurrency?: string | null;
+    provider?: 'mpesa' | 'pawapay' | 'paystack';
+    now?: Date;
+  },
 ): Promise<'confirmed' | 'failed' | 'short' | 'already' | null> {
   const now = input.now ?? new Date();
   return prisma.$transaction(async (tx) => {
     const payment = await tx.planPayment.findUnique({ where: { checkoutRequestId: input.checkoutRequestId } });
     if (!payment) return null;
+    if (input.provider && payment.provider !== input.provider) return null;
     if (payment.status !== 'PENDING') return 'already';
-    const covered = input.ok && planPaymentCovers(input.paidKes, payment.amountCents);
+    const currencyOk = !input.paidCurrency || input.paidCurrency.toUpperCase() === payment.currency.toUpperCase();
+    const covered = input.ok && currencyOk && planPaymentCovers(input.paidKes, payment.amountCents);
     const claimed = await tx.planPayment.updateMany({
       where: { id: payment.id, status: 'PENDING' },
       data: covered
@@ -616,7 +632,7 @@ export async function settlePlanPayment(
         planTier: payment.tier,
         status: 'ACTIVE',
         unitPriceCents: monthlyCents,
-        currency: 'KES',
+        currency: payment.currency,
         currentPeriodEnd: periodEnd,
       },
       update: { planTier: payment.tier, status: 'ACTIVE', currentPeriodEnd: periodEnd },
