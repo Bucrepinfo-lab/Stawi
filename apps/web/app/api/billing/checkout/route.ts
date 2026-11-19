@@ -38,10 +38,12 @@ export async function POST(req: Request) {
   const quote = quoteGroup({ country, members, period, env: process.env });
   const tenantRef = body.tenantRef ?? userId;
 
-  // Owner rule 19/11/26: Paddle first in every country it sells to (Kenya
-  // included); it is the merchant of record and remits the tax. Hand the
-  // browser Paddle's public checkout details; the card is typed into Paddle,
-  // never into Stawi. Where Paddle can't sell, the country's own rail below.
+  // Owner rules 19/11/26: the most convenient local method leads where we can
+  // charge it (M-Pesa in Kenya), Paddle second there and first elsewhere it
+  // sells. Stawi cannot yet charge M-Pesa for the plan itself (that needs a
+  // pending-plan-payment record), so where Paddle sells it is the way for now.
+  // Paddle is the merchant of record and remits the tax; the card is typed
+  // into Paddle, never into Stawi. Where Paddle can't sell, the rail below.
   const paddle = paddleConfig(process.env, STAWI_PADDLE_PRICES);
   if (paddle && paddleSellsIn(country)) {
     return NextResponse.json({
