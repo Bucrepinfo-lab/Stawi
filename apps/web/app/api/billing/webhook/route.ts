@@ -13,7 +13,11 @@ export async function POST(req: Request) {
   const sig = req.headers.get('stripe-signature') ?? '';
   const payload = await req.text();
 
-  if (secret) {
+  // Fail closed: without the signing secret nobody can prove an event came
+  // from Stripe, so nothing is activated (fixed 19/11/26; it used to accept
+  // unsigned events). Cards now go through Paddle (/api/billing/webhook/paddle).
+  if (!secret) return NextResponse.json({ error: 'not configured' }, { status: 503 });
+  {
     const parts = Object.fromEntries(sig.split(',').map((kv) => kv.split('=')));
     const t = parts['t'];
     const v1 = parts['v1'];

@@ -13,6 +13,7 @@ export * from './plans';
 export * from './group-pricing';
 export * from './tenancy';
 export * from './payments';
+export * from './paddle';
 export * from './savings';
 export * from './credit';
 export * from './graduation';

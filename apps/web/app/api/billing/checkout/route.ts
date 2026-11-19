@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getUserId } from '@/lib/auth';
-import { getPlan, getCountryProfile, buildSubscriptionCheckout, quoteGroup, SMALL_GROUP_MAX_MEMBERS, planPurchasesAllowed, PLAY_APP_COOKIE, PLAY_APP_PURCHASE_UNAVAILABLE, type PlanTier, type CountryCode } from '@stawi/core';
+import { getPlan, getCountryProfile, buildSubscriptionCheckout, quoteGroup, SMALL_GROUP_MAX_MEMBERS, planPurchasesAllowed, PLAY_APP_COOKIE, PLAY_APP_PURCHASE_UNAVAILABLE, paddleConfig, stawiPaddleKey, STAWI_PADDLE_PRICES, type PlanTier, type CountryCode } from '@stawi/core';
 import { startCheckout } from '@/lib/billing';
 
 export const runtime = 'nodejs';
@@ -36,8 +36,25 @@ export async function POST(req: Request) {
   // The small-group plan is capped at 10 members, so it pays the small-group price.
   const members = tier === 'FREE' ? SMALL_GROUP_MAX_MEMBERS : SMALL_GROUP_MAX_MEMBERS + 1;
   const quote = quoteGroup({ country, members, period, env: process.env });
+  const tenantRef = body.tenantRef ?? userId;
 
-  const checkout = buildSubscriptionCheckout(tier, country, quote.currency, quote.amountCents, body.tenantRef ?? userId, period === 'YEAR' ? 'year' : 'month');
+  // Owner decision 19/11/26: cards go through Paddle as merchant of record (it
+  // handles the tax). When Paddle is on, hand the browser Paddle's public
+  // checkout details; the card is typed into Paddle, never into Stawi.
+  const paddle = paddleConfig(process.env, STAWI_PADDLE_PRICES);
+  if (paddle) {
+    return NextResponse.json({
+      ok: true,
+      card: {
+        environment: paddle.environment,
+        clientToken: paddle.clientToken,
+        priceId: paddle.prices[stawiPaddleKey(tier === 'FREE', period)],
+        customData: { tenantRef },
+      },
+    });
+  }
+
+  const checkout = buildSubscriptionCheckout(tier, country, quote.currency, quote.amountCents, tenantRef, period === 'YEAR' ? 'year' : 'month');
   const result = await startCheckout(checkout);
 
   if (result.url) return NextResponse.json({ ok: true, url: result.url, reference: result.reference });

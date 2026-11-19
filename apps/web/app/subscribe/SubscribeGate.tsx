@@ -3,6 +3,39 @@
 import { useState } from 'react';
 import { PLAN_ORDER, getPlan, quoteGroup, formatPrice, YEAR_PLAN_MONTHS_PAID, SMALL_GROUP_MAX_MEMBERS, type PlanTier, type BillingPeriod } from '@stawi/core';
 
+type PaddleJs = {
+  Environment: { set: (environment: string) => void };
+  Initialize: (options: { token: string }) => void;
+  Checkout: { open: (options: { items: { priceId: string; quantity: number }[]; customData: Record<string, string> }) => void };
+};
+type CardCheckout = { environment: 'sandbox' | 'production'; clientToken: string; priceId: string; customData: Record<string, string> };
+
+let paddleReady: Promise<PaddleJs> | null = null;
+
+/** Loads Paddle.js once. Paddle is the seller for card payments and handles the tax. */
+function loadPaddle(card: CardCheckout): Promise<PaddleJs> {
+  if (!paddleReady) {
+    paddleReady = new Promise<PaddleJs>((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
+      script.async = true;
+      script.onload = () => {
+        const paddle = (window as unknown as { Paddle?: PaddleJs }).Paddle;
+        if (!paddle) return reject(new Error('The card checkout did not load.'));
+        if (card.environment === 'sandbox') paddle.Environment.set('sandbox');
+        paddle.Initialize({ token: card.clientToken });
+        resolve(paddle);
+      };
+      script.onerror = () => {
+        paddleReady = null;
+        reject(new Error('The card checkout did not load.'));
+      };
+      document.head.appendChild(script);
+    });
+  }
+  return paddleReady;
+}
+
 export function SubscribeGate() {
   const [country, setCountry] = useState('KE');
   const [selected, setSelected] = useState<PlanTier>('STARTER');
@@ -45,6 +78,13 @@ export function SubscribeGate() {
         body: JSON.stringify({ tier: selected, country, period }),
       });
       const data = await res.json();
+      if (data.card) {
+        const card = data.card as CardCheckout;
+        const paddle = await loadPaddle(card);
+        paddle.Checkout.open({ items: [{ priceId: card.priceId, quantity: 1 }], customData: card.customData });
+        setDone(`${p.name}: complete the card payment in the Paddle window. Card payments are processed by Paddle, our online reseller, which handles any tax due.`);
+        return;
+      }
       if (data.url) {
         window.location.href = data.url; // hosted Stripe Checkout
         return;

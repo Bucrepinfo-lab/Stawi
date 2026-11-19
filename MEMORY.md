@@ -1,5 +1,12 @@
 # Stawi — session memory / start-here
 
+## 19/11/26 — Cards through Paddle (merchant of record); Stripe webhook fails closed (awaiting owner merge)
+- Owner 19/11/26: "we had agreed we use firms like Paddle that do an auto remittance of the tax", chose Paddle + M-Pesa for all five products. Cards: Paddle is the seller and charges, files and remits the tax. M-Pesa: direct sale, no VAT until Telpen Systems Ltd is VAT-registered.
+- `packages/core/src/paddle.ts` (browser-safe: config, signature check with a server-supplied HMAC, paid item) + tests. `/api/billing/checkout` returns Paddle's public checkout details when `PADDLE_ENABLED=true` (keys `PADDLE_PRICE_{SMALL,GROUP}_{MONTH,YEAR}`, `PADDLE_CLIENT_TOKEN`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_ENV`); `SubscribeGate` opens Paddle's overlay with `customData.tenantRef`. Webhook `/api/billing/webhook/paddle` (signed, idempotent activation; small-group price refused for groups over 10).
+- Fixed: `/api/billing/webhook` (Stripe) accepted UNSIGNED events when `STRIPE_WEBHOOK_SECRET` was unset; anyone could activate a subscription. It now refuses (503) without the secret.
+- Not built yet: M-Pesa for the Stawi plan itself (the `MPESA` rail in `lib/billing.ts` is still a `pending` stub; group contributions use Daraja separately). Needs a pending-subscription-payment record (schema, owner approval).
+- Owner steps: Paddle website approval for getstawi.com; four Paddle prices (recurring, 30-day trial for "first month free"; likely USD); notification destination `https://getstawi.com/api/billing/webhook/paddle`; Fly secrets; `PADDLE_ENABLED=true`.
+
 ## 18/11/26 — group prices and founding price lock (awaiting owner merge)
 - Owner approved 18/11/26 ("Agreed, go ahead and fix"): KES 299/month or KES 2,990/year per group; groups of 10 members or fewer KES 149/1,490; first month free; a year ahead = 10 months; founding price locked for groups joining in the first 12 months while they stay subscribed (cancelling ends it); other countries indicative until approved.
 - Code: `packages/core/src/group-pricing.ts` (`quoteGroup`, `FOUNDING_GROUP_PRICES`, `lockHolds`, `isFoundingGroup`), tests `packages/core/test/group-pricing.test.ts`. Plans now carry `billing: PER_GROUP | CUSTOM` (no USD price); the FREE tier is the "Small group" plan (DB enum unchanged). `/api/billing/checkout` sets the amount on the server in the country's currency, takes `period: MONTH | YEAR`, and Stripe uses a yearly interval for YEAR. `subscriptionDueCents` default is KES 29,900.
