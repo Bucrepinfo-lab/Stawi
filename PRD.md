@@ -313,7 +313,8 @@ packages/db   Prisma schema (13 models / 10 enums) + tenant-scoped repository + 
 | **Clerk** auth + `/sign-in` `/sign-up` + middleware | wired |
 | **Clerk webhook** (org→Tenant, membership→TenantMember, svix verify) | live on `CLERK_WEBHOOK_SECRET` |
 | **M-Pesa Daraja** STK push + callback (pending→confirmed persistence) | live on Daraja keys |
-| **Stripe** Checkout (subscription, 30-day trial) + webhook (HMAC verify) | live on `STRIPE_SECRET_KEY` |
+| **Paddle** card checkout (merchant of record; Paddle remits the tax, owner decision 19/11/26) + signed webhook `/api/billing/webhook/paddle` | live on `PADDLE_ENABLED=true` + keys |
+| **Stripe** Checkout (subscription, 30-day trial) + webhook (HMAC verify, refuses without `STRIPE_WEBHOOK_SECRET`) | dormant; Paddle is the card rail when enabled |
 | **Paystack / Flutterwave** | routed by country, stubs until keyed |
 | **Africa's Talking** SMS acknowledgements | live on AT keys |
 | **Postgres (Prisma)** tenant-scoped queries + `rls.sql` | live on `DATABASE_URL` |
