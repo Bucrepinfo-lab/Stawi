@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getUserId } from '@/lib/auth';
-import { getPlan, getCountryProfile, buildSubscriptionCheckout, quoteGroup, SMALL_GROUP_MAX_MEMBERS, planPurchasesAllowed, PLAY_APP_COOKIE, PLAY_APP_PURCHASE_UNAVAILABLE, paddleConfig, stawiPaddleKey, STAWI_PADDLE_PRICES, type PlanTier, type CountryCode } from '@stawi/core';
+import { getPlan, getCountryProfile, buildSubscriptionCheckout, quoteGroup, SMALL_GROUP_MAX_MEMBERS, planPurchasesAllowed, PLAY_APP_COOKIE, PLAY_APP_PURCHASE_UNAVAILABLE, paddleConfig, paddleSellsIn, stawiPaddleKey, STAWI_PADDLE_PRICES, type PlanTier, type CountryCode } from '@stawi/core';
 import { startCheckout } from '@/lib/billing';
 
 export const runtime = 'nodejs';
@@ -38,11 +38,12 @@ export async function POST(req: Request) {
   const quote = quoteGroup({ country, members, period, env: process.env });
   const tenantRef = body.tenantRef ?? userId;
 
-  // Owner decision 19/11/26: cards go through Paddle as merchant of record (it
-  // handles the tax). When Paddle is on, hand the browser Paddle's public
-  // checkout details; the card is typed into Paddle, never into Stawi.
+  // Owner rule 19/11/26: Paddle first in every country it sells to (Kenya
+  // included); it is the merchant of record and remits the tax. Hand the
+  // browser Paddle's public checkout details; the card is typed into Paddle,
+  // never into Stawi. Where Paddle can't sell, the country's own rail below.
   const paddle = paddleConfig(process.env, STAWI_PADDLE_PRICES);
-  if (paddle) {
+  if (paddle && paddleSellsIn(country)) {
     return NextResponse.json({
       ok: true,
       card: {
