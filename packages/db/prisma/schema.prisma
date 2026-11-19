@@ -98,6 +98,7 @@ model Group {
   charter       GroupCharter?
   meetings      Meeting[]
   statements    MonthlyStatement[]
+  planPayments  PlanPayment[]
   salesRepId    String?
   salesRep      SalesAgent? @relation(fields: [salesRepId], references: [id])
 
@@ -194,6 +195,27 @@ model Subscription {
   currentPeriodEnd DateTime?
   termsAcceptedAt DateTime?
   createdAt    DateTime  @default(now())
+}
+
+/// A plan payment asked of M-Pesa (owner decision 19/11/26: M-Pesa leads in
+/// Kenya). PENDING until Safaricom's callback confirms it; the subscription only
+/// moves on CONFIRMED, once. Additive: a new table, no change to existing ones.
+model PlanPayment {
+  id                String        @id @default(cuid())
+  group             Group         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId           String
+  checkoutRequestId String        @unique
+  tier              PlanTier
+  period            String        // MONTH | YEAR
+  amountCents       Int
+  currency          String        @default("KES")
+  status            PaymentStatus @default(PENDING)
+  mpesaRef          String?
+  requestedByUserId String
+  createdAt         DateTime      @default(now())
+  confirmedAt       DateTime?
+
+  @@index([groupId, status])
 }
 
 // ───────────────────────── Business / accounting (Pillar 3) ─────────────

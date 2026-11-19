@@ -1,5 +1,12 @@
 # Stawi — session memory / start-here
 
+## 19/11/26 — M-Pesa for the Stawi plan (owner: "Yes, build M-Pesa for Stawi and merge all")
+- A group's chairman or treasurer pays the plan by M-Pesa (Daraja STK to their own verified phone) from `/subscribe`: in Kenya "Pay by M-Pesa" comes first (group picker when they run more than one), "Pay by card" (Paddle) second.
+- `POST /api/billing/mpesa` sets the price on the server (`quoteGroup` with the group's real member count; small-group plan refused over 10 members; KES whole shillings only) and records a PENDING `PlanPayment`. `GET` lists the Kenyan groups the person may pay for.
+- New table `PlanPayment` (additive; in `rls.sql`'s group-scoped list). The M-Pesa callback runs `settlePlanPayment`: a full, successful payment confirms it once and extends the group's `Subscription` (ACTIVE, `currentPeriodEnd` +1 or +12 months after whatever runs, free first month included); short or failed payments unlock nothing.
+- `packages/core/src/plan-payment.ts` (`planPeriodEndAfterPayment`, `planPaymentCovers`, `PLAN_PAYER_ROLES`) + tests.
+- Live M-Pesa needs the Daraja keys and Telpen's Paybill (in progress with Safaricom); until then the route answers "M-Pesa is not set up yet. Please pay by card."
+
 ## 19/11/26 (evening) — M-Pesa should lead in Kenya; Stawi can't charge it for the plan yet
 - Owner refined the rule: the most convenient local method takes the lead over Paddle where we can charge it (Kenya: M-Pesa, 89.1% of 53.4 million mobile money subscriptions, CA Kenya March 2026). `subscriptionRails` now returns every way, best first (Kenya M-Pesa then Paddle).
 - Stawi has no M-Pesa payment for the plan itself (the MPESA rail is a `pending` stub), so where Paddle sells, Paddle stays the way until that is built. Building it needs a pending-plan-payment table (database; owner approval).
