@@ -1,5 +1,14 @@
 # Stawi — session memory / start-here
 
+## 19/11/26 (evening) — M-Pesa should lead in Kenya; Stawi can't charge it for the plan yet
+- Owner refined the rule: the most convenient local method takes the lead over Paddle where we can charge it (Kenya: M-Pesa, 89.1% of 53.4 million mobile money subscriptions, CA Kenya March 2026). `subscriptionRails` now returns every way, best first (Kenya M-Pesa then Paddle).
+- Stawi has no M-Pesa payment for the plan itself (the MPESA rail is a `pending` stub), so where Paddle sells, Paddle stays the way until that is built. Building it needs a pending-plan-payment table (database; owner approval).
+
+## 19/11/26 — Paddle first wherever it sells (awaiting owner merge)
+- Owner rule (19/11/26, with the merge of #23): Paddle takes priority in every country it sells to, Kenya included (it deducts and remits the tax); else a merchant of record that remits the tax (researched: none takes M-Pesa or mobile money); else the most popular local method (M-Pesa in Kenya).
+- `packages/core/src/payment-rails.ts` (Paddle's blocked list incl. CF, CD, LY, ML, SO, SS, SD, ZW; `paddleSellsIn`, `subscriptionRail`) + tests. `/api/billing/checkout` uses Paddle only where it sells; elsewhere the country's own rail.
+- Still open: M-Pesa for the Stawi plan (only needed in Kenya while Paddle is off).
+
 ## 19/11/26 — Cards through Paddle (merchant of record); Stripe webhook fails closed (awaiting owner merge)
 - Owner 19/11/26: "we had agreed we use firms like Paddle that do an auto remittance of the tax", chose Paddle + M-Pesa for all five products. Cards: Paddle is the seller and charges, files and remits the tax. M-Pesa: direct sale, no VAT until Telpen Systems Ltd is VAT-registered.
 - `packages/core/src/paddle.ts` (browser-safe: config, signature check with a server-supplied HMAC, paid item) + tests. `/api/billing/checkout` returns Paddle's public checkout details when `PADDLE_ENABLED=true` (keys `PADDLE_PRICE_{SMALL,GROUP}_{MONTH,YEAR}`, `PADDLE_CLIENT_TOKEN`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_ENV`); `SubscribeGate` opens Paddle's overlay with `customData.tenantRef`. Webhook `/api/billing/webhook/paddle` (signed, idempotent activation; small-group price refused for groups over 10).

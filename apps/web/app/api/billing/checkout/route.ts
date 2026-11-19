@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getUserId } from '@/lib/auth';
-import { getPlan, getCountryProfile, buildSubscriptionCheckout, quoteGroup, SMALL_GROUP_MAX_MEMBERS, planPurchasesAllowed, PLAY_APP_COOKIE, PLAY_APP_PURCHASE_UNAVAILABLE, paddleConfig, stawiPaddleKey, STAWI_PADDLE_PRICES, type PlanTier, type CountryCode } from '@stawi/core';
+import { getPlan, getCountryProfile, buildSubscriptionCheckout, quoteGroup, SMALL_GROUP_MAX_MEMBERS, planPurchasesAllowed, PLAY_APP_COOKIE, PLAY_APP_PURCHASE_UNAVAILABLE, paddleConfig, paddleSellsIn, stawiPaddleKey, STAWI_PADDLE_PRICES, type PlanTier, type CountryCode } from '@stawi/core';
 import { startCheckout } from '@/lib/billing';
 
 export const runtime = 'nodejs';
@@ -38,11 +38,14 @@ export async function POST(req: Request) {
   const quote = quoteGroup({ country, members, period, env: process.env });
   const tenantRef = body.tenantRef ?? userId;
 
-  // Owner decision 19/11/26: cards go through Paddle as merchant of record (it
-  // handles the tax). When Paddle is on, hand the browser Paddle's public
-  // checkout details; the card is typed into Paddle, never into Stawi.
+  // Owner rules 19/11/26: the most convenient local method leads where we can
+  // charge it (M-Pesa in Kenya), Paddle second there and first elsewhere it
+  // sells. Stawi cannot yet charge M-Pesa for the plan itself (that needs a
+  // pending-plan-payment record), so where Paddle sells it is the way for now.
+  // Paddle is the merchant of record and remits the tax; the card is typed
+  // into Paddle, never into Stawi. Where Paddle can't sell, the rail below.
   const paddle = paddleConfig(process.env, STAWI_PADDLE_PRICES);
-  if (paddle) {
+  if (paddle && paddleSellsIn(country)) {
     return NextResponse.json({
       ok: true,
       card: {
