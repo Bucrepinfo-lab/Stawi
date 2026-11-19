@@ -29,6 +29,19 @@ export async function POST(req: Request) {
   try {
     const result = parseStkCallback(raw as Parameters<typeof parseStkCallback>[0]);
 
+    // A plan payment (owner 19/11/26): confirms and extends the group's plan
+    // on a full, successful payment, once; a short or failed one unlocks nothing.
+    if (dbEnabled() && result.checkoutRequestId) {
+      const { prisma, settlePlanPayment } = await import('@stawi/db');
+      const plan = await settlePlanPayment(prisma, {
+        checkoutRequestId: result.checkoutRequestId,
+        ok: result.ok,
+        mpesaRef: result.mpesaReceipt,
+        paidKes: result.amount,
+      });
+      if (plan) console.info('[mpesa] plan payment', result.checkoutRequestId, plan);
+    }
+
     if (result.ok) {
       // Mark the pending contribution confirmed (when a DB is configured).
       if (dbEnabled()) {

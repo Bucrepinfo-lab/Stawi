@@ -15,6 +15,7 @@ export * from './tenancy';
 export * from './payments';
 export * from './paddle';
 export * from './payment-rails';
+export * from './plan-payment';
 export * from './savings';
 export * from './credit';
 export * from './graduation';

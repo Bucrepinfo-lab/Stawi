@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PLAN_ORDER, getPlan, quoteGroup, formatPrice, YEAR_PLAN_MONTHS_PAID, SMALL_GROUP_MAX_MEMBERS, type PlanTier, type BillingPeriod } from '@stawi/core';
 
 type PaddleJs = {
@@ -43,6 +43,49 @@ export function SubscribeGate() {
   const [accepted, setAccepted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
+  // M-Pesa leads in Kenya (owner 19/11/26): the groups this person may pay for.
+  const [mpesaGroups, setMpesaGroups] = useState<Array<{ id: string; name: string; members: number }>>([]);
+  const [groupId, setGroupId] = useState('');
+
+  useEffect(() => {
+    if (country !== 'KE') return;
+    let cancelled = false;
+    fetch('/api/billing/mpesa')
+      .then((res) => (res.ok ? res.json() : { groups: [] }))
+      .then((data: { groups?: Array<{ id: string; name: string; members: number }> }) => {
+        if (cancelled) return;
+        const groups = data.groups ?? [];
+        setMpesaGroups(groups);
+        setGroupId((current) => current || groups[0]?.id || '');
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [country]);
+
+  async function payByMpesa() {
+    if (!accepted || !groupId) return;
+    setBusy(true);
+    setDone(null);
+    try {
+      const res = await fetch('/api/billing/mpesa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ groupId, tier: selected, period }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      setDone(
+        data.ok
+          ? 'Check your phone: M-Pesa is asking you to pay. Your plan starts as soon as the payment goes through.'
+          : data.error ?? 'M-Pesa did not take the request. Try again in a minute.',
+      );
+    } catch {
+      setDone('No connection. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  }
 
   const COUNTRIES = [
     ['KE', '🇰🇪 Kenya'], ['NG', '🇳🇬 Nigeria'], ['ZA', '🇿🇦 South Africa'],
@@ -152,8 +195,25 @@ export function SubscribeGate() {
         </span>
       </label>
 
+      {country === 'KE' && getPlan(selected).billing === 'PER_GROUP' && mpesaGroups.length > 0 && (
+        <div style={{ marginTop: 18, display: 'grid', gap: 10, maxWidth: 520 }}>
+          {mpesaGroups.length > 1 && (
+            <label style={{ display: 'grid', gap: 6, fontSize: 14, color: 'var(--ink-2)' }}>
+              Group to pay for
+              <select value={groupId} onChange={(e) => setGroupId(e.target.value)} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--paper)', fontFamily: 'inherit', fontSize: 14 }}>
+                {mpesaGroups.map((g) => <option key={g.id} value={g.id}>{g.name} ({g.members} members)</option>)}
+              </select>
+            </label>
+          )}
+          <button onClick={() => void payByMpesa()} disabled={!accepted || busy || !groupId} style={{ padding: '14px 26px', borderRadius: 12, border: 'none', background: accepted && !busy ? 'var(--forest)' : 'var(--bone-2)', color: accepted && !busy ? 'var(--paper)' : 'var(--dim)', fontWeight: 700, fontSize: 15, cursor: accepted && !busy ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
+            {busy ? 'Asking M-Pesa…' : 'Pay by M-Pesa'}
+          </button>
+          <span style={{ fontSize: 12.5, color: 'var(--ink-2)' }}>M-Pesa asks your own phone to approve with your PIN. Or pay by card below.</span>
+        </div>
+      )}
+
       <button onClick={activate} disabled={!accepted || busy} style={{ marginTop: 18, padding: '14px 26px', borderRadius: 12, border: 'none', background: accepted && !busy ? 'var(--gold)' : 'var(--bone-2)', color: accepted && !busy ? 'var(--forest-deep)' : 'var(--dim)', fontWeight: 700, fontSize: 15, cursor: accepted && !busy ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
-        {busy ? 'Opening secure checkout…' : getPlan(selected).billing === 'PER_GROUP' ? 'Start free month' : 'Contact sales'}
+        {busy ? 'Opening secure checkout…' : getPlan(selected).billing !== 'PER_GROUP' ? 'Contact sales' : country === 'KE' && mpesaGroups.length > 0 ? 'Pay by card' : 'Start free month'}
       </button>
 
       {done && (

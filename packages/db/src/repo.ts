@@ -8,7 +8,7 @@
  */
 
 import type { PrismaClient, GroupType, MemberRole } from '@prisma/client';
-import { assertSameTenant, toSlug, assertSaccoPlusEnabled, isSaccoPlusEnabled } from '@stawi/core';
+import { assertSameTenant, toSlug, assertSaccoPlusEnabled, isSaccoPlusEnabled, planPaymentCovers, planPeriodEndAfterPayment, type PlanPeriod } from '@stawi/core';
 import type { TenantContext, TenantRole } from '@stawi/core';
 import type {
   GroupAccountDTO,
@@ -558,6 +558,71 @@ export async function accrueMonthlyInterest(
     total += cents;
   }
   return { accounts: posted, totalCents: total };
+}
+
+/** Record a plan payment asked of M-Pesa (PENDING until the callback). */
+export async function createPlanPayment(
+  prisma: PrismaClient,
+  input: {
+    groupId: string;
+    checkoutRequestId: string;
+    tier: 'FREE' | 'STARTER' | 'GROWTH' | 'ENTERPRISE';
+    period: PlanPeriod;
+    amountCents: number;
+    requestedByUserId: string;
+  },
+): Promise<void> {
+  await prisma.planPayment.create({ data: { ...input, currency: 'KES' } });
+}
+
+/**
+ * Safaricom confirmed (or failed) an STK payment. If it was a plan payment and
+ * still PENDING: a full payment confirms it and extends the group's plan; a
+ * short or failed one unlocks nothing. Runs once per payment (status guard).
+ * Returns what happened, or null when the payment is not a plan payment.
+ */
+export async function settlePlanPayment(
+  prisma: PrismaClient,
+  input: { checkoutRequestId: string; ok: boolean; mpesaRef?: string; paidKes?: number; now?: Date },
+): Promise<'confirmed' | 'failed' | 'short' | 'already' | null> {
+  const now = input.now ?? new Date();
+  return prisma.$transaction(async (tx) => {
+    const payment = await tx.planPayment.findUnique({ where: { checkoutRequestId: input.checkoutRequestId } });
+    if (!payment) return null;
+    if (payment.status !== 'PENDING') return 'already';
+    const covered = input.ok && planPaymentCovers(input.paidKes, payment.amountCents);
+    const claimed = await tx.planPayment.updateMany({
+      where: { id: payment.id, status: 'PENDING' },
+      data: covered
+        ? { status: 'CONFIRMED', mpesaRef: input.mpesaRef ?? null, confirmedAt: now }
+        : { status: 'FAILED', mpesaRef: input.mpesaRef ?? null },
+    });
+    if (claimed.count === 0) return 'already';
+    if (!covered) return input.ok ? 'short' : 'failed';
+
+    const sub = await tx.subscription.findUnique({ where: { groupId: payment.groupId } });
+    const group = await tx.group.findUnique({ where: { id: payment.groupId }, select: { createdAt: true } });
+    // The first month is free: a payment made during it starts after it.
+    const freeMonthEnds = group ? new Date(group.createdAt.getTime() + 30 * 24 * 60 * 60 * 1000) : null;
+    const paidUntil = sub?.currentPeriodEnd ?? null;
+    const runningEnd =
+      freeMonthEnds && (!paidUntil || freeMonthEnds.getTime() > paidUntil.getTime()) ? freeMonthEnds : paidUntil;
+    const periodEnd = planPeriodEndAfterPayment(runningEnd, now, payment.period === 'YEAR' ? 'YEAR' : 'MONTH');
+    const monthlyCents = payment.period === 'YEAR' ? Math.round(payment.amountCents / 10) : payment.amountCents;
+    await tx.subscription.upsert({
+      where: { groupId: payment.groupId },
+      create: {
+        groupId: payment.groupId,
+        planTier: payment.tier,
+        status: 'ACTIVE',
+        unitPriceCents: monthlyCents,
+        currency: 'KES',
+        currentPeriodEnd: periodEnd,
+      },
+      update: { planTier: payment.tier, status: 'ACTIVE', currentPeriodEnd: periodEnd },
+    });
+    return 'confirmed';
+  });
 }
 
 /** Flip a tenant's subscription ACTIVE (Stripe webhook seam). */
