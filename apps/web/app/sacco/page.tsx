@@ -16,7 +16,7 @@ export default async function SaccoPage() {
   const accounts = await getSaccoAccountsData();
   const viewerRole = await getViewerRole();
   return (
-    <main style={{ maxWidth: 980, margin: '0 auto', padding: '28px 24px 80px' }}>
+    <main className="pillar-4" style={{ maxWidth: 980, margin: '0 auto', padding: '28px 24px 80px' }}>
       <p
         style={{
           fontSize: 12,

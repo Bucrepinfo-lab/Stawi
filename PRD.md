@@ -433,6 +433,10 @@ Pillar 1 is complete end to end and the tree is locked pending go-live:
 
 **NEXT SESSION = DigitalOcean deployment only.** Resume from `PRE-DEPLOY-CHECKLIST.md` (steps 1–15) + `DEPLOYMENT-RUNBOOK.md`. First question: DigitalOcean account status. No further feature work until deployed.
 
+
+### Flow and escalation (added 20/11/26)
+Every section with a duty has one person who acts first; stalled work climbs responsible official → Chairperson → all officials → every member. Seven watches live in `packages/core/src/escalation.ts`; the group page shows "Needs attention" to the responsible person and those above them only. Coverage, gaps and owner decisions: `docs/FLOW-ESCALATION-AUDIT.md`. Standing rules 13–18 (`docs/STANDING_RULES.md`) record the Telpen Edu orders adopted.
+
 ## 13. Skills & Tools Used
 
 - **`frontend-design`** (Anthropic skill) — drove the "warm savanna fintech" design

@@ -36,7 +36,7 @@ function Banner({ prop, lang, startOpen }: { prop: ValueProp; lang: ValueLang; s
   return (
     <details
       ref={ref}
-      className={`vb-card pillar-${prop.pillar}`}
+      className={`vb-card s-card pillar-${prop.pillar}`}
       open={startOpen}
       onToggle={(e) => { if ((e.currentTarget as HTMLDetailsElement).open) trackOnce('open', prop.id); }}
     >

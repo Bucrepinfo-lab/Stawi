@@ -71,7 +71,7 @@ export default async function AdminPage() {
         ))}
       </div>
 
-      <details style={card}>
+      <details className="s-card" style={card}>
         <summary style={{ cursor: 'pointer', fontWeight: 800, fontSize: 16 }}>What people look at and share · last 7 days</summary>
         <p style={{ color: 'var(--dim)', fontSize: 13, marginTop: 8 }}>
           Counts only. Stawi does not record who viewed, tapped or shared.
@@ -106,7 +106,7 @@ export default async function AdminPage() {
         )}
       </details>
 
-      <div style={card}>
+      <div className="s-card" style={card}>
         <h2 className="display" style={{ fontWeight: 600, fontSize: 20 }}>Sales &amp; supervision hierarchy</h2>
         <div style={{ marginTop: 12 }}>
           {TIERS.map((t, i) => (
@@ -125,7 +125,7 @@ export default async function AdminPage() {
         </div>
       </div>
 
-      <div style={card}>
+      <div className="s-card" style={card}>
         <h2 className="display" style={{ fontWeight: 600, fontSize: 20 }}>Onboarded groups &amp; businesses</h2>
         <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, fontSize: 13.5 }}>
           <thead>

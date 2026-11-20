@@ -50,3 +50,4 @@ export * from './scope';
 export * from './receipt-access';
 export * from './value-props';
 export * from './engagement';
+export * from './escalation';

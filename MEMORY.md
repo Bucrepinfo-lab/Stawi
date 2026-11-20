@@ -1,5 +1,15 @@
 # Stawi — session memory / start-here
 
+## 20/11/26 (15:00) — Flow and escalation, Telpen Edu standing orders adopted, decorated cards and tabs (awaiting owner merge)
+- Owner order: analyse all of Stawi, apply the escalation where it fits, reuse the Telpen Edu standing orders; good nav tabs; decorated cards in every section.
+- `packages/core/src/escalation.ts` (pure, 16 tests): seven watches (officials_missing, rules_missing, meeting_overdue, minutes_not_posted, contributions_not_recorded, member_behind, member_absent). Ladder: responsible official → Chairperson → all officials → every member; empty posts fall through. Member-named matters stop at the officials. Days counted on the country's own clock.
+- `apps/web/lib/attention.ts` filters on the server (viewer matched to the member list by signed-in phone; super admin sees all; demo mode shows the Chairperson's view). `AttentionCard` shows "Needs attention" on the group page; officials with nothing waiting see "All in order".
+- `docs/FLOW-ESCALATION-AUDIT.md`: section → who acts first → watch, gaps, and which Telpen Edu orders were adopted. `docs/STANDING_RULES.md` gains rules 13–18.
+- Design: `.s-card` (bead band in the pillar colour, soft wash, rising sun) on value banners and the cards of group, ideas, books, savings and admin screens; main tabs restyled (medallion on phones, pill on computers, bead line); group record tabs are now `.s-tabs` (44 px, scroll on small phones, proper tab roles).
+- Privacy page now names the anonymous counts (on the value-banners PR).
+- **Not done / owner decisions:** daily alerts by SMS or push need a small table and a schedule (protected); watches for month-end statement, daily sales and tax dates; a ladder for Books; confirm that level 4 may tell every member. No database change in this PR.
+- Local note: `npm ci` could not reach the registry from the sandbox; core tests ran through the esbuild runner, web typecheck is proven by CI.
+
 ## 20/11/26 (afternoon) — Value banners, main tabs, sharing, countdown badges and engagement counts (awaiting owner merge)
 - Owner brief: sell the value, not the app; every section shows a pain, the proof and the solution; verifiable, no flattery; easy for non-readers; fast tabs; sharing tools; countdown badges; count clicks, views and shares.
 - `packages/core/src/value-props.ts`: 15 banners across the four pillars in English and Kiswahili. Each has a fact with a named source link and a `status`: `live` only where the tool exists today, `coming` for planned tools (voice minutes, buyer check, separate business purse, loan folder). Pillar 4 banners show only when SACCO+ is on. Tests enforce a source on every banner and no "guaranteed/best" wording.

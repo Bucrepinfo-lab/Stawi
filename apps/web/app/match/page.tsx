@@ -3,7 +3,7 @@ import { ValueBanners } from '@/components/ValueBanners';
 
 export default function MatchPage() {
   return (
-    <main style={{ maxWidth: 920, margin: '0 auto', padding: '28px 24px 80px' }}>
+    <main className="pillar-2" style={{ maxWidth: 920, margin: '0 auto', padding: '28px 24px 80px' }}>
       <p
         style={{
           fontSize: 12,

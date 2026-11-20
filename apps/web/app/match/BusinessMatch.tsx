@@ -108,7 +108,7 @@ export function BusinessMatch() {
 
   return (
     <div style={{ marginTop: 24 }}>
-      <div style={card}>
+      <div className="s-card" style={card}>
         {/* Controls */}
         <div
           style={{
