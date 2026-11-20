@@ -45,8 +45,17 @@ export async function recordContributionAction(input: {
   groupId?: string;
   membershipId: string;
   amountCents: number;
+  /** How the money came in, when written by hand (owner 20/11/26). Default cash. */
+  way?: string;
+  /** M-Pesa code or bank reference, when there is one. */
+  reference?: string;
 }): Promise<{ ok: boolean; persisted: boolean; contributionId?: string; error?: string }> {
   if (!Number.isInteger(input.amountCents) || input.amountCents <= 0) return { ok: false, persisted: false, error: 'Amount must be positive' };
+  const { COLLECT_WAYS, collectWay, checkPaymentRef, isDuplicateRef } = await import('@stawi/core');
+  const way = collectWay(input.way);
+  const ref = checkPaymentRef(way, input.reference);
+  if (!ref.ok) return { ok: false, persisted: false, error: ref.error.en };
+  const channel = COLLECT_WAYS.find((w) => w.id === way)!.channel;
   if (!dbEnabled() || !input.groupId) {
     publishEvent({ type: 'contribution', channel: 'public' });
     return { ok: true, persisted: false };
@@ -58,14 +67,20 @@ export async function recordContributionAction(input: {
   const userId = await getUserId();
   const member = await prisma.membership.findFirst({ where: { id: input.membershipId, groupId: input.groupId }, select: { id: true } });
   if (!member) return { ok: false, persisted: false, error: 'Member not found in this group.' };
+  // The same M-Pesa code written twice is the same money.
+  if (ref.ref) {
+    const seen = await prisma.contribution.findMany({ where: { groupId: input.groupId, mpesaRef: ref.ref }, select: { mpesaRef: true }, take: 1 });
+    if (isDuplicateRef(ref.ref, seen.map((x) => x.mpesaRef))) return { ok: false, persisted: false, error: 'This M-Pesa code is already written in. Each payment is written once.' };
+  }
   let contributionId: string;
   try {
     ({ id: contributionId } = await recordContribution(prisma, {
       groupId: input.groupId,
       membershipId: input.membershipId,
       amountCents: input.amountCents,
-      channel: 'CASH',
+      channel,
       confirmed: true,
+      mpesaRef: ref.ref ?? undefined,
       recordedByClerkUserId: userId ?? undefined,
       tenantId: await tenantId(),
     }));

@@ -57,3 +57,4 @@ export * from './money-summary';
 export * from './modules';
 export * from './attention-notices';
 export * from './messages';
+export * from './collect-ways';
