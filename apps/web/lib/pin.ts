@@ -14,8 +14,10 @@
  *   from AUTH_DEVICE_SECRET + the user's session epoch; the user never sees it,
  *   and revoking all devices rotates it.
  *
- * Active only when DATABASE_URL, AUTH_DEVICE_SECRET and SUPABASE_SERVICE_ROLE_KEY
- * are all set; otherwise sign-in is closed (demo mode runs without a login).
+ * Active when DATABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set. The signing
+ * secret is AUTH_DEVICE_SECRET, or — when that is not set — one derived from the
+ * service key (20/11/26: production had no AUTH_DEVICE_SECRET, which closed
+ * sign-in after the no-SMS change).
  */
 import crypto from 'node:crypto';
 import { cookies } from 'next/headers';
@@ -29,13 +31,15 @@ import {
 } from '@stawi/core';
 
 export function pinFeatureEnabled(): boolean {
-  return !!(process.env.DATABASE_URL && process.env.AUTH_DEVICE_SECRET && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  return !!(process.env.DATABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
 function secret(): string {
-  const s = process.env.AUTH_DEVICE_SECRET;
-  if (!s) throw new Error('AUTH_DEVICE_SECRET is not set');
-  return s;
+  const own = process.env.AUTH_DEVICE_SECRET;
+  if (own) return own;
+  const service = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!service) throw new Error('AUTH_DEVICE_SECRET or SUPABASE_SERVICE_ROLE_KEY must be set');
+  return crypto.createHmac('sha256', service).update('stawi-auth-device-secret').digest('hex');
 }
 
 export const deviceCrypto: DeviceCrypto = {
@@ -191,7 +195,32 @@ export async function openSession(userId: string, phone: string): Promise<Opened
   const epoch = (await getAuthPin(prisma, userId))?.sessionEpoch ?? 0;
   const { createSupabaseServerClient } = await import('./supabase/server');
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.signInWithPassword({ phone, password: sessionPassword(userId, epoch) });
-  if (error || !data.session) return null;
+  const password = sessionPassword(userId, epoch);
+  let { data, error } = await supabase.auth.signInWithPassword({ phone, password });
+  if (error || !data.session) {
+    // The server-held password may predate a secret change: the PIN (or code)
+    // was already checked, so set it again and retry once.
+    const a = await admin();
+    if (!a || (await a.auth.admin.updateUserById(userId, { password })).error) return null;
+    ({ data, error } = await supabase.auth.signInWithPassword({ phone, password }));
+    if (error || !data.session) return null;
+  }
   return { accessToken: data.session.access_token, refreshToken: data.session.refresh_token };
+}
+
+/**
+ * Owner bootstrap (20/11/26): a phone in OWNER_PHONES may use the fixed 6-digit
+ * OWNER_BOOTSTRAP_CODE as its joining code — for an owner whose account
+ * predates PINs, or who is locked out with no other official to give a code.
+ * Both are Fly secrets the owner sets and can unset after use.
+ */
+export function matchesOwnerBootstrap(phone: string, code: string): boolean {
+  const configured = (process.env.OWNER_BOOTSTRAP_CODE ?? '').trim();
+  if (!/^\d{6}$/.test(configured)) return false;
+  const digits = (v: string) => v.replace(/\D/g, '').replace(/^0+/, '').slice(-9);
+  const owners = (process.env.OWNER_PHONES ?? '').split(',').map(digits).filter((v) => v.length === 9);
+  if (!owners.includes(digits(phone))) return false;
+  const a = Buffer.from(crypto.createHash('sha256').update(code).digest('hex'));
+  const b = Buffer.from(crypto.createHash('sha256').update(configured).digest('hex'));
+  return crypto.timingSafeEqual(a, b);
 }
