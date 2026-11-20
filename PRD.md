@@ -232,7 +232,7 @@ earned. Acquisition thesis: win the books first, win the wallet later.
 - **DB:** PostgreSQL (DigitalOcean Managed). Real-time via Postgres LISTEN/NOTIFY or a websocket layer (e.g. Supabase Realtime/Ably) for live dashboards.
 - **Payments:** M-Pesa **Daraja 3.0** (STK Push, C2B, B2C) behind a payment-provider abstraction (so Flutterwave/Paystack/banks slot in per country).
 - **Files/receipts:** PDF generation service; object storage (DO Spaces).
-- **Notifications:** push (Expo), SMS (Africa's Talking), in-app, email.
+- **Notifications:** in-app (group Messages, attention card), push (Expo), email. No SMS (owner 20/11/26).
 - **Deploy:** DigitalOcean App Platform (web + API), Managed Postgres, Spaces. CI/CD from GitHub. **All work pushed to GitHub.**
 
 ---
@@ -318,7 +318,7 @@ packages/db   Prisma schema (13 models / 10 enums) + tenant-scoped repository + 
 | **Paddle** card checkout (merchant of record; Paddle remits the tax, owner decision 19/11/26) + signed webhook `/api/billing/webhook/paddle` | live on `PADDLE_ENABLED=true` + keys |
 | **Stripe** Checkout (subscription, 30-day trial) + webhook (HMAC verify, refuses without `STRIPE_WEBHOOK_SECRET`) | dormant; Paddle is the card rail when enabled |
 | **Paystack / Flutterwave** | routed by country, stubs until keyed |
-| **Africa's Talking** SMS acknowledgements | live on AT keys |
+| ~~Africa's Talking SMS acknowledgements~~ | removed 20/11/26: M-Pesa texts its own confirmation; receipts in-app |
 | **Postgres (Prisma)** tenant-scoped queries + `rls.sql` | live on `DATABASE_URL` |
 
 ### Multi-tenant model
@@ -425,7 +425,7 @@ reconciliation → downloadable statement).
 Pillar 1 is complete end to end and the tree is locked pending go-live:
 - **Cockpit** (charter · self-directing minutes · paraphrasing OS · month-end statement) — web + full **Expo mobile** parity.
 - **Import written notes** — photo (OCR) or file → parsed → pre-filled minutes. **Customizable per-country phone length** (`PHONE_RULES`).
-- **Phone-first identity** — phone number is the primary credential; roster numbers are the join key; optional **Clerk** phone-OTP on mobile, verified server-side.
+- **Phone-first identity** — phone number + the person's own 4-digit PIN, no SMS (owner 20/11/26); roster numbers are the join key, proven by a one-time joining code an official gives (`docs/SIGN-IN.md`).
 - **Live data** — mobile ⇄ web JSON API (`/api/mobile/*`), tenant-scoped repo, RLS.
 - **Persistence** — `GroupCharter`/`Meeting`/`MonthlyStatement` + phone-keyed memberships; local Postgres via `docker-compose.yml`; `DB-SETUP.md`. **Production requires `DATABASE_URL`** — no silent seed fall-back (mobile API returns 503).
 

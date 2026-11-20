@@ -1,8 +1,10 @@
 /**
  * Google Play reviewer access — pure checks (env passed in).
  *
- * Only when BOTH `PLAY_REVIEW_PHONE` and `PLAY_REVIEW_CODE` are set may that one
- * phone number sign in with that fixed code (no SMS). Unset → feature off.
+ * Only when `PLAY_REVIEW_PHONE` and a fixed secret are set may that one phone
+ * number sign in without a joining code: `PLAY_REVIEW_PIN` (4 digits, the
+ * normal phone + PIN screen, owner 20/11/26) or the older `PLAY_REVIEW_CODE`.
+ * Unset → feature off.
  * Nothing about the reviewer is hard-coded; remove the env pair after review.
  */
 import { toE164 } from './phone';
@@ -13,7 +15,8 @@ type Env = Record<string, string | undefined>;
 export function reviewPhone(env: Env): string | null {
   const phone = (env.PLAY_REVIEW_PHONE ?? '').trim();
   const code = (env.PLAY_REVIEW_CODE ?? '').trim();
-  if (!phone || !code) return null;
+  const pin = (env.PLAY_REVIEW_PIN ?? '').trim();
+  if (!phone || (!code && !pin)) return null;
   return toE164(phone);
 }
 
@@ -37,4 +40,11 @@ export function isReviewLogin(env: Env, phone: string | null | undefined, code: 
   const phoneOk = isReviewPhone(env, phone);
   const codeOk = sameString(expected, (code ?? '').trim());
   return phoneOk && codeOk && expected.length > 0;
+}
+
+/** Reviewer phone AND the fixed 4-digit `PLAY_REVIEW_PIN` both match (phone + PIN screen). */
+export function isReviewPinLogin(env: Env, phone: string | null | undefined, pin: string | null | undefined): boolean {
+  const expected = (env.PLAY_REVIEW_PIN ?? '').trim();
+  if (!/^\d{4}$/.test(expected)) return false;
+  return isReviewPhone(env, phone) && sameString(expected, (pin ?? '').trim());
 }

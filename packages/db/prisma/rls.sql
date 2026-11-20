@@ -37,7 +37,7 @@ CREATE POLICY tenantmember_isolation ON "TenantMember"
 DO $$
 DECLARE t text;
 BEGIN
-  FOREACH t IN ARRAY ARRAY['Membership','Cycle','Contribution','Subscription','Business','GroupCharter','Meeting','MonthlyStatement','PlanPayment','AttentionNotice','GroupMessage']
+  FOREACH t IN ARRAY ARRAY['Membership','Cycle','Contribution','Subscription','Business','GroupCharter','Meeting','MonthlyStatement','PlanPayment','AttentionNotice','GroupMessage','JoinCode']
   LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
     EXECUTE format('DROP POLICY IF EXISTS %s_tenant_isolation ON %I', lower(t), t);

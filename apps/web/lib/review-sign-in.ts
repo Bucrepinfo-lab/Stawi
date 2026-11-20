@@ -3,8 +3,8 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 /**
- * Google Play reviewer sign-in (PLAY_REVIEW_PHONE + PLAY_REVIEW_CODE both set,
- * already checked by the caller). Provisions the reviewer's Supabase login with
+ * Google Play reviewer sign-in (PLAY_REVIEW_PHONE + PLAY_REVIEW_PIN, the normal
+ * phone + PIN screen; already checked by the caller). Provisions the reviewer's Supabase login with
  * the admin API and a server-derived password, then signs in (session cookies).
  */
 export async function signInReviewer(phone: string): Promise<{ ok: true; userId?: string } | { ok: false; status: number; error: string }> {
@@ -14,7 +14,7 @@ export async function signInReviewer(phone: string): Promise<{ ok: true; userId?
 
   const password = crypto
     .createHmac('sha256', serviceKey)
-    .update(`stawi-play-review:${phone}:${process.env.PLAY_REVIEW_CODE}`)
+    .update(`stawi-play-review:${phone}:${process.env.PLAY_REVIEW_PIN ?? process.env.PLAY_REVIEW_CODE}`)
     .digest('hex');
 
   const created = await admin.auth.admin.createUser({ phone, password, phone_confirm: true });

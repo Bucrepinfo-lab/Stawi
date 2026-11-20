@@ -3,7 +3,7 @@ import {
   CONTRIBUTION_QUICK_CENTS, checkContributionAmount, contributionPayOptions, contributionReference,
   contributionTooSoon, memberPayEnabled,
 } from '@stawi/core';
-import { getUserId, getUserPhone } from '@/lib/auth';
+import { getLoginPhone, getUserId, getUserPhone } from '@/lib/auth';
 import { dbEnabled } from '@/lib/data';
 import { initiateStkPush, darajaConfig } from '@/lib/mpesa';
 
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
 
   // The member's own sign-in phone unless they type another line they hold.
   const typed = typeof body.phone === 'string' ? body.phone.trim() : '';
-  const payerPhone = typed || ctx.phone || '';
+  const payerPhone = typed || ctx.phone || (await getLoginPhone().catch(() => null)) || '';
   if (last9(payerPhone).length !== 9) {
     return NextResponse.json({ ok: false, error: 'Enter the phone number that will pay.' }, { status: 400 });
   }

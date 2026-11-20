@@ -1,5 +1,19 @@
 # Stawi — session memory / start-here
 
+## 20/11/26 (18:40) — Sign-in without SMS: phone + PIN, joining codes (owner approved; awaiting merge)
+- Owner: no paid SMS codes (Africa's Talking is not global); phone + own PIN; officials give a
+  joining code the first time; no alerts or codes from Africa's Talking — the app's Messages instead.
+- Sign-in: phone + 4-digit PIN on any device (`/api/auth/pin/sign-in`). First time / forgotten /
+  locked: joining code from an official (`/api/groups/[id]/join-code`, `/api/auth/join`), 6 digits,
+  one group + phone, once, 48 h, 5 tries, keyed hash in new `JoinCode` table (RLS). Founders open an
+  account with phone + PIN (`/api/auth/start`); their phone stays unproven (no roster match by phone).
+- Removed: `/api/auth/otp/*`, `/api/auth/send-sms`, `lib/sms.ts`, `lib/notify.ts`, `toSmsRecipient`,
+  the M-Pesa receipt SMS, the Clerk mobile screen. Daily alerts post in group Messages.
+- Play reviewer: `PLAY_REVIEW_PHONE` + `PLAY_REVIEW_PIN`. Subscriptions already Daraja STK.
+- Owner/Chrome after merge: Fly secret `PLAY_REVIEW_PIN`; unset `AT_*`, `SUPABASE_SEND_SMS_HOOK_SECRET`,
+  `PLAY_REVIEW_CODE`; turn off the Supabase Send SMS hook; update Play App access text.
+- Docs: `docs/SIGN-IN.md`.
+
 ## 20/11/26 (18:10) — Buttons and wording checked, unused code removed (awaiting owner merge)
 - Removed code nothing used: `components/sign-out-button.tsx` (sign-out lives in Account → Security),
   `lib/paystack.ts` and `lib/flutterwave.ts` (Paystack runs through `lib/local-providers.ts`),

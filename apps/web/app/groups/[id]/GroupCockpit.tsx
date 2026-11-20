@@ -53,6 +53,7 @@ import {
 } from '@/app/actions';
 import type { Cockpit } from '@/lib/cockpit';
 import { setUrlParams } from '@/lib/url-state';
+import { JoiningCodes } from './JoiningCodes';
 
 type Tab = 'charter' | 'minutes' | 'documents' | 'statement' | 'sacco';
 const TABS: readonly Tab[] = ['charter', 'minutes', 'documents', 'statement', 'sacco'];
@@ -472,6 +473,7 @@ function CharterTab({ charter, setCharter, canEdit, groupId }: { charter: GroupC
       <div className="s-card" style={card}>
         <SectionTitle n={3} title="Members & officials" />
         <RosterEditor members={charter.members} disabled={disabled} country={charter.countryCode} onChange={(members) => set({ members })} />
+        {canEdit && <JoiningCodes groupId={groupId} members={charter.members} country={charter.countryCode} />}
       </div>
 
       {/* Governance docs */}

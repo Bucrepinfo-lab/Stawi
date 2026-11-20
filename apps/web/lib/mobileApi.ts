@@ -7,7 +7,7 @@
  * (no database) exist only outside production.
  */
 import { NextResponse } from 'next/server';
-import { decideApiAccess, toE164, type VerifiedIdentity } from '@stawi/core';
+import { decideApiAccess, toE164, type VerifiedIdentity, phoneIsProven } from '@stawi/core';
 
 export const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -58,7 +58,7 @@ export async function authorize(req: Request): Promise<{ identity: VerifiedIdent
       const { createClient } = await import('@supabase/supabase-js');
       const sb = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false } });
       const { data, error } = await sb.auth.getUser(bearer);
-      if (!error && data.user) identity = { userId: data.user.id, phone: data.user.phone ? toE164(data.user.phone) : null };
+      if (!error && data.user) identity = { userId: data.user.id, phone: data.user.phone && phoneIsProven(data.user.app_metadata, data.user.phone_confirmed_at) ? toE164(data.user.phone) : null };
     } catch {
       identity = null;
     }

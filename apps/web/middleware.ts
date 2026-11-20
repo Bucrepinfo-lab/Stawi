@@ -17,9 +17,9 @@ const PUBLIC: RegExp[] = [
   /^\/api\/mpesa\/callback/,
   /^\/api\/billing\/webhook/,
   /^\/api\/webhooks\/clerk/,
-  /^\/api\/auth\/send-sms/,
-  /^\/api\/auth\/otp\/(send|verify)$/,
+  // Sign-in without SMS (owner 20/11/26): phone + PIN, joining code, new account.
   /^\/api\/auth\/pin\/(status|sign-in)$/,
+  /^\/api\/auth\/(join|start)$/,
   /^\/api\/mobile/,
   // Engagement counts (owner 20/11/26): counts only, no personal data, rate-limited.
   /^\/api\/track$/,

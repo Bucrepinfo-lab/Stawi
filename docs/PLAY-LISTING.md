@@ -111,20 +111,18 @@ Set on the server (Fly secrets), then run the demo seed once:
 
 ```bash
 fly secrets set --app stawi PLAY_REVIEW_PHONE="<reviewer phone, e.g. 07XX XXX XXX>" \
-  PLAY_REVIEW_CODE="<6-digit code>" SUPABASE_SERVICE_ROLE_KEY="<service role key>"
+  PLAY_REVIEW_PIN="<4-digit PIN, not 1234>" SUPABASE_SERVICE_ROLE_KEY="<service role key>"
 PLAY_REVIEW_PHONE="<same phone>" DATABASE_URL="<db url>" npx tsx packages/db/prisma/seed-demo.ts
 ```
 
 Instructions to paste into Play Console:
 
 > 1. Open the app and tap **Sign in**.
-> 2. Enter phone number **<PLAY_REVIEW_PHONE>** and tap **Send code** (no SMS is sent to this test number).
-> 3. Enter code **<PLAY_REVIEW_CODE>** and tap **Verify & continue**.
-> 4. When asked to choose a 4-digit PIN, either set any PIN (e.g. 2580) for faster sign-in on this device, or tap **Skip for the demo account**.
-> 5. You are the treasurer of the demo group "<demo group name>": record a contribution on the dashboard, open **Open group workspace** for the charter, minutes and **Month-End** statement.
-> 6. Account → **Sign out of all devices**, and **Delete my account** (/account/delete; public steps at /delete-account).
+> 2. Enter phone number **<PLAY_REVIEW_PHONE>** and PIN **<PLAY_REVIEW_PIN>**, then tap **Sign in**. No SMS or one-time code is used: members sign in with their phone number and their own PIN.
+> 3. You are the treasurer of the demo group "<demo group name>": record a contribution on the dashboard, open **Open group workspace** for the charter, minutes and **Month-End** statement.
+> 4. Account → **Sign out of all devices**, and **Delete my account** (/account/delete; public steps at /delete-account).
 
-Remove `PLAY_REVIEW_PHONE` / `PLAY_REVIEW_CODE` after review (`fly secrets unset`).
+Remove `PLAY_REVIEW_PHONE` / `PLAY_REVIEW_PIN` after review (`fly secrets unset`).
 
 ## Still to do (owner / Chrome)
 

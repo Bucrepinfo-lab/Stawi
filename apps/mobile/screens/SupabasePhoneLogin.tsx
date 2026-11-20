@@ -1,64 +1,66 @@
 /**
- * Production phone auth via Supabase (Expo). Two steps: enter phone → SMS code.
- * One flow covers new and returning members — Supabase creates the user on first
- * verify. Only rendered when EXPO_PUBLIC_SUPABASE_URL is set (see App.tsx). On
- * success the session updates and App swaps to the group view automatically.
+ * Mobile sign-in (Expo): phone number, then the person's own 4-digit PIN — no
+ * SMS (owner 20/11/26). The server checks the PIN (POST /api/auth/pin/sign-in
+ * with app: true) and hands back the session, which Supabase keeps. A first
+ * sign-in, forgotten or locked PIN uses the joining code a group official
+ * gave, on the website; then the PIN works here too.
  */
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { phoneRule, toE164 } from '@stawi/core';
 import { colors, radius, spacing } from '../theme/tokens';
 import { supabase } from '../lib/supabase';
 
+const BASE = (process.env.EXPO_PUBLIC_API_BASE ?? '').replace(/\/$/, '');
+
 export function SupabasePhoneLogin() {
   const [phone, setPhone] = useState('');
-  const [code, setCode] = useState('');
-  const [stage, setStage] = useState<'phone' | 'code'>('phone');
-  const [e164Phone, setE164Phone] = useState('');
+  const [pin, setPin] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string>();
 
-  async function sendCode() {
+  async function signIn() {
     const e164 = toE164(phone);
     if (!e164) { setErr('Enter a valid phone number.'); return; }
+    if (!/^\d{4}$/.test(pin)) { setErr('Enter your 4-digit PIN.'); return; }
+    if (!BASE) { setErr('Sign-in is not set up in this build.'); return; }
     setBusy(true); setErr(undefined);
-    const { error } = await supabase.auth.signInWithOtp({ phone: e164 });
-    setBusy(false);
-    if (error) { setErr(error.message); return; }
-    setE164Phone(e164); setStage('code');
-  }
-
-  async function verify() {
-    setBusy(true); setErr(undefined);
-    const { error } = await supabase.auth.verifyOtp({ phone: e164Phone, token: code.trim(), type: 'sms' });
-    setBusy(false);
-    if (error) { setErr('That code did not match. Try again.'); return; }
-    // Session change is observed by App's SupabaseGate; nothing else to do.
+    try {
+      const res = await fetch(`${BASE}/api/auth/pin/sign-in`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: e164, pin, app: true }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.session) { setErr(data.error ?? 'Could not sign in. Try again.'); return; }
+      const { error } = await supabase.auth.setSession({ access_token: data.session.accessToken, refresh_token: data.session.refreshToken });
+      if (error) setErr('Could not sign in. Try again.');
+      // Session change is observed by App's SupabaseGate; nothing else to do.
+    } catch {
+      setErr('No connection. Try again.');
+    } finally {
+      setBusy(false);
+      setPin('');
+    }
   }
 
   return (
     <ScrollView contentContainerStyle={{ padding: spacing.xl }}>
       <Text style={s.kicker}>SAVE TOGETHER · GROW TOGETHER</Text>
-      <Text style={s.h1}>{stage === 'phone' ? 'Enter with your phone' : 'Enter the code'}</Text>
-      <Text style={s.sub}>{stage === 'phone' ? 'No email needed. We’ll text you a one-time code.' : `Sent to ${e164Phone}.`}</Text>
+      <Text style={s.h1}>Enter with your phone</Text>
+      <Text style={s.sub}>Your phone number and your own 4-digit PIN. No email, no SMS.</Text>
 
-      {stage === 'phone' ? (
-        <>
-          <Text style={s.label}>Phone number</Text>
-          <View style={s.row}>
-            <View style={s.cc}><Text style={s.ccTxt}>🇰🇪 +254</Text></View>
-            <TextInput style={s.input} value={phone} onChangeText={(t) => setPhone(t.replace(/[^0-9]/g, ''))} keyboardType="number-pad" maxLength={phoneRule('KE').localMaxDigits} placeholder={phoneRule('KE').placeholder} placeholderTextColor={colors.faint} />
-          </View>
-          <TouchableOpacity style={[s.cta, busy && s.disabled]} disabled={busy} onPress={sendCode}><Text style={s.ctaTxt}>{busy ? 'Sending…' : 'Send code →'}</Text></TouchableOpacity>
-        </>
-      ) : (
-        <>
-          <Text style={s.label}>6-digit code</Text>
-          <TextInput style={s.input} value={code} onChangeText={setCode} keyboardType="number-pad" placeholder="123456" placeholderTextColor={colors.faint} />
-          <TouchableOpacity style={[s.cta, busy && s.disabled]} disabled={busy} onPress={verify}><Text style={s.ctaTxt}>{busy ? 'Verifying…' : 'Verify & continue →'}</Text></TouchableOpacity>
-          <TouchableOpacity onPress={() => { setStage('phone'); setCode(''); }}><Text style={s.back}>← Use a different number</Text></TouchableOpacity>
-        </>
-      )}
+      <Text style={s.label}>Phone number</Text>
+      <View style={s.row}>
+        <View style={s.cc}><Text style={s.ccTxt}>🇰🇪 +254</Text></View>
+        <TextInput style={s.input} value={phone} onChangeText={(t) => setPhone(t.replace(/[^0-9]/g, ''))} keyboardType="number-pad" maxLength={phoneRule('KE').localMaxDigits} placeholder={phoneRule('KE').placeholder} placeholderTextColor={colors.faint} />
+      </View>
+      <Text style={s.label}>PIN</Text>
+      <TextInput style={s.input} value={pin} onChangeText={(t) => setPin(t.replace(/[^0-9]/g, '').slice(0, 4))} keyboardType="number-pad" secureTextEntry maxLength={4} placeholder="••••" placeholderTextColor={colors.faint} />
+      <TouchableOpacity style={[s.cta, busy && s.disabled]} disabled={busy} onPress={signIn}><Text style={s.ctaTxt}>{busy ? 'Checking…' : 'Sign in →'}</Text></TouchableOpacity>
+      <TouchableOpacity onPress={() => { if (BASE) void Linking.openURL(`${BASE}/sign-in?code=1`); }}>
+        <Text style={s.back}>First time, or forgot your PIN? Use your joining code</Text>
+      </TouchableOpacity>
       {!!err && <Text style={s.err}>{err}</Text>}
     </ScrollView>
   );

@@ -56,3 +56,4 @@ export * from './modules';
 export * from './attention-notices';
 export * from './messages';
 export * from './collect-ways';
+export * from './join-code';
