@@ -34,62 +34,89 @@ Today: KES 299 a month per group, KES 149 for 10 members or fewer.
 For the smallest savers the fee eats a tenth of what the group saves. A flat
 price is unfair to them: a 12-member group pays double what a 10-member group pays.
 
-## Proposal
+## What others charge (read 20/11/26)
 
-### Pillar 1 — the group's records (who pays: the group)
-**KES 10 per member a month. Never less than KES 50, never more than KES 299 a group.**
+| Product | Kind | Price | Free tier |
+|---|---|---|---|
+| [MyChama](https://mychama.app/) | Chama records | KES 550 a month up to 30 members; KES 2,000 up to 100 | Yes: up to 10 members, 50 transactions a month |
+| [ChamaPro](https://chamapro.co.ke/pricing) | Chama records | KES 50–90 **per member** a month (10 members ≈ KES 800) | No; 30-day trial |
+| [ChamaPoint](https://chamapoint.com/blog/best-chama-management-software-kenya-buyers-guide/) | Chama records | From KES 2,500 a month, flat | No; 7-day trial |
+| [Chamasoft](https://help.chamasoft.com/make-payment-chamasoft/) | Chama records | KSh 696 a month (page dated 2016) | 14-day trial |
+| [BiasharaBook](https://biasharabook.com/) | Shop books and till | KES 599 a month; KES 5,499 a year | Yes: one shop, limited sales |
+| [Kasoko](https://kasoko.com/) | Shop books and till | KES 3,000 a month | Yes: 50 products, 100 sales a month |
+| [PayDesk](https://paydesk.co.ke/) | Till | KES 599 a month | Trial |
+
+What this says:
+- **Chama tools charge KES 550–2,500 a month for a 30-member group.** The cheapest per-member price found is KES 50.
+- **Shop books start at KES 599 a month, and two of three offer a free plan** for a small shop. A free plan is the bar a butcher or kiosk owner will compare us with.
+- Nobody found charges by the day.
+
+## The best charges — recommended
+
+The aim: no group or small trader is priced out, and the fee is never more than a
+small share of what they save or earn.
+
+### 1. Group records (meetings, minutes, contributions, statements, messages, ideas)
+**KES 10 per member a month — at least KES 50, at most KES 299 a group.**
 A year paid ahead costs 10 months. First month free.
 
-| Members | A month | Each member, a week |
-|---|---|---|
-| 5 or fewer | KES 50 | about KES 2.50 |
-| 8 | KES 80 | KES 2.30 |
-| 10 | KES 100 | KES 2.30 |
-| 15 | KES 150 | KES 2.30 |
-| 20 | KES 200 | KES 2.30 |
-| 30 or more | KES 299 | KES 2.30 or less |
+| Members | A month | Each member, a week | vs. MyChama | vs. ChamaPro |
+|---|---|---|---|---|
+| 5 | KES 50 | about KES 2.50 | free | ≈ KES 450 |
+| 10 | KES 100 | KES 2.30 | free | ≈ KES 800 |
+| 15 | KES 150 | KES 2.30 | KES 550 | ≈ KES 1,200 |
+| 30 | KES 299 | KES 2.30 | KES 550 | ≈ KES 2,100 |
+| 60 | KES 299 | KES 1.15 | KES 2,000 | ≈ KES 3,000 |
 
-- No group pays more than the price already approved, so the founding price promise is kept.
-- A 15-member group saving KES 50 a week pays 4.6% of its pool instead of 9.2%.
-- Still below MyChama (KES 550) and Chamasoft (KSh 696) for a 30-member group.
+- **Why:** it is a fifth to a tenth of what the paid chama tools charge, and the
+  fee follows the size of the group, so the smallest groups pay least.
+- **Against today's price:** no group pays more than KES 299, the price already
+  approved, so the founding-price promise holds. A 15-member group saving KES 50
+  a week pays 4.6% of its pool instead of 9.2%.
+- **Not chosen:** a free tier like MyChama's. Stawi's first month is free, and
+  KES 50 for a small group is less than one member's weekly saving.
 
-A lower option, if the owner wants the widest reach: **KES 5 per member, at
-least KES 50, at most KES 199.** It halves income per group.
+### 2. A group that uses meetings and minutes only (no money)
+**Half: KES 5 per member a month — at least KES 30, at most KES 149.**
+For groups happy with their bank or SACCO. It costs us less to run, and it
+keeps the "keep your bank" welcome honest.
 
-### Pillar 2 — business ideas (who pays: nobody extra)
-Included with the group's plan. It is what moves a group from saving to earning,
-and charging for it would stop the groups that most need it.
+### 3. The books for a business (no group needed)
+**Small shop: free for ever — up to 100 sales a month, one person.**
+**Full books: KES 99 a month (KES 990 a year), or KES 30 a week, or KES 5 a day.**
+First month of the full books free.
 
-### Pillar 3 — the books for a business (who pays: the business)
-People who earn daily pay daily. Same service, three ways to pay:
+- **Why a free plan:** BiasharaBook and Kasoko both give a small shop the
+  books for free. Without one, a kiosk owner will not try us.
+- **Why KES 99:** one-sixth of the cheapest paid competitor (KES 599). A shop,
+  butchery or pub pays it with one sale.
+- **By the day or week:** for people paid daily. Paying by the day costs more
+  over a month (KES 150), and the screen says so plainly.
+- A business owned by a subscribed group: its first business's full books are included.
 
-| Pay | Price |
-|---|---|
-| A day (only days the books are used) | KES 5 |
-| A week | KES 30 |
-| A month | KES 99 |
+### 4. Business ideas and messages
+Included in every group plan.
 
-A business owned by a subscribed group pays nothing extra for its first business.
-
-### Pillar 4 — savings and credit (switched off)
-No price yet. Proposed for when it is switched on: no monthly fee to members; a
-small fee per loan processed, set with the lender. Decide then.
+### 5. Savings and credit (switched off)
+No fee while it is off. When it is switched on: no monthly fee to members; a
+small fee per loan, set with the lender. Decide then.
 
 ### Collecting small amounts
-A KES 5 or KES 50 payment only works if it costs nothing to collect. Buy Goods
-is free for the payer and free for the Till up to KES 500, so every price above
-can be collected at no M-Pesa cost. This needs a Buy Goods Till for Telpen
-beside the Paybill.
+Every price above is under KES 500, so it costs nothing to collect through an
+M-Pesa Buy Goods Till (free for the payer; free for the Till up to KES 500
+since 07/08/26, [Tech-ish](https://tech-ish.com/2026/08/01/mpesa-pochi-buy-goods-tariff-cuts-2026/)).
+**Needs:** a Buy Goods Till for Telpen beside the Paybill.
 
 ### Other countries
-After approval, each country keeps its approved price as the ceiling, with the
-per-member price at one-thirtieth of it and the floor at one-sixth, rounded to a
-round local amount, and comes back for approval as a table.
+Each keeps its approved price as the ceiling; the per-member price is one-
+thirtieth of it and the floor one-sixth, rounded to a round local amount. They
+come back as a table for approval.
 
 ## Owner decisions
-1. Pillar 1: KES 10 per member (floor 50, ceiling 299), or KES 5 (floor 50, ceiling 199), or keep today's price.
-2. Pillar 2 included: yes or no.
-3. Pillar 3: KES 5 a day, 30 a week, 99 a month: yes or change.
-4. Open a Buy Goods Till for small payments: yes or no.
+1. Group records: KES 10 per member (floor 50, ceiling 299) — yes or change.
+2. Meetings-only groups at half — yes or no.
+3. Books: free small-shop plan, then KES 99 a month / 30 a week / 5 a day — yes or change.
+4. Open a Buy Goods Till for small payments — yes or no.
 
 This is pricing information for the owner's decision, not financial advice.
+Competitor prices were read from their own pages on 20/11/26 and may change.
