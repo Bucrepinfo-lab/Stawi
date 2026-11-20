@@ -1,5 +1,10 @@
 # Stawi — session memory / start-here
 
+## 20/11/26 — All African local prices approved (owner: "approve all prices")
+- `FOUNDING_GROUP_PRICES` approved, group / small group (10 or fewer) a month: Kenya KES 299/149, Uganda UGX 8,400/4,200, Tanzania TZS 6,000/3,000, Rwanda RWF 3,000/1,500 (new rows), Nigeria NGN 3,500/1,750, South Africa ZAR 45/22, Ghana GHS 30/15. The rest of the world stays indicative (card through Paddle).
+- Uganda, Tanzania and Rwanda added as country profiles in `compliance.ts` (VAT 18%, URA/TRA/RRA, cooperative registrars MTIC/TCDC/RCA, data protection PDPO/PDPC/NCSA; indicative, verify locally). Before this a Ugandan group fell back to the Kenya profile and KES. SubscribeGate's country list gained UG, TZ, RW and GH.
+- Local payment there still opens only once the pawaPay (UG, TZ, RW, GH) or Paystack (NG, ZA) keys are set.
+
 ## 19/11/26 — Local way first in every country; card later via Paddle (owner standing order)
 - Owner 19/11/26: "Always, we go for the most convenient mode of payment... Anything to do with the card, it comes later"; when a card is used, Paddle takes it and remits the VAT. Local direct sales carry Telpen's VAT (owner accepted).
 - `packages/core/src/payment-rails.ts` v4: `LOCAL_METHOD` (KE M-Pesa; UG TZ RW GH ZM MW MZ CM CI SN BJ BF CG GA SL mobile money via pawaPay; NG bank transfer/USSD and ZA EFT via Paystack), `subscriptionRails({country, switches, localPriceApproved})` best first, full `PADDLE_BLOCKED_COUNTRIES`.

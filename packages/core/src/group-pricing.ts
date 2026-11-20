@@ -9,8 +9,9 @@
  *   keeps the founding price below for as long as it stays subscribed (its
  *   subscription is never CANCELLED). Later price changes apply only to groups
  *   that join after the founding window, through STAWI_GROUP_PRICES.
- * - Kenya is approved. Every other country is INDICATIVE (near the same value)
- *   until the owner approves it.
+ * - Approved by the owner: Kenya, then Uganda, Tanzania, Rwanda, Nigeria, South
+ *   Africa and Ghana (20/11/26, "approve all prices"). The rest of the world is
+ *   INDICATIVE (near the same value, card through Paddle) until approved.
  *
  * Money is integer minor units (cents). Nothing here moves money: it only says
  * what a group would be asked to pay.
@@ -51,9 +52,12 @@ const US_PRICES = row('US', 'USD', 299, 149);
 /** The founding price list. Changing a founding price breaks the lock: don't. */
 export const FOUNDING_GROUP_PRICES: Record<string, GroupPriceList> = {
   KE: row('KE', 'KES', 29_900, 14_900, true),
-  NG: row('NG', 'NGN', 350_000, 175_000),
-  ZA: row('ZA', 'ZAR', 4_500, 2_200),
-  GH: row('GH', 'GHS', 3_000, 1_500),
+  UG: row('UG', 'UGX', 840_000, 420_000, true),
+  TZ: row('TZ', 'TZS', 600_000, 300_000, true),
+  RW: row('RW', 'RWF', 300_000, 150_000, true),
+  NG: row('NG', 'NGN', 350_000, 175_000, true),
+  ZA: row('ZA', 'ZAR', 4_500, 2_200, true),
+  GH: row('GH', 'GHS', 3_000, 1_500, true),
   US: US_PRICES,
   GB: row('GB', 'GBP', 249, 119),
   DE: row('DE', 'EUR', 279, 139),
