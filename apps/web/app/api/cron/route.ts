@@ -15,6 +15,9 @@ export const runtime = 'nodejs';
  *  2. dunning   — subscriptions past currentPeriodEnd flip ACTIVE → PAST_DUE.
  *  3. (reconciliation roll-ups are computed on read in @stawi/core
  *     accounting — nothing to materialize until reports move off-line.)
+ *  4. attention — stalled group work is told to the officials it concerns by
+ *     SMS, once per matter, person and level (owner approved 20/11/26).
+ *     Capped per run; off with ATTENTION_SMS=off.
  */
 async function run(req: Request) {
   const url = new URL(req.url);
@@ -49,6 +52,15 @@ async function run(req: Request) {
     data: { status: 'PAST_DUE' },
   });
   out.dunning = { pastDue: dunned.count };
+
+  // 4) Daily alerts for stalled work. A failure here never fails the other jobs.
+  try {
+    const { runAttentionNotices } = await import('@/lib/attention-notices');
+    out.attention = await runAttentionNotices(now);
+  } catch (e) {
+    console.error('[cron] attention failed', e instanceof Error ? e.message : e);
+    out.attention = 'failed';
+  }
 
   return NextResponse.json({ ok: true, ranAt: now.toISOString(), ...out });
 }

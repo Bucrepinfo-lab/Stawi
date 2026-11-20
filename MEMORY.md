@@ -1,5 +1,12 @@
 # Stawi — session memory / start-here
 
+## 20/11/26 (17:20) — Owner said yes: one shared papers list for savings and credit; daily alerts by SMS (awaiting owner merge)
+- Owner 15:36: "yes, go ahead and fix all" to: merge #29–#33 in order; savings and credit reads the shared papers list; and the standing items (level 4 reaches every member; table and schedule for daily alerts). **The merges were blocked by the session's safety check and are still open** — the owner must merge, or allow it.
+- `activationEvidence` (`packages/core/src/sacco-activation.ts`) now returns the document house's "start savings and credit" purpose (`buildHouseFromFacts` + `houseFactsFromStatements`). Same seven ids, same readiness for every existing test; needs 3 sittings and 3 months.
+- Daily alerts: `packages/core/src/attention-notices.ts` (planner, tests), `apps/web/lib/attention-notices.ts`, job 4 in `/api/cron` (the existing 03:00 UTC run). **Database (additive):** `AttentionNotice` (group, matter key, level, member row id, sentAt) — in `rls.sql`'s group list. Officials only by SMS; no member's name in an SMS; 150 a run; `ATTENTION_SMS=off` stops them. SMS purpose is `transactional` (an alert about the person's own duty).
+- Level 4 (every member sees it in the app) confirmed by the owner.
+- **Still the owner's:** which price option, and where group contributions settle — "yes" did not pick between the options.
+
 ## 20/11/26 (16:50) — Use only what you need: section switches, three ways to start, books with no group (awaiting owner merge)
 - Owner order: modules a group switches on and off (officials' posts, agenda items, money, ideas, books, savings and credit); open to everyone; warm, honest welcome for people who want one part; a business needs no group.
 - `packages/core/src/modules.ts` (tests): seven switches, `resolveModules` (saved choice over the default; agenda needs meetings; savings and credit only where the platform flag is on), three ways to start, `watchAllowed`, `groupTabsFor`, `booksOnly`, four welcome notes.

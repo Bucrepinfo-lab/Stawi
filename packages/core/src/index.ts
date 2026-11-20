@@ -55,3 +55,4 @@ export * from './contribution-pay';
 export * from './document-house';
 export * from './money-summary';
 export * from './modules';
+export * from './attention-notices';

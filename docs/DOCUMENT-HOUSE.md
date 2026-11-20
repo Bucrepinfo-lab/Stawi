@@ -33,9 +33,9 @@ lists of what each purpose needs are indicative (Kenya first) and an office may
 ask for more — verify against the office's current list.
 
 ## Next
-- Savings and credit should read `checkPurpose('savings_credit')` in place of
-  its own checklist (`activationEvidence`) so there is one list, not two.
-  That file is in a protected area — owner to approve.
+- Done (owner approved 20/11/26): savings and credit reads this shared list.
+  `activationEvidence` is now the house's "start savings and credit" purpose, so
+  the two can never disagree.
 - A record of which pack was opened, by whom and when (needs a small table).
 - Kiswahili on the printed pack.
 - Per-country lists (Uganda, Tanzania, Rwanda).
