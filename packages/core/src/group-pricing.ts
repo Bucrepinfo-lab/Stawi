@@ -58,6 +58,25 @@ export const FOUNDING_GROUP_PRICES: Record<string, GroupPriceList> = {
   NG: row('NG', 'NGN', 350_000, 175_000, true),
   ZA: row('ZA', 'ZAR', 4_500, 2_200, true),
   GH: row('GH', 'GHS', 3_000, 1_500, true),
+  // Second round, approved by the owner 20/11/26 (the pawaPay countries). Recorded
+  // only: these countries have no Stawi country profile yet, so a group cannot be
+  // set there and the quote falls back to Kenya. They open once each is added as a
+  // market in compliance.ts (owner decision; compliance-pack).
+  ZM: row('ZM', 'ZMW', 5_000, 2_500, true),
+  MW: row('MW', 'MWK', 400_000, 200_000, true),
+  MZ: row('MZ', 'MZN', 15_000, 7_500, true),
+  CM: row('CM', 'XAF', 130_000, 65_000, true),
+  CG: row('CG', 'XAF', 130_000, 65_000, true),
+  GA: row('GA', 'XAF', 130_000, 65_000, true),
+  CI: row('CI', 'XOF', 130_000, 65_000, true),
+  SN: row('SN', 'XOF', 130_000, 65_000, true),
+  BJ: row('BJ', 'XOF', 130_000, 65_000, true),
+  BF: row('BF', 'XOF', 130_000, 65_000, true),
+  CD: row('CD', 'CDF', 530_000, 270_000, true),
+  LS: row('LS', 'LSL', 4_000, 2_000, true),
+  SL: row('SL', 'SLE', 5_500, 2_700, true),
+  ZW: row('ZW', 'USD', 299, 149, true),
+  ET: row('ET', 'ETB', 38_000, 19_000, true),
   US: US_PRICES,
   GB: row('GB', 'GBP', 249, 119),
   DE: row('DE', 'EUR', 279, 139),

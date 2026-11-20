@@ -40,7 +40,8 @@ describe('group pricing (owner decision 18/11/26)', () => {
   });
 
   it('the African prices are owner-approved (20/11/26); the rest of the world is indicative', () => {
-    const approved = ['KE', 'UG', 'TZ', 'RW', 'NG', 'ZA', 'GH'];
+    const approved = ['KE', 'UG', 'TZ', 'RW', 'NG', 'ZA', 'GH',
+      'ZM', 'MW', 'MZ', 'CM', 'CG', 'GA', 'CI', 'SN', 'BJ', 'BF', 'CD', 'LS', 'SL', 'ZW', 'ET'];
     for (const [code, row] of Object.entries(FOUNDING_GROUP_PRICES)) {
       expect(row.approved).toBe(approved.includes(code));
       expect(row.smallMonthlyCents).toBeGreaterThan(0);
