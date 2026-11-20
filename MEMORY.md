@@ -1,5 +1,12 @@
 # Stawi — session memory / start-here
 
+## 20/11/26 (16:00) — One house, four rooms: papers written once, used in every section (awaiting owner merge)
+- Owner order: a group moving from group records to savings and credit, or into business, must not be sent back for documents Stawi already holds.
+- `packages/core/src/document-house.ts` (tests): twelve papers (nine from group records, three from business books) with state, count and dates; five purposes (register, bank account, start a business, show records to a bank or fund, start savings and credit — the last only when SACCO+ is on); `checkPurpose` says what is ready and how many more are needed.
+- `apps/web/lib/house.ts` + `GET /api/groups/:id/papers` (members only; no personal details). `DocumentHouse` card on the group, ideas and books pages. `/groups/:id/papers?for=` is the printable pack (officials only; no phone numbers).
+- Honest limit stated on screen: an outside office may still ask for signatures or a stamp on the printed copy.
+- Not done: SACCO+ activation still has its own checklist (`activationEvidence`, protected area) — proposed to read the shared one; a record of who opened a pack (needs a table); Kiswahili on the printed pack. No database change.
+
 ## 20/11/26 (15:30) — A member pays their own contribution (built, switched OFF; awaiting owner decision and merge)
 - Owner order: a member finds a place to pay, taps Pay, and the M-Pesa request arrives; local way first, card second.
 - `packages/core/src/contribution-pay.ts` (tests), `GET/POST /api/contributions/pay` (member of the group only, own membership only, 90-second double-tap guard, PENDING contribution confirmed by the existing callback), `PayContribution` card on the dashboard (quick amounts KES 20–1,000, or type one; smallest KES 10).
