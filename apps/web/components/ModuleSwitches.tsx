@@ -40,15 +40,21 @@ export function ModuleSwitches({ groupId, modules, offered }: { groupId: string;
     setState(next);
     setNote(null);
     track('sort', `use-${id.replace(/_/g, '-')}-${next[id] ? 'on' : 'off'}`);
-    start(async () => {
-      const r = await saveModulesAction({ groupId, modules: next });
-      if (r.ok) {
-        setNote({ ok: true, text: T.saved[lang] });
-        router.refresh();
-      } else {
-        setState(before);
-        setNote({ ok: false, text: r.error ?? T.failed[lang] });
-      }
+    start(() => {
+      void saveModulesAction({ groupId, modules: next })
+        .then((r) => {
+          if (r.ok) {
+            setNote({ ok: true, text: T.saved[lang] });
+            router.refresh();
+          } else {
+            setState(before);
+            setNote({ ok: false, text: r.error ?? T.failed[lang] });
+          }
+        })
+        .catch(() => {
+          setState(before);
+          setNote({ ok: false, text: T.failed[lang] });
+        });
     });
   }
 

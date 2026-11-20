@@ -98,14 +98,15 @@ export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, 
   const [meetings, setMeetings] = useState<Meeting[]>(cockpit.meetings);
   const [saccoActive, setSaccoActive] = useState(false);
 
-  const tabs: { key: Tab; label: string; icon: string }[] = [
+  const allTabs: { key: Tab; label: string; icon: string }[] = [
     { key: 'charter', label: 'Charter', icon: '📋' },
     { key: 'minutes', label: 'Minutes', icon: '📝' },
     { key: 'documents', label: 'Documents', icon: '📄' },
     { key: 'statement', label: 'Month-End', icon: '📊' },
     // SACCO+ (savings & credit) tab only when the server enables it.
     ...(saccoPlus ? [{ key: 'sacco' as Tab, label: 'SACCO+', icon: '🏦' }] : []),
-  ].filter((t) => allowedTabs.includes(t.key));
+  ];
+  const tabs = allTabs.filter((t) => allowedTabs.includes(t.key));
 
   // The self-directing spine: turn this group's live state into a whole-app
   // journey with a single "do this next" step spanning all four pillars.

@@ -420,7 +420,7 @@ export function Landing({ saccoPlus, foundingDays = null }: { saccoPlus: boolean
         <CountdownBadge days={foundingDays} label={lang === 'sw' ? 'siku zimebaki kujiunga kwa bei ya waanzilishi' : 'days left to join at the founding price'} />
       </div>
       <ValueBanners pillars={[1, 2, 3, 4]} saccoPlus={saccoPlus} lang={lang} />
-      <OpenDoor lang={lang} savingsCredit={saccoPlus} />
+      <OpenDoor lang={lang === 'sw' ? 'sw' : 'en'} savingsCredit={saccoPlus} />
       <ShareBar lang={lang} />
 
       {/* Vision · Mission · Values */}
