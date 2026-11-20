@@ -10,7 +10,7 @@ const ul: React.CSSProperties = { margin: '6px 0 0', paddingLeft: 20 };
 
 export default function PrivacyPage() {
   return (
-    <LegalPage kicker="Legal" title="Privacy Policy" updated="07/11/26">
+    <LegalPage kicker="Legal" title="Privacy Policy" updated="20/11/26">
       <LegalSection h="1. Who we are">
         <p style={{ margin: 0 }}>
           Stawi is a record-keeping app for savings groups (chamas) operated by <b>Telpen Systems Ltd</b>, a company
@@ -28,6 +28,7 @@ export default function PrivacyPage() {
           <li><b>Contributions</b> — amounts, dates and channel (cash or M-Pesa) recorded for you, fines and payouts, and the month-end statements built from them.</li>
           <li><b>M-Pesa transaction metadata</b> — for treasurer-initiated payment requests: the paying phone number, amount, M-Pesa receipt number, request IDs and result status returned by Safaricom. We never see or store your M-Pesa PIN.</li>
           <li><b>Technical data</b> — sign-in session and trusted-device cookies, and standard server logs (IP address, time, page) used for security, rate limiting and troubleshooting.</li>
+          <li><b>Anonymous counts</b> — to learn which parts of Stawi help, we count how many times a section is seen, opened, tapped or shared each day. A count is only a number beside a section name. It holds no name, phone number, group, location or device, so it cannot be traced to you.</li>
         </ul>
         <p style={{ margin: '8px 0 0' }}>We do not collect your contacts, location, SMS inbox, photos library or device identifiers, and we show no advertising.</p>
       </LegalSection>

@@ -21,6 +21,8 @@ const PUBLIC: RegExp[] = [
   /^\/api\/auth\/otp\/(send|verify)$/,
   /^\/api\/auth\/pin\/(status|sign-in)$/,
   /^\/api\/mobile/,
+  // Engagement counts (owner 20/11/26): counts only, no personal data, rate-limited.
+  /^\/api\/track$/,
 ];
 
 const isPublic = (pathname: string) => PUBLIC.some((re) => re.test(pathname));
