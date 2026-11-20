@@ -226,3 +226,30 @@ html.dark .app-tab[aria-current="page"] { color: var(--ink); }
 .house-note { font-size: 13.5px; color: var(--dim); }
 .house-go { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 12px 20px; border-radius: 14px; border: 0; background: var(--forest-deep); color: #fffdf8; font: inherit; font-weight: 800; font-size: 16px; text-decoration: none; cursor: pointer; box-shadow: inset 0 -4px 0 var(--gold); }
 .house-purpose:focus-visible, .house-go:focus-visible, .house-line .tag.go:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* ── Money statement by day, week and month (owner 20/11/26) ─────────────── */
+.money { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); margin-top: 18px; }
+.money > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 19px 16px 14px; min-height: 72px; }
+.money > summary::-webkit-details-marker { display: none; }
+.money-icon { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; background: color-mix(in srgb, var(--sky) 14%, var(--paper)); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--sky) 35%, transparent), 0 0 0 3px var(--paper), 0 0 0 4px color-mix(in srgb, var(--gold) 55%, transparent); }
+.money-title { display: block; font-family: var(--font-display); font-weight: 600; font-size: 21px; line-height: 1.15; }
+.money-sub { display: block; font-size: 13.5px; color: var(--ink-2); margin-top: 2px; }
+.money-badge { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 800; background: var(--good); }
+.money-badge.bad { background: var(--clay); }
+.money-body { padding: 0 16px 16px; display: grid; gap: 12px; }
+.money-sides { display: flex; gap: 6px; flex-wrap: wrap; }
+.money-side { min-height: 40px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--bone); color: var(--ink-2); font: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer; }
+.money-side[aria-selected="true"] { background: var(--sky); border-color: var(--sky); color: #fffdf8; }
+.money-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.money-table { width: 100%; border-collapse: collapse; font-size: 14.5px; min-width: 300px; }
+.money-table th { text-align: right; padding: 9px 10px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); background: var(--bone-2); }
+.money-table th:first-child, .money-table td:first-child { text-align: left; }
+.money-table td { padding: 9px 10px; border-top: 1px solid var(--line); }
+.money-table .n { text-align: right; font-family: var(--font-mono); font-feature-settings: "tnum"; white-space: nowrap; }
+.money-table .neg { color: var(--danger); }
+.money-table tfoot td { font-weight: 800; background: var(--bone); border-top: 2px solid var(--line); }
+.money-none { color: var(--dim); font-size: 14.5px; }
+.money-checks { list-style: none; display: grid; gap: 6px; }
+.money-checks li { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; padding: 8px 10px; border-radius: 10px; font-size: 14px; font-weight: 600; background: color-mix(in srgb, var(--good) 12%, var(--paper)); color: var(--good); }
+.money-checks li.bad { background: color-mix(in srgb, var(--clay) 13%, var(--paper)); color: var(--clay); }
+.money > summary:focus-visible, .money-side:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }

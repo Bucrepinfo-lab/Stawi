@@ -1,5 +1,12 @@
 # Stawi — session memory / start-here
 
+## 20/11/26 (16:20) — One money statement by day, week and month, checked (awaiting owner merge)
+- Owner order: wherever a financial statement is needed, show it by day, week and month, harmonised and reconciled into one clear summary.
+- `packages/core/src/money-summary.ts` (tests): group table money (posted meetings only) and business books on one calendar; buckets by day, week (Monday) and month; totals; two checks — day/week/month totals agree, and each meeting opens with what the last one closed with (a blank or 0 opening is "not written", never a gap).
+- `GET /api/groups/:id/money` (members only; totals, no names). `MoneySummary` card, folded until opened, on the group and books pages: By day / By week / By month, Together / Group / Business. The papers pack gains the together table and the check lines.
+- Read-only; no change to `accounting.ts`, `statement.ts` or any money path. No database change.
+- Not done: opening and closing balance per period for the business (the books hold no opening cash figure); the country's own currency label (KES shown).
+
 ## 20/11/26 (16:00) — One house, four rooms: papers written once, used in every section (awaiting owner merge)
 - Owner order: a group moving from group records to savings and credit, or into business, must not be sent back for documents Stawi already holds.
 - `packages/core/src/document-house.ts` (tests): twelve papers (nine from group records, three from business books) with state, count and dates; five purposes (register, bank account, start a business, show records to a bank or fund, start savings and credit — the last only when SACCO+ is on); `checkPurpose` says what is ready and how many more are needed.

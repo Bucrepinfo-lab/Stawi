@@ -53,3 +53,4 @@ export * from './engagement';
 export * from './escalation';
 export * from './contribution-pay';
 export * from './document-house';
+export * from './money-summary';
