@@ -101,7 +101,8 @@ export function joinCodeMessage(input: { name: string; groupName: string; code: 
  * A founder who opened their own account with a PIN has an unproven phone:
  * they reach their own groups by account, never someone else's roster by phone.
  */
-export function phoneIsProven(meta: { phone_proved?: unknown } | null | undefined, phoneConfirmedAt: string | null | undefined): boolean {
-  if (meta && typeof meta.phone_proved === 'boolean') return meta.phone_proved;
+export function phoneIsProven(meta: object | null | undefined, phoneConfirmedAt: string | null | undefined): boolean {
+  const flag = meta ? (meta as { phone_proved?: unknown }).phone_proved : undefined;
+  if (typeof flag === 'boolean') return flag;
   return !!phoneConfirmedAt;
 }
