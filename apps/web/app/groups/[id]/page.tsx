@@ -57,7 +57,7 @@ export default async function GroupWorkspacePage({ params, searchParams }: { par
       {(modules.money || modules.books) && <MoneySummary groupId={cockpit.groupId} />}
       {!booksOnly(modules) && <DocumentHouse groupId={cockpit.groupId} />}
       {canEdit && <ModuleSwitches groupId={cockpit.groupId} modules={modules} offered={offeredModules({ savingsCredit: saccoPlusEnabled() }).map((m) => m.id)} />}
-      <TabsHint records={!booksOnly(modules)} ideas={modules.ideas} books={modules.books} />
+      <TabsHint records={!booksOnly(modules)} ideas={modules.ideas} books={modules.books} messages={modules.messages} />
     </main>
   );
 }

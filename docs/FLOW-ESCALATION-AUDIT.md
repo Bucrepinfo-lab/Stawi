@@ -39,6 +39,7 @@ the group page).
 | 3 | Tax dates | File and pay on time | Business owner | not yet watched — see gaps |
 | 4 | Savings and credit (off) | Repayments, arrears, approvals | Credit committee | to be designed with SACCO+ before it is switched on |
 | — | Subscription | Keep the group's plan paid | Treasurer | existing subscription-due notice; no ladder (billing is protected) |
+| 1 | Messages — ask the officials | Answer a member's question | Officials | not yet watched: unanswered questions are marked "Waiting for an answer" and listed first; a watch that raises one unanswered for 3 days is the next PR |
 | — | Logo, motto, goals, sharing | Optional | — | none by design |
 
 ## Gaps found

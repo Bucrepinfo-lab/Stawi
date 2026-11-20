@@ -10,7 +10,7 @@ describe('a group opens only the rooms it wants', () => {
     const g = resolveModules(null, { groupType: 'CHAMA', savingsCredit: true });
     expect(Object.values(g).every(Boolean)).toBe(true);
     const b = resolveModules(undefined, { groupType: 'BUSINESS', savingsCredit: true });
-    expect(b).toEqual({ meetings: false, agendas: false, officials: false, money: false, ideas: false, books: true, savings_credit: false });
+    expect(b).toEqual({ meetings: false, agendas: false, officials: false, money: false, messages: false, ideas: false, books: true, savings_credit: false });
     expect(booksOnly(b)).toBe(true);
     expect(booksOnly(g)).toBe(false);
   });
@@ -77,5 +77,14 @@ describe('the welcome is warm and true', () => {
     expect(welcomeNotes({ savingsCredit: true }).map((n) => n.id)).toContain('moving');
     expect(off.find((n) => n.id === 'keep_bank')!.body.en).toContain('You do not have to move your money to use Stawi');
     for (const n of off) expect(`${n.title.en} ${n.body.en} ${n.cta.en}`).not.toMatch(/loan|borrow|credit|lend/i);
+  });
+});
+
+describe('messages is a switch like any other', () => {
+  it('is on for groups, off for a business on its own, and can be switched off', () => {
+    expect(resolveModules(null, { groupType: 'CHAMA' }).messages).toBe(true);
+    expect(startChoice('organise').modules.messages).toBe(true);
+    expect(defaultModules('BUSINESS').messages).toBe(false);
+    expect(resolveModules({ messages: false }, { groupType: 'CHAMA' }).messages).toBe(false);
   });
 });

@@ -15,6 +15,7 @@ warm and honest words, and nobody is pushed towards savings and credit.
 | Agenda items (needs meetings) | Agenda section in the minutes form | The form does not ask for agenda items |
 | Show officials' posts | Members see who holds which post | Members get the list without posts (removed on the server); officials still see them; minutes still name who chaired; the "name your officials" watch stops |
 | Contributions and money statements | Table money, pay card, month-end and money statement | No money asked for or shown; money watches stop |
+| Messages | Messages tab: whole group, and ask the officials | Hidden; messages already written are kept |
 | Business ideas | Ideas tab | Hidden |
 | Business books | Books tab | Hidden |
 | Savings and credit | Offered only where `SACCO_PLUS_ENABLED` is on | Nothing about it is shown to that group |
@@ -53,4 +54,3 @@ list sent to ordinary members, the home screen, the main tabs, the books page.
 ## Not yet
 - Hiding the officials' posts on already-posted minutes (a posted record is not rewritten).
 - The mobile app and `/api/mobile/*` do not read the switches yet (standing rule 2: fix everywhere) — next PR.
-- A switch for messaging, when messaging is built.

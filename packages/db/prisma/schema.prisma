@@ -103,6 +103,7 @@ model Group {
   statements    MonthlyStatement[]
   planPayments  PlanPayment[]
   attentionNotices AttentionNotice[]
+  messages      GroupMessage[]
   salesRepId    String?
   salesRep      SalesAgent? @relation(fields: [salesRepId], references: [id])
 
@@ -598,4 +599,22 @@ model AttentionNotice {
 
   @@unique([groupId, key, level, memberId])
   @@index([groupId])
+}
+
+/// Messages inside the app (owner 20/11/26). channel ALL = the whole group;
+/// OFFICIALS = "ask the officials": seen by the member named in threadMemberId
+/// and by the officials only. Plain text, screened before it is stored.
+/// Group-owned (listed in rls.sql). No phone number is stored here.
+model GroupMessage {
+  id                 String   @id @default(cuid())
+  group              Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId            String
+  channel            String   @default("ALL") // ALL | OFFICIALS
+  threadMemberId     String? // Membership.id of the member whose question this is (OFFICIALS only)
+  senderMembershipId String
+  body               String
+  createdAt          DateTime @default(now())
+
+  @@index([groupId, channel, createdAt])
+  @@index([groupId, threadMemberId])
 }
