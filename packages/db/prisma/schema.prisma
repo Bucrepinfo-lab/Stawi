@@ -89,6 +89,9 @@ model Group {
   countryCode String     @default("KE")
   flagEmoji   String     @default("🇰🇪")
   formalizationStep Int  @default(0)
+  // Which sections this group or business uses (owner 20/11/26). Null = the default for its type.
+  // { meetings, agendas, officials, money, ideas, books, savings_credit } — see @stawi/core modules.ts
+  modules     Json?
 
   members       Membership[]
   contributions Contribution[]

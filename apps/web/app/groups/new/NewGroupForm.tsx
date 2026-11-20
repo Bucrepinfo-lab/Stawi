@@ -1,52 +1,70 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { START_CHOICES, startChoice, type StartChoiceId, type ValueLang } from '@stawi/core';
 import { createGroupAction } from '@/app/actions';
+import { storedLang, track } from '@/components/track';
 
-const input: React.CSSProperties = { width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--line)', background: '#fff', fontFamily: 'inherit', fontSize: 15, color: 'var(--ink)', boxSizing: 'border-box' };
-const lbl: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: 'var(--dim)', marginBottom: 6 };
+/**
+ * Start a group or a business (owner 20/11/26): pick what you came for, give
+ * it a name, and only those sections open. A business needs no group.
+ */
 
-const TYPES: { v: 'CHAMA' | 'SELF_HELP_GROUP' | 'SACCO' | 'BUSINESS'; label: string }[] = [
-  { v: 'CHAMA', label: 'Chama' },
-  { v: 'SELF_HELP_GROUP', label: 'Self-Help Group' },
-  { v: 'SACCO', label: 'SACCO' },
-  { v: 'BUSINESS', label: 'Business' },
-];
+const T = {
+  what: { en: 'What do you want to use?', sw: 'Unataka kutumia nini?' },
+  groupName: { en: 'Name of the group', sw: 'Jina la kikundi' },
+  bizName: { en: 'Name of the business', sw: 'Jina la biashara' },
+  groupEg: { en: 'e.g. Umoja Women Group', sw: 'mf. Kikundi cha Umoja' },
+  bizEg: { en: 'e.g. Mama Njeri Butchery', sw: 'mf. Bucha ya Mama Njeri' },
+  go: { en: 'Open it', sw: 'Fungua' },
+  busy: { en: 'Opening…', sw: 'Inafungua…' },
+  later: { en: 'You can switch sections on or off later.', sw: 'Unaweza kuwasha au kuzima sehemu baadaye.' },
+  fail: { en: 'Could not open it. Please try again.', sw: 'Haikufunguka. Tafadhali jaribu tena.' },
+} as const;
 
-export function NewGroupForm() {
+export function NewGroupForm({ initialStart }: { initialStart?: string }) {
   const router = useRouter();
+  const [lang, setLang] = useState<ValueLang>('en');
   const [name, setName] = useState('');
-  const [type, setType] = useState<(typeof TYPES)[number]['v']>('CHAMA');
+  const [start, setStart] = useState<StartChoiceId>(startChoice(initialStart).id);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string>();
+  useEffect(() => { setLang(storedLang()); }, []);
+
+  const choice = startChoice(start);
+  const business = choice.type === 'BUSINESS';
 
   async function submit() {
+    if (!name.trim() || busy) return;
     setBusy(true); setErr(undefined);
-    const r = await createGroupAction({ name, type });
+    track('cta', `start-${start.replace(/_/g, '-')}`);
+    const r = await createGroupAction({ name, start });
     setBusy(false);
-    if (r.ok && r.groupId) router.push(`/groups/${r.groupId}`);
-    else setErr(r.error ?? 'Could not create the group.');
+    if (r.ok && r.groupId) router.push(r.booksOnly ? `/books?group=${encodeURIComponent(r.groupId)}` : `/groups/${r.groupId}`);
+    else setErr(r.error ?? T.fail[lang]);
   }
 
   return (
-    <div style={{ marginTop: 26, display: 'grid', gap: 18 }}>
-      <div>
-        <label style={lbl}>Group name</label>
-        <input style={input} value={name} autoFocus placeholder="e.g. Umoja Women Group" onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && name.trim()) submit(); }} />
+    <div className="start">
+      <p className="start-label">{T.what[lang]}</p>
+      <div className="start-list" role="radiogroup" aria-label={T.what[lang]}>
+        {START_CHOICES.map((c) => (
+          <button key={c.id} type="button" role="radio" aria-checked={start === c.id} className={`start-card s-card pillar-${c.type === 'BUSINESS' ? 3 : 1}`} onClick={() => setStart(c.id)}>
+            <span className="start-icon" aria-hidden>{c.icon}</span>
+            <span className="start-name">{c.name[lang]}</span>
+            <span className="start-about">{c.about[lang]}</span>
+          </button>
+        ))}
       </div>
-      <div>
-        <label style={lbl}>Type</label>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {TYPES.map((t) => (
-            <button key={t.v} onClick={() => setType(t.v)} style={{ padding: '9px 15px', borderRadius: 999, border: `1px solid ${type === t.v ? 'var(--forest)' : 'var(--line)'}`, background: type === t.v ? 'var(--forest)' : '#fff', color: type === t.v ? '#fff' : 'var(--ink-2)', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>{t.label}</button>
-          ))}
-        </div>
-      </div>
-      <button onClick={submit} disabled={busy || !name.trim()} style={{ padding: '13px 22px', borderRadius: 12, border: 'none', background: name.trim() ? 'var(--gold)' : 'var(--bone-2)', color: 'var(--forest-deep)', fontWeight: 700, fontSize: 15, cursor: name.trim() ? 'pointer' : 'default', fontFamily: 'inherit' }}>
-        {busy ? 'Creating…' : 'Create group & open workspace →'}
-      </button>
-      {err && <p style={{ color: 'var(--danger)', fontWeight: 600, fontSize: 13.5 }}>{err}</p>}
+      <label className="pay-field">
+        <span>{business ? T.bizName[lang] : T.groupName[lang]}</span>
+        <input style={{ fontFamily: 'inherit' }} value={name} placeholder={business ? T.bizEg[lang] : T.groupEg[lang]} maxLength={80}
+          onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void submit(); }} />
+      </label>
+      <button type="button" className="pay-go" onClick={submit} disabled={busy || !name.trim()}>{busy ? T.busy[lang] : T.go[lang]}</button>
+      <p className="pay-hint">{T.later[lang]}</p>
+      {err && <p className="pay-note bad" role="alert">{err}</p>}
     </div>
   );
 }

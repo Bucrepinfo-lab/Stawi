@@ -309,35 +309,79 @@ export async function createGroupAction(input: {
   name: string;
   type?: 'CHAMA' | 'SELF_HELP_GROUP' | 'SACCO' | 'BUSINESS';
   countryCode?: string;
-}): Promise<{ ok: boolean; groupId?: string; persisted: boolean; error?: string }> {
+  /** How the person chose to start (owner 20/11/26): everything, meetings only, or the books only. */
+  start?: string;
+}): Promise<{ ok: boolean; groupId?: string; persisted: boolean; error?: string; booksOnly?: boolean }> {
+  const { startChoice, booksOnly, MAX_SELF_STARTED } = await import('@stawi/core');
   const name = input.name?.trim();
-  if (!name || name.length < 2) return { ok: false, persisted: false, error: 'Enter a group name.' };
+  if (!name || name.length < 2) return { ok: false, persisted: false, error: 'Enter a name.' };
   const clean = await assertCleanSafe(name);
   if (!clean.ok) return { ok: false, persisted: false, error: clean.error };
+  // The way of starting sets which sections open; a business opens the books alone.
+  const choice = input.start ? startChoice(input.start) : null;
+  const type = choice?.type === 'BUSINESS' ? 'BUSINESS' : (input.type ?? 'CHAMA');
+  const modules = choice ? choice.modules : type === 'BUSINESS' ? startChoice('books_only').modules : null;
+  const isBooksOnly = !!modules && booksOnly(modules);
   if (!dbEnabled()) {
     // Demo: derive a stable-ish slug so the workspace opens.
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'group';
+    if (modules) (await import('@/lib/modules')).setDemoModules(slug, modules);
     publishEvent({ type: 'group', channel: 'public' });
-    return { ok: true, persisted: false, groupId: slug };
+    return { ok: true, persisted: false, groupId: slug, booksOnly: isBooksOnly };
   }
   try {
     const { prisma } = await import('@stawi/db');
     const { getUserId } = await import('@/lib/auth');
     const userId = await getUserId();
+    if (!userId) return { ok: false, persisted: false, error: 'Please sign in first.' };
+    // Anyone signed in may start a group or business (owner 20/11/26), a few at most.
+    const started = await prisma.membership.count({ where: { clerkUserId: userId, role: 'CHAIRMAN' } });
+    const { getViewerRole } = await import('@/lib/data');
+    if (started >= MAX_SELF_STARTED && (await getViewerRole()) === 'MEMBER') {
+      return { ok: false, persisted: false, error: `You have already started ${MAX_SELF_STARTED}. Please contact us to add more.` };
+    }
     const tid = await tenantId();
     const g = await prisma.group.create({
-      data: { name, type: input.type ?? 'CHAMA', countryCode: input.countryCode ?? 'KE', tenantId: tid, clerkOrgId: `manual-${Date.now()}` },
+      data: { name, type, countryCode: input.countryCode ?? 'KE', tenantId: tid, clerkOrgId: `manual-${Date.now()}`, ...(modules ? { modules } : {}) },
       select: { id: true },
     });
+    // A business gets its books at once — no group records are needed first.
+    if (type === 'BUSINESS') {
+      await prisma.business.create({ data: { groupId: g.id, name } }).catch(() => {});
+    }
     if (userId) {
       const { getUserPhone } = await import('@/lib/auth');
       const phone = await getUserPhone().catch(() => null);
       await prisma.membership.create({ data: { groupId: g.id, clerkUserId: userId, fullName: 'Group founder', phone, role: 'CHAIRMAN' } }).catch(() => {});
     }
     publishEvent({ type: 'group', channel: tid ?? 'public' });
-    return { ok: true, persisted: true, groupId: g.id };
+    return { ok: true, persisted: true, groupId: g.id, booksOnly: isBooksOnly };
   } catch (e) {
     return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Create failed' };
+  }
+}
+
+/** The group's officials choose which sections the group uses (owner 20/11/26). */
+export async function saveModulesAction(input: {
+  groupId: string;
+  modules: unknown;
+}): Promise<{ ok: boolean; persisted: boolean; error?: string }> {
+  const { sanitizeModules } = await import('@stawi/core');
+  if (!input.groupId) return { ok: false, persisted: false, error: 'Missing group.' };
+  const chosen = sanitizeModules(input.modules);
+  if (!dbEnabled()) {
+    (await import('@/lib/modules')).setDemoModules(input.groupId, chosen);
+    return { ok: true, persisted: false };
+  }
+  const denied = await requireGroupRole(input.groupId, 'records');
+  if (denied) return { ok: false, persisted: false, error: 'Only group officials (chair, secretary, treasurer) can change what the group uses.' };
+  try {
+    const { prisma } = await import('@stawi/db');
+    await prisma.group.update({ where: { id: input.groupId }, data: { modules: chosen } });
+    publishEvent({ type: 'group', channel: (await tenantId()) ?? 'public' });
+    return { ok: true, persisted: true };
+  } catch (e) {
+    return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Save failed' };
   }
 }
 

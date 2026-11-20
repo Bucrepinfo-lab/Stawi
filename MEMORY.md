@@ -1,5 +1,14 @@
 # Stawi — session memory / start-here
 
+## 20/11/26 (16:50) — Use only what you need: section switches, three ways to start, books with no group (awaiting owner merge)
+- Owner order: modules a group switches on and off (officials' posts, agenda items, money, ideas, books, savings and credit); open to everyone; warm, honest welcome for people who want one part; a business needs no group.
+- `packages/core/src/modules.ts` (tests): seven switches, `resolveModules` (saved choice over the default; agenda needs meetings; savings and credit only where the platform flag is on), three ways to start, `watchAllowed`, `groupTabsFor`, `booksOnly`, four welcome notes.
+- **Database (additive):** `Group.modules Json?`. Null = the default for the group's type. Applied by the release `db push`; no RLS change (Group is already covered).
+- **Access change:** `/groups/new` no longer turns away accounts without a tenant; anyone signed in may start up to three (`MAX_SELF_STARTED`). A BUSINESS start creates its `Business` row so the books open at once.
+- Web: `ModuleSwitches` ("Choose what you use", officials only, `saveModulesAction`), `OpenDoor` on the landing and start pages, `TabsHint` so the main tabs follow the group on screen, home screen and books page follow the switches, minutes form drops agenda or money sections, posts removed on the server for ordinary members when switched off.
+- `docs/USE-ONLY-WHAT-YOU-NEED.md`, `docs/BOOKS-FOR-ANY-BUSINESS.md` (audit: what the books have, eleven gaps in build order).
+- Not done: mobile app and `/api/mobile/*` do not read the switches; books gaps 1–11.
+
 ## 20/11/26 (16:20) — One money statement by day, week and month, checked (awaiting owner merge)
 - Owner order: wherever a financial statement is needed, show it by day, week and month, harmonised and reconciled into one clear summary.
 - `packages/core/src/money-summary.ts` (tests): group table money (posted meetings only) and business books on one calendar; buckets by day, week (Monday) and month; totals; two checks — day/week/month totals agree, and each meeting opens with what the last one closed with (a blank or 0 opening is "not written", never a gap).
