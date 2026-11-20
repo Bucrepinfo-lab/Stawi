@@ -45,6 +45,18 @@ export async function POST(req: Request) {
   // Paddle is the merchant of record and remits the tax; the card is typed
   // into Paddle, never into Stawi. Where Paddle can't sell, the rail below.
   const paddle = paddleConfig(process.env, STAWI_PADDLE_PRICES);
+  // Where the price follows the number of members (Kenya, owner 20/11/26), the
+  // fixed card prices would not match it: pay from the group's own row by
+  // M-Pesa, which charges the group's exact price. The card returns here once a
+  // per-member card price is set up in Paddle.
+  // Nothing is charged here: the amount depends on the group, which this page does not know.
+  if (quote.perMember) {
+    return NextResponse.json({
+      ok: true,
+      status: 'pending',
+      note: 'Your first month is free. After it, the group’s chairman or treasurer pays the group’s own price by M-Pesa from this page.',
+    });
+  }
   if (paddle && paddleSellsIn(country)) {
     return NextResponse.json({
       ok: true,

@@ -1,5 +1,11 @@
 # Stawi — session memory / start-here
 
+## 20/11/26 (16:45) — Owner approved the researched prices (Kenya)
+- Owner 16:20: "yes confirm the prices, i approve". Kenya groups: KES 10 a member a month, at least 50, at most 299 (year = 10 months); meetings-only groups half (5 a member, 30–149); business books free for a small shop (≤100 sales a month, one person), else KES 99 a month / 30 a week / 5 a day / 990 a year; a subscribed group's first business included. Other countries keep per-group prices until their per-member table is approved.
+- Code: `PER_MEMBER_PRICES`, `perMemberMonthlyCents`, `quoteGroup({ meetingsOnly })`, `BOOKS_PRICES`, `quoteBooks` in `group-pricing.ts` (tests). `/api/billing/local` charges each group's exact price (meetings-only read from `Group.modules`). Subscribe page shows the per-member rule and "Pay KES … by M-Pesa" for the group.
+- **Card in Kenya is held back:** Paddle has fixed prices (149/299), which would not match. Kenya pays by M-Pesa from the group's row; the card returns once a per-member card price is set up in Paddle (owner, Paddle dashboard). Nothing is charged on a guessed amount.
+- Books billing is priced but not yet charged (no books checkout yet). Terms page updated.
+
 ## 20/11/26 (16:20) — Owner chose each group's own Till; by hand meanwhile; researched prices (awaiting owner)
 - Owner 15:53: Till is right; for groups that hesitate, a role-assigned person updates the figures by hand; encourage Pochi la Biashara or a Till kindly (papers are hard for many). Owner 15:53: "merge them" (#29–#36) — #29 merged d958a87; the rest merge one by one at green heads (`merge-stack.sh`, no force-push; each branch's tree is checked unchanged after bringing main in).
 - `packages/core/src/collect-ways.ts` (tests): four ways money comes in (cash, M-Pesa to our Till or Pochi, M-Pesa to an official's phone, bank), M-Pesa code check (10 letters and numbers; asked for, not forced), duplicate-code refusal, three kind tips with Safaricom sources.

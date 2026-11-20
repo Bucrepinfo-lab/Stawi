@@ -15,6 +15,13 @@
  *
  * Money is integer minor units (cents). Nothing here moves money: it only says
  * what a group would be asked to pay.
+ *
+ * Owner approval 20/11/26 (16:20, after researching what others charge,
+ * docs/PRICING-PROPOSAL-2026-11.md): in Kenya a group pays per member —
+ * KES 10 a member a month, at least KES 50, at most KES 299 — and a group that
+ * uses meetings and minutes only pays half (KES 5 a member, 30 to 149). The
+ * other countries keep the per-group prices above until their own per-member
+ * table is approved. The business books have their own price (`quoteBooks`).
  */
 
 import { getCountryProfile } from './compliance';
@@ -87,6 +94,26 @@ export const FOUNDING_GROUP_PRICES: Record<string, GroupPriceList> = {
   BR: row('BR', 'BRL', 1_490, 740),
 };
 
+/** Per-member pricing, by country (owner-approved 20/11/26: Kenya). */
+export interface PerMemberPrice {
+  perMemberCents: number;
+  floorCents: number;
+  ceilingCents: number;
+}
+
+export const PER_MEMBER_PRICES: Record<string, { full: PerMemberPrice; meetingsOnly: PerMemberPrice }> = {
+  KE: {
+    full: { perMemberCents: 1_000, floorCents: 5_000, ceilingCents: 29_900 },
+    meetingsOnly: { perMemberCents: 500, floorCents: 3_000, ceilingCents: 14_900 },
+  },
+};
+
+/** members × price per member, never below the floor or above the ceiling. */
+export function perMemberMonthlyCents(price: PerMemberPrice, members: number): number {
+  const n = Number.isFinite(members) ? Math.max(0, Math.floor(members)) : 0;
+  return Math.min(price.ceilingCents, Math.max(price.floorCents, n * price.perMemberCents));
+}
+
 export function isSmallGroup(members: number): boolean {
   return members <= SMALL_GROUP_MAX_MEMBERS;
 }
@@ -143,6 +170,10 @@ export interface GroupQuote {
   /** True when the founding price lock applies. */
   locked: boolean;
   approved: boolean;
+  /** True when the price follows the number of members (per-member country). */
+  perMember: boolean;
+  /** True when the group uses meetings and minutes only (half price). */
+  meetingsOnly: boolean;
 }
 
 /**
@@ -158,6 +189,8 @@ export function quoteGroup(input: {
   status?: SubscriptionStatus | null;
   now?: Date;
   env?: Record<string, string | undefined>;
+  /** The group uses meetings and minutes only (owner 20/11/26: half price). */
+  meetingsOnly?: boolean;
 }): GroupQuote {
   const env = input.env ?? {};
   const now = input.now ?? new Date();
@@ -171,7 +204,12 @@ export function quoteGroup(input: {
   const override = isFounding ? undefined : parsePriceOverrides(env.STAWI_GROUP_PRICES)[code];
   const list = override ? { ...founding, ...override } : founding;
 
-  const monthlyCents = small ? list.smallMonthlyCents : list.monthlyCents;
+  // Per member where approved (a later override, for groups after the founding window, still wins).
+  const perMember = !override ? PER_MEMBER_PRICES[code] : undefined;
+  const meetingsOnly = !!input.meetingsOnly && !!perMember;
+  const monthlyCents = perMember
+    ? perMemberMonthlyCents(meetingsOnly ? perMember.meetingsOnly : perMember.full, input.members)
+    : small ? list.smallMonthlyCents : list.monthlyCents;
   return {
     country: founding.country,
     currency: founding.currency,
@@ -181,7 +219,60 @@ export function quoteGroup(input: {
     amountCents: period === 'YEAR' ? monthlyCents * YEAR_PLAN_MONTHS_PAID : monthlyCents,
     locked: isFounding,
     approved: founding.approved,
+    perMember: !!perMember,
+    meetingsOnly,
   };
+}
+
+// ── The business books (owner-approved 20/11/26, Kenya) ──────────────────
+
+export type BooksPeriod = 'DAY' | 'WEEK' | 'MONTH' | 'YEAR';
+
+export interface BooksPriceList {
+  currency: string;
+  /** A small shop keeps the books free: up to this many sales a month, one person. */
+  freeSalesPerMonth: number;
+  dayCents: number;
+  weekCents: number;
+  monthCents: number;
+  /** A year ahead = 10 months. */
+  yearCents: number;
+}
+
+export const BOOKS_PRICES: Record<string, BooksPriceList> = {
+  KE: { currency: 'KES', freeSalesPerMonth: 100, dayCents: 500, weekCents: 3_000, monthCents: 9_900, yearCents: 99_000 },
+};
+
+export interface BooksQuote {
+  country: string;
+  currency: string;
+  period: BooksPeriod;
+  /** Nothing to pay: a small shop within the free plan. */
+  free: boolean;
+  amountCents: number;
+}
+
+/**
+ * The price of the full books for a business. `salesThisMonth` and `people`
+ * decide whether the small-shop free plan covers it. A business owned by a
+ * subscribed group has its first business's books included (`groupIncluded`).
+ * Null where the books are not priced yet for the country.
+ */
+export function quoteBooks(input: {
+  country: string;
+  period?: BooksPeriod;
+  salesThisMonth?: number;
+  people?: number;
+  groupIncluded?: boolean;
+}): BooksQuote | null {
+  const code = (input.country ?? '').trim().toUpperCase();
+  const list = BOOKS_PRICES[code];
+  if (!list) return null;
+  const period = input.period ?? 'MONTH';
+  const smallShop = (input.salesThisMonth ?? 0) <= list.freeSalesPerMonth && (input.people ?? 1) <= 1;
+  const free = !!input.groupIncluded || smallShop;
+  const amountCents = free ? 0 : period === 'DAY' ? list.dayCents : period === 'WEEK' ? list.weekCents : period === 'YEAR' ? list.yearCents : list.monthCents;
+  return { country: code, currency: list.currency, period, free, amountCents };
 }
 
 /** What is due this month: nothing in the first (free) month, else the quote. */

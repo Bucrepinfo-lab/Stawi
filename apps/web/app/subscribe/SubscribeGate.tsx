@@ -37,7 +37,7 @@ function loadPaddle(card: CardCheckout): Promise<PaddleJs> {
 }
 
 
-type LocalGroup = { id: string; name: string; members: number; method: string };
+type LocalGroup = { id: string; name: string; members: number; method: string; monthlyCents?: number; currency?: string; perMember?: boolean };
 export function SubscribeGate() {
   const [country, setCountry] = useState('KE');
   const [selected, setSelected] = useState<PlanTier>('STARTER');
@@ -66,7 +66,12 @@ export function SubscribeGate() {
     };
   }, []);
 
-  const localMethod = localGroups.find((g) => g.id === groupId)?.method ?? localGroups[0]?.method ?? '';
+  const localGroup = localGroups.find((g) => g.id === groupId) ?? localGroups[0];
+  const localMethod = localGroup?.method ?? '';
+  // The group's own price, from the server (per member where that applies).
+  const localPrice = localGroup?.monthlyCents && localGroup.currency
+    ? formatPrice(localGroup.monthlyCents * (period === 'YEAR' ? YEAR_PLAN_MONTHS_PAID : 1), localGroup.currency)
+    : '';
 
   async function payLocally() {
     if (!accepted || !groupId) return;
@@ -111,6 +116,8 @@ export function SubscribeGate() {
     const p = getPlan(tier);
     if (p.billing === 'CUSTOM') return 'Custom';
     const q = quoteFor(tier);
+    // Per member (Kenya, owner 20/11/26): the price follows the group's size.
+    if (q.perMember) return `${formatPrice(period === 'YEAR' ? 1_000 * YEAR_PLAN_MONTHS_PAID : 1_000, q.currency)} a member${period === 'YEAR' ? '/yr' : '/mo'}`;
     return `${formatPrice(q.amountCents, q.currency)}${period === 'YEAR' ? '/yr' : '/mo'}`;
   }
 
@@ -142,7 +149,9 @@ export function SubscribeGate() {
         return;
       }
       setDone(
-        data.note
+        data.note && sample.perMember
+          ? `${p.name} selected. ${data.note}`
+          : data.note
           ? `${p.name} selected. ${data.note} (Once a payment provider is connected, you'll be sent to secure checkout — first month free.)`
           : `${p.name} plan started — first month free.`,
       );
@@ -170,8 +179,10 @@ export function SubscribeGate() {
         ))}
       </div>
       <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: '0 0 14px', maxWidth: 640 }}>
-        Priced per group. Groups of {SMALL_GROUP_MAX_MEMBERS} members or fewer pay the small-group price. Groups that join
-        in our first 12 months keep this founding price for as long as they stay subscribed.
+        {sample.perMember
+          ? <>Priced by the size of the group: {formatPrice(1_000, sample.currency)} a member a month, at least {formatPrice(5_000, sample.currency)} and never more than {formatPrice(29_900, sample.currency)} a group. A group that uses meetings and minutes only pays half. A year paid ahead costs {YEAR_PLAN_MONTHS_PAID} months. </>
+          : <>Priced per group. Groups of {SMALL_GROUP_MAX_MEMBERS} members or fewer pay the small-group price. </>}
+        Groups that join in our first 12 months keep this founding price for as long as they stay subscribed.
         {sample.approved ? '' : ' Prices for this country are indicative until confirmed.'}
       </p>
 
@@ -215,15 +226,15 @@ export function SubscribeGate() {
             </label>
           )}
           <button onClick={() => void payLocally()} disabled={!accepted || busy || !groupId} style={{ padding: '14px 26px', borderRadius: 12, border: 'none', background: accepted && !busy ? 'var(--forest)' : 'var(--bone-2)', color: accepted && !busy ? 'var(--paper)' : 'var(--dim)', fontWeight: 700, fontSize: 15, cursor: accepted && !busy ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
-            {busy ? 'Starting the payment…' : `Pay by ${localMethod}`}
+            {busy ? 'Starting the payment…' : localPrice ? `Pay ${localPrice} by ${localMethod}` : `Pay by ${localMethod}`}
           </button>
-          <span style={{ fontSize: 12.5, color: 'var(--ink-2)' }}>You approve it yourself, on your own phone or your bank's page. Or pay by card below.</span>
+          <span style={{ fontSize: 12.5, color: 'var(--ink-2)' }}>You approve it yourself, on your own phone or your bank's page.{sample.perMember ? '' : ' Or pay by card below.'}</span>
         </div>
       )}
 
-      <button onClick={activate} disabled={!accepted || busy} style={{ marginTop: 18, padding: '14px 26px', borderRadius: 12, border: 'none', background: accepted && !busy ? 'var(--gold)' : 'var(--bone-2)', color: accepted && !busy ? 'var(--forest-deep)' : 'var(--dim)', fontWeight: 700, fontSize: 15, cursor: accepted && !busy ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
+      {!(sample.perMember && localGroups.length > 0) && <button onClick={activate} disabled={!accepted || busy} style={{ marginTop: 18, padding: '14px 26px', borderRadius: 12, border: 'none', background: accepted && !busy ? 'var(--gold)' : 'var(--bone-2)', color: accepted && !busy ? 'var(--forest-deep)' : 'var(--dim)', fontWeight: 700, fontSize: 15, cursor: accepted && !busy ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
         {busy ? 'Opening secure checkout…' : getPlan(selected).billing !== 'PER_GROUP' ? 'Contact sales' : localGroups.length > 0 ? 'Pay by card' : 'Start free month'}
-      </button>
+      </button>}
 
       {done && (
         <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 12, background: 'rgba(47,125,82,.08)', border: '1px solid var(--good)', color: 'var(--good)', fontWeight: 600, fontSize: 14 }}>
