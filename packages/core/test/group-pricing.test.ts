@@ -39,14 +39,22 @@ describe('group pricing (owner decision 18/11/26)', () => {
     expect(groupAmountDueCents(2, q)).toBe(29_900);
   });
 
-  it('only Kenya is approved; other countries are indicative', () => {
-    expect(FOUNDING_GROUP_PRICES.KE.approved).toBe(true);
+  it('the African prices are owner-approved (20/11/26); the rest of the world is indicative', () => {
+    const approved = ['KE', 'UG', 'TZ', 'RW', 'NG', 'ZA', 'GH',
+      'ZM', 'MW', 'MZ', 'CM', 'CG', 'GA', 'CI', 'SN', 'BJ', 'BF', 'CD', 'LS', 'SL', 'ZW', 'ET'];
     for (const [code, row] of Object.entries(FOUNDING_GROUP_PRICES)) {
-      if (code !== 'KE') expect(row.approved).toBe(false);
+      expect(row.approved).toBe(approved.includes(code));
       expect(row.smallMonthlyCents).toBeGreaterThan(0);
       expect(row.monthlyCents).toBeGreaterThan(row.smallMonthlyCents);
     }
-    expect(quoteGroup({ country: 'NG', members: 30 }).approved).toBe(false);
+    expect(quoteGroup({ country: 'NG', members: 30 }).approved).toBe(true);
+    expect(quoteGroup({ country: 'GB', members: 30 }).approved).toBe(false);
+  });
+
+  it('Uganda, Tanzania and Rwanda quote in their own currency', () => {
+    expect(quoteGroup({ country: 'UG', members: 30 })).toMatchObject({ currency: 'UGX', monthlyCents: 840_000, approved: true });
+    expect(quoteGroup({ country: 'TZ', members: 8 })).toMatchObject({ currency: 'TZS', monthlyCents: 300_000, small: true });
+    expect(quoteGroup({ country: 'RW', members: 30, period: 'YEAR' })).toMatchObject({ currency: 'RWF', amountCents: 3_000_000 });
   });
 
   it('a group joining in the founding window keeps the founding price while subscribed', () => {

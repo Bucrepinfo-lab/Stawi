@@ -9,7 +9,7 @@
  */
 
 export type CountryCode =
-  | 'KE' | 'NG' | 'ZA' | 'GH' | 'US' | 'GB' | 'DE'
+  | 'KE' | 'UG' | 'TZ' | 'RW' | 'NG' | 'ZA' | 'GH' | 'US' | 'GB' | 'DE'
   | 'IN' | 'AU' | 'CA' | 'AE' | 'BR';
 
 export interface CountryProfile {
@@ -32,6 +32,12 @@ export interface CountryProfile {
 
 export const COUNTRIES: Record<CountryCode, CountryProfile> = {
   KE: { code: 'KE', name: 'Kenya', region: 'Africa', currency: 'KES', locale: 'en-KE', flag: '🇰🇪', consumptionTaxRate: 0.16, consumptionTaxName: 'VAT', taxAuthority: 'Kenya Revenue Authority (KRA)', registrar: 'Dept. of Social Protection / Commissioner for Cooperatives', dataProtection: 'Data Protection Act, 2019', dataProtectionAuthority: 'Office of the Data Protection Commissioner (ODPC)', links: [{ label: 'KRA iTax', url: 'https://itax.kra.go.ke' }, { label: 'ODPC', url: 'https://www.odpc.go.ke' }] },
+  // UG, TZ, RW added 20/11/26 with the owner's price approval. Indicative defaults — verify against current local law:
+  // VAT 18% in all three (VAT Act Cap 349 UG; VAT Act 2014 TZ; Law 049/2023 RW); cooperatives under the Cooperative Societies
+  // Act Cap 112 (UG, MTIC), the Cooperative Societies Act 2013 (TZ, TCDC) and Rwanda Cooperative Agency rules (RW).
+  UG: { code: 'UG', name: 'Uganda', region: 'Africa', currency: 'UGX', locale: 'en-UG', flag: '🇺🇬', consumptionTaxRate: 0.18, consumptionTaxName: 'VAT', taxAuthority: 'Uganda Revenue Authority (URA)', registrar: 'Registrar of Cooperatives, Ministry of Trade, Industry and Cooperatives (MTIC) / district Community Development Officer', dataProtection: 'Data Protection and Privacy Act, 2019', dataProtectionAuthority: 'Personal Data Protection Office (PDPO)', links: [{ label: 'URA', url: 'https://ura.go.ug' }, { label: 'MTIC', url: 'https://www.mtic.go.ug' }] },
+  TZ: { code: 'TZ', name: 'Tanzania', region: 'Africa', currency: 'TZS', locale: 'en-TZ', flag: '🇹🇿', consumptionTaxRate: 0.18, consumptionTaxName: 'VAT', taxAuthority: 'Tanzania Revenue Authority (TRA)', registrar: 'Tanzania Cooperative Development Commission (TCDC)', dataProtection: 'Personal Data Protection Act, 2022', dataProtectionAuthority: 'Personal Data Protection Commission (PDPC)', links: [{ label: 'TRA', url: 'https://www.tra.go.tz' }] },
+  RW: { code: 'RW', name: 'Rwanda', region: 'Africa', currency: 'RWF', locale: 'en-RW', flag: '🇷🇼', consumptionTaxRate: 0.18, consumptionTaxName: 'VAT', taxAuthority: 'Rwanda Revenue Authority (RRA)', registrar: 'Rwanda Cooperative Agency (RCA)', dataProtection: 'Law No. 058/2021 on the protection of personal data and privacy', dataProtectionAuthority: 'National Cyber Security Authority (NCSA)', links: [{ label: 'RRA', url: 'https://www.rra.gov.rw' }, { label: 'RCA', url: 'https://www.rca.gov.rw' }] },
   NG: { code: 'NG', name: 'Nigeria', region: 'Africa', currency: 'NGN', locale: 'en-NG', flag: '🇳🇬', consumptionTaxRate: 0.075, consumptionTaxName: 'VAT', taxAuthority: 'Federal Inland Revenue Service (FIRS)', registrar: 'Corporate Affairs Commission (CAC)', dataProtection: 'Nigeria Data Protection Act, 2023', dataProtectionAuthority: 'Nigeria Data Protection Commission (NDPC)', links: [{ label: 'FIRS', url: 'https://www.firs.gov.ng' }, { label: 'NDPC', url: 'https://ndpc.gov.ng' }] },
   ZA: { code: 'ZA', name: 'South Africa', region: 'Africa', currency: 'ZAR', locale: 'en-ZA', flag: '🇿🇦', consumptionTaxRate: 0.15, consumptionTaxName: 'VAT', taxAuthority: 'South African Revenue Service (SARS)', registrar: 'CIPC', dataProtection: 'POPIA', dataProtectionAuthority: 'Information Regulator', links: [{ label: 'SARS', url: 'https://www.sars.gov.za' }] },
   GH: { code: 'GH', name: 'Ghana', region: 'Africa', currency: 'GHS', locale: 'en-GH', flag: '🇬🇭', consumptionTaxRate: 0.15, consumptionTaxName: 'VAT', taxAuthority: 'Ghana Revenue Authority (GRA)', registrar: 'Registrar-General / Dept. of Cooperatives', dataProtection: 'Data Protection Act, 2012', dataProtectionAuthority: 'Data Protection Commission', links: [{ label: 'GRA', url: 'https://gra.gov.gh' }] },

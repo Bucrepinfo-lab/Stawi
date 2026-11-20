@@ -96,7 +96,8 @@ export function SubscribeGate() {
   }
 
   const COUNTRIES = [
-    ['KE', '🇰🇪 Kenya'], ['NG', '🇳🇬 Nigeria'], ['ZA', '🇿🇦 South Africa'],
+    ['KE', '🇰🇪 Kenya'], ['UG', '🇺🇬 Uganda'], ['TZ', '🇹🇿 Tanzania'], ['RW', '🇷🇼 Rwanda'],
+    ['GH', '🇬🇭 Ghana'], ['NG', '🇳🇬 Nigeria'], ['ZA', '🇿🇦 South Africa'],
     ['US', '🇺🇸 United States'], ['GB', '🇬🇧 United Kingdom'], ['IN', '🇮🇳 India'],
     ['DE', '🇩🇪 Germany'], ['BR', '🇧🇷 Brazil'],
   ];

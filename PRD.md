@@ -101,7 +101,7 @@ The foundation. Chosen to build first because it creates the group, the members,
 - **Supplier integration & stock alerts:** link supplier contacts; when stock is low → alert manager + subscribed supplier to supply; **pre-runout warning** + **critical-runout warning** at POS, dashboard, and via messaging.
 - **Tax & levy auto-calc (Kenya):** PAYE, VAT (16%), Tourism/Catering Levy (2%), Standards Levy where applicable — with links to the correct remittance bodies (KRA iTax/eTIMS, Tourism Fund), configurable per country and business type.
 - **Member profiles + messaging:** photo, contacts, designation; in-app message, chat, and call.
-- **Subscriptions (owner decision 18/11/26):** priced **per group** in the country's currency — Kenya **KES 299/month or KES 2,990/year** (a year ahead = 10 months); groups of **10 members or fewer KES 149/month or KES 1,490/year**. **First month free.** **Founding price lock:** groups joining in the first 12 months after launch (`STAWI_FOUNDING_UNTIL`) keep the founding price while subscribed; later prices only via `STAWI_GROUP_PRICES`. Other countries are indicative until approved. Code: `packages/core/src/group-pricing.ts`. Customisable **country flag**.
+- **Subscriptions (owner decision 18/11/26):** priced **per group** in the country's currency — Kenya **KES 299/month or KES 2,990/year** (a year ahead = 10 months); groups of **10 members or fewer KES 149/month or KES 1,490/year**. **First month free.** **Founding price lock:** groups joining in the first 12 months after launch (`STAWI_FOUNDING_UNTIL`) keep the founding price while subscribed; later prices only via `STAWI_GROUP_PRICES`. Uganda (UGX 8,400 / 4,200), Tanzania (TZS 6,000 / 3,000), Rwanda (RWF 3,000 / 1,500), Nigeria, South Africa and Ghana approved 20/11/26; other countries are indicative until approved. Code: `packages/core/src/group-pricing.ts`. Customisable **country flag**.
 - **Multi-tier admin side panel:** super admin sees all individuals/groups/businesses onboard, their subscriptions, and their assigned sales team across constituency → county → national → continental → global. Tabulated analytics: groups/businesses, members subscribed per group, revenue, operations. Each tier supervises the tier below, assigns roles, and pushes weekly/monthly/financial reports upward.
 
 ### Pillar 4 — Stawi SACCO+ (Savings & Credit Services) *(added 2026-07-06)*
@@ -330,7 +330,7 @@ Groups. Isolation enforced at the query layer (`getTenantContext`, `assertSameTe
   abuse/incitement/hate, flags profanity, defeats leetspeak. `ModerationLog` audit table.
 - Subscription **Terms & Conditions** template — `legal/SUBSCRIPTION-TERMS.md` (+ `/terms`
   summary + acceptance gate). ⚠️ needs per-market legal review.
-- `COMPLIANCE.md` — 12-country regulatory registry (⚠️ rates indicative, verify locally).
+- `COMPLIANCE.md` — 15-country regulatory registry (⚠️ rates indicative, verify locally).
 
 ### Pillar 4 — SACCO+ (added 2026-07-06)
 - `core/savings.ts` (entity onboarding, txn engine, 10% deposit interest, 13% dividends,

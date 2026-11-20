@@ -13,7 +13,7 @@ country is a configurable profile in `@stawi/core` (`compliance.ts`,
 - Official links
 
 ## Currently seeded markets
-Kenya, Nigeria, South Africa, Ghana, United States, United Kingdom, Germany (EU),
+Kenya, Uganda, Tanzania, Rwanda (added 20/11/26), Nigeria, South Africa, Ghana, United States, United Kingdom, Germany (EU),
 India, Australia, Canada, UAE, Brazil — spanning Africa, Europe, North & South
 America, Asia, Oceania, and the Middle East.
 

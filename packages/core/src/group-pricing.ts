@@ -9,8 +9,9 @@
  *   keeps the founding price below for as long as it stays subscribed (its
  *   subscription is never CANCELLED). Later price changes apply only to groups
  *   that join after the founding window, through STAWI_GROUP_PRICES.
- * - Kenya is approved. Every other country is INDICATIVE (near the same value)
- *   until the owner approves it.
+ * - Approved by the owner: Kenya, then Uganda, Tanzania, Rwanda, Nigeria, South
+ *   Africa and Ghana (20/11/26, "approve all prices"). The rest of the world is
+ *   INDICATIVE (near the same value, card through Paddle) until approved.
  *
  * Money is integer minor units (cents). Nothing here moves money: it only says
  * what a group would be asked to pay.
@@ -51,9 +52,31 @@ const US_PRICES = row('US', 'USD', 299, 149);
 /** The founding price list. Changing a founding price breaks the lock: don't. */
 export const FOUNDING_GROUP_PRICES: Record<string, GroupPriceList> = {
   KE: row('KE', 'KES', 29_900, 14_900, true),
-  NG: row('NG', 'NGN', 350_000, 175_000),
-  ZA: row('ZA', 'ZAR', 4_500, 2_200),
-  GH: row('GH', 'GHS', 3_000, 1_500),
+  UG: row('UG', 'UGX', 840_000, 420_000, true),
+  TZ: row('TZ', 'TZS', 600_000, 300_000, true),
+  RW: row('RW', 'RWF', 300_000, 150_000, true),
+  NG: row('NG', 'NGN', 350_000, 175_000, true),
+  ZA: row('ZA', 'ZAR', 4_500, 2_200, true),
+  GH: row('GH', 'GHS', 3_000, 1_500, true),
+  // Second round, approved by the owner 20/11/26 (the pawaPay countries). Recorded
+  // only: these countries have no Stawi country profile yet, so a group cannot be
+  // set there and the quote falls back to Kenya. They open once each is added as a
+  // market in compliance.ts (owner decision; compliance-pack).
+  ZM: row('ZM', 'ZMW', 5_000, 2_500, true),
+  MW: row('MW', 'MWK', 400_000, 200_000, true),
+  MZ: row('MZ', 'MZN', 15_000, 7_500, true),
+  CM: row('CM', 'XAF', 130_000, 65_000, true),
+  CG: row('CG', 'XAF', 130_000, 65_000, true),
+  GA: row('GA', 'XAF', 130_000, 65_000, true),
+  CI: row('CI', 'XOF', 130_000, 65_000, true),
+  SN: row('SN', 'XOF', 130_000, 65_000, true),
+  BJ: row('BJ', 'XOF', 130_000, 65_000, true),
+  BF: row('BF', 'XOF', 130_000, 65_000, true),
+  CD: row('CD', 'CDF', 530_000, 270_000, true),
+  LS: row('LS', 'LSL', 4_000, 2_000, true),
+  SL: row('SL', 'SLE', 5_500, 2_700, true),
+  ZW: row('ZW', 'USD', 299, 149, true),
+  ET: row('ET', 'ETB', 38_000, 19_000, true),
   US: US_PRICES,
   GB: row('GB', 'GBP', 249, 119),
   DE: row('DE', 'EUR', 279, 139),
