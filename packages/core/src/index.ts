@@ -51,3 +51,4 @@ export * from './receipt-access';
 export * from './value-props';
 export * from './engagement';
 export * from './escalation';
+export * from './contribution-pay';

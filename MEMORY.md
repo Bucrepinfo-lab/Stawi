@@ -1,5 +1,12 @@
 # Stawi — session memory / start-here
 
+## 20/11/26 (15:30) — A member pays their own contribution (built, switched OFF; awaiting owner decision and merge)
+- Owner order: a member finds a place to pay, taps Pay, and the M-Pesa request arrives; local way first, card second.
+- `packages/core/src/contribution-pay.ts` (tests), `GET/POST /api/contributions/pay` (member of the group only, own membership only, 90-second double-tap guard, PENDING contribution confirmed by the existing callback), `PayContribution` card on the dashboard (quick amounts KES 20–1,000, or type one; smallest KES 10).
+- **Off by default: `MEMBER_PAY_ENABLED=true` switches it on.** The request goes to `MPESA_SHORTCODE`; if that is Telpen's Paybill, Telpen would hold group savings (regulated). `docs/MEMBER-PAY.md` sets out three ways to settle (each group's own Till recommended) for the owner to choose.
+- Card is not offered for contributions (Paddle may not collect savings). Other countries wait for pawaPay's live account.
+- No database change.
+
 ## 20/11/26 (15:00) — Flow and escalation, Telpen Edu standing orders adopted, decorated cards and tabs (awaiting owner merge)
 - Owner order: analyse all of Stawi, apply the escalation where it fits, reuse the Telpen Edu standing orders; good nav tabs; decorated cards in every section.
 - `packages/core/src/escalation.ts` (pure, 16 tests): seven watches (officials_missing, rules_missing, meeting_overdue, minutes_not_posted, contributions_not_recorded, member_behind, member_absent). Ladder: responsible official → Chairperson → all officials → every member; empty posts fall through. Member-named matters stop at the officials. Days counted on the country's own clock.
