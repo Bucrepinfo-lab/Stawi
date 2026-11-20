@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { addAgenda, emptyMeeting, type Meeting } from '../src/minutes';
 import { addMember, emptyCharter, type GroupCharter } from '../src/charter';
 import { HOUSE_PURPOSES, buildHouse, checkHouse, checkPurpose, housePurposes, houseRoomName } from '../src/document-house';
+import { activationEvidence } from '../src/sacco-activation';
+import { reconcilePostedMonth } from '../src/statement';
 
 function group(full = true): GroupCharter {
   const c = emptyCharter('g1', 'Umoja', 'KE');
@@ -101,5 +103,30 @@ describe('one set of papers serves every section', () => {
     }
     expect(houseRoomName(1, 'sw')).toBe('Rekodi za kikundi');
     expect(houseRoomName(3)).toBe('Business books');
+  });
+});
+
+describe('savings and credit reads the shared list (owner 20/11/26)', () => {
+  it('asks for exactly the papers the house lists as needed, and agrees on each', () => {
+    const c = group();
+    const ms = meetings(c, sixMonths);
+    const statements = ['2021-01', '2021-02', '2021-03', '2021-04', '2021-05', '2021-06'].map((ym) => {
+      const [y, m] = ym.split('-').map(Number);
+      return reconcilePostedMonth(ms, c, { year: y!, month: m! });
+    });
+    const purpose = HOUSE_PURPOSES.find((p) => p.id === 'savings_credit')!;
+    const fromHouse = checkPurpose(buildHouse({ charter: c, meetings: ms }), purpose).lines.filter((l) => l.kind === 'must');
+    const evidence = activationEvidence(c, statements);
+    expect(evidence.map((e) => e.label)).toEqual(fromHouse.map((l) => l.doc.name.en));
+    expect(evidence.map((e) => e.satisfied)).toEqual(fromHouse.map((l) => l.ok));
+    expect(evidence.every((e) => e.satisfied)).toBe(true);
+  });
+
+  it('a gap shows the same in both places, with what to do', () => {
+    const c = group(false);
+    const evidence = activationEvidence(c, []);
+    const missing = evidence.filter((e) => !e.satisfied).map((e) => e.id);
+    expect(missing).toEqual(['registration', 'constitution', 'resolution', 'minutes', 'financials', 'kyc']);
+    expect(evidence.find((e) => e.id === 'minutes')!.detail).toContain('3 more needed');
   });
 });

@@ -37,7 +37,7 @@ export default function PrivacyPage() {
         <ul style={ul}>
           <li>To provide the service you and your group signed up for — keeping group records, contributions and statements (performance of a contract).</li>
           <li>To sign you in securely and prevent fraud or abuse (legitimate interests).</li>
-          <li>To send service SMS such as sign-in codes and payment confirmations (contract).</li>
+          <li>To send service SMS such as sign-in codes, payment confirmations and, to a group&apos;s officials, a reminder about their own unfinished group duty (contract).</li>
           <li>To meet legal obligations, e.g. record-keeping or lawful requests from authorities (legal obligation).</li>
         </ul>
         <p style={{ margin: '8px 0 0' }}>Stawi does not offer loans, credit scoring or interest-bearing accounts, and we do not sell personal data.</p>

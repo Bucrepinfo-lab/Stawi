@@ -102,6 +102,7 @@ model Group {
   meetings      Meeting[]
   statements    MonthlyStatement[]
   planPayments  PlanPayment[]
+  attentionNotices AttentionNotice[]
   salesRepId    String?
   salesRep      SalesAgent? @relation(fields: [salesRepId], references: [id])
 
@@ -580,4 +581,21 @@ model EngagementCount {
 
   @@unique([day, event, key])
   @@index([day])
+}
+
+/// Daily alerts already sent for stalled work (owner approved 20/11/26), so
+/// nobody is told twice about the same matter at the same level. Holds the
+/// matter's key and the member's row id in the member list — no name, no
+/// phone, no message text. Group-owned (listed in rls.sql).
+model AttentionNotice {
+  id       String   @id @default(cuid())
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId  String
+  key      String // e.g. "minutes_not_posted:<meetingId>"
+  level    Int
+  memberId String // CharterMember.id
+  sentAt   DateTime @default(now())
+
+  @@unique([groupId, key, level, memberId])
+  @@index([groupId])
 }

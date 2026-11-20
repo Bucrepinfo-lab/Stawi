@@ -20,6 +20,7 @@
 
 import type { GroupCharter } from './charter';
 import type { Meeting } from './minutes';
+import type { MonthEndStatement } from './statement';
 
 export type HouseLang = 'en' | 'sw';
 type Words = Record<HouseLang, string>;
@@ -86,13 +87,59 @@ function doc(
   return { id, room, place, state, count, name, have, fix, from, to };
 }
 
+/**
+ * What the group's meetings add up to — worked out from the meetings
+ * themselves, or from the month-end statements made from them.
+ */
+export interface HouseFacts {
+  /** Posted meetings on record. */
+  sittings: number;
+  /** Posted meetings (or months) with a written decision. */
+  withDecision: number;
+  /** Posted meetings (or months) with contributions written. */
+  withMoney: number;
+  /** Months that have a statement. */
+  months: number;
+  first?: string;
+  last?: string;
+  moneyFirst?: string;
+  moneyLast?: string;
+}
+
+export function houseFactsFromMeetings(meetings: readonly Meeting[]): HouseFacts {
+  const posted = meetings.filter((m) => m.status === 'POSTED' && validDate(m.date)).sort((a, b) => a.date.localeCompare(b.date));
+  const withMoney = posted.filter((m) => (m.tableBanking?.contributions ?? []).length > 0);
+  return {
+    sittings: posted.length,
+    withDecision: posted.filter((m) => m.agendas.some((a) => a.resolution?.trim())).length,
+    withMoney: withMoney.length,
+    months: new Set(posted.map((m) => m.date.slice(0, 7))).size,
+    first: posted[0]?.date.slice(0, 10),
+    last: posted[posted.length - 1]?.date.slice(0, 10),
+    moneyFirst: withMoney[0]?.date.slice(0, 10),
+    moneyLast: withMoney[withMoney.length - 1]?.date.slice(0, 10),
+  };
+}
+
+/** The same facts from month-end statements (each is built from posted meetings only). */
+export function houseFactsFromStatements(statements: readonly MonthEndStatement[]): HouseFacts {
+  return {
+    sittings: statements.reduce((n, st) => n + Math.max(0, Math.round(st.meetingsHeld ?? 0)), 0),
+    withDecision: statements.filter((st) => (st.resolutions?.length ?? 0) > 0).length,
+    withMoney: statements.filter((st) => (st.finance?.contributionsCents ?? 0) > 0).length,
+    months: statements.length,
+  };
+}
+
 /** Every paper the group holds today, and how complete each one is. */
 export function buildHouse(input: HouseInput): HouseDocument[] {
-  const c = input.charter;
+  return buildHouseFromFacts(input.charter, houseFactsFromMeetings(input.meetings), input.business);
+}
+
+/** The same list of papers, from facts already worked out. */
+export function buildHouseFromFacts(c: GroupCharter, facts: HouseFacts, business?: HouseBusiness | null): HouseDocument[] {
   const members = c.members ?? [];
-  const posted = input.meetings.filter((m) => m.status === 'POSTED' && validDate(m.date)).sort((a, b) => a.date.localeCompare(b.date));
-  const first = posted[0]?.date.slice(0, 10);
-  const last = posted[posted.length - 1]?.date.slice(0, 10);
+  const { first, last } = facts;
   const when = span(first, last);
 
   const has = (...names: string[]) => members.some((m) => names.includes(m.designation));
@@ -101,11 +148,10 @@ export function buildHouse(input: HouseInput): HouseDocument[] {
   const withPhone = members.filter((m) => (m.phone ?? '').trim()).length;
   const rules = !!(c.constitution?.trim() || c.constitutionFileUrl);
   const reg = (c.registeredNumber ?? '').trim();
-  const resolutions = posted.filter((m) => m.agendas.some((a) => a.resolution?.trim())).length;
-  const withMoney = posted.filter((m) => (m.tableBanking?.contributions ?? []).length > 0);
-  const months = new Set(posted.map((m) => m.date.slice(0, 7))).size;
+  const resolutions = facts.withDecision;
+  const months = facts.months;
 
-  const biz = input.business ?? null;
+  const biz = business ?? null;
   const entryDates = (biz?.entryDates ?? []).filter(validDate).map((x) => x.slice(0, 10)).sort();
   const bizMonths = new Set(entryDates.map((x) => x.slice(0, 7))).size;
   const bizWhen = span(entryDates[0], entryDates[entryDates.length - 1]);
@@ -131,19 +177,19 @@ export function buildHouse(input: HouseInput): HouseDocument[] {
       { en: 'Members’ ID numbers', sw: 'Namba za vitambulisho vya wanachama' },
       { en: `${withId} of ${members.length} members have an ID number`, sw: `Wanachama ${withId} kati ya ${members.length} wana namba ya kitambulisho` },
       { en: 'Add the ID number of each member in the member list.', sw: 'Ongeza namba ya kitambulisho ya kila mwanachama kwenye orodha.' }),
-    doc('minutes', 1, 'minutes', posted.length === 0 ? 'missing' : 'ready', posted.length,
+    doc('minutes', 1, 'minutes', facts.sittings === 0 ? 'missing' : 'ready', facts.sittings,
       { en: 'Meeting minutes', sw: 'Kumbukumbu za mikutano' },
-      { en: `${posted.length} meetings on record${when.en}`, sw: `Mikutano ${posted.length} imerekodiwa${when.sw}` },
+      { en: `${facts.sittings} meetings on record${when.en}`, sw: `Mikutano ${facts.sittings} imerekodiwa${when.sw}` },
       { en: 'Record a meeting and post its minutes.', sw: 'Rekodi mkutano na uchapishe kumbukumbu zake.' }, first, last),
     doc('resolution', 1, 'minutes', resolutions > 0 ? 'ready' : 'missing', resolutions,
       { en: 'Decisions the group agreed', sw: 'Maamuzi ya kikundi' },
       { en: `${resolutions} meetings with a written decision`, sw: `Mikutano ${resolutions} yenye uamuzi ulioandikwa` },
       { en: 'Write what the group agreed in the minutes, with who proposed and who seconded.', sw: 'Andika kile kikundi kilikubaliana kwenye kumbukumbu, pamoja na aliyependekeza na aliyeunga mkono.' }),
-    doc('money_record', 1, 'minutes', withMoney.length === 0 ? 'missing' : 'ready', withMoney.length,
+    doc('money_record', 1, 'minutes', facts.withMoney === 0 ? 'missing' : 'ready', facts.withMoney,
       { en: 'Record of contributions', sw: 'Rekodi ya michango' },
-      { en: `Contributions written at ${withMoney.length} meetings`, sw: `Michango imeandikwa katika mikutano ${withMoney.length}` },
+      { en: `Contributions written at ${facts.withMoney} meetings`, sw: `Michango imeandikwa katika mikutano ${facts.withMoney}` },
       { en: 'Write each member’s contribution at every meeting.', sw: 'Andika mchango wa kila mwanachama katika kila mkutano.' },
-      withMoney[0]?.date.slice(0, 10), withMoney[withMoney.length - 1]?.date.slice(0, 10)),
+      facts.moneyFirst, facts.moneyLast),
     doc('statements', 1, 'statement', months === 0 ? 'missing' : 'ready', months,
       { en: 'Monthly money statements', sw: 'Taarifa za fedha za kila mwezi' },
       { en: `${months} months can be shown${when.en}`, sw: `Miezi ${months} inaweza kuonyeshwa${when.sw}` },
@@ -230,7 +276,7 @@ export const HOUSE_PURPOSES: HousePurpose[] = [
     name: { en: 'Start savings and credit', sw: 'Kuanza akiba na mikopo' },
     needs: [
       { doc: 'registration', kind: 'must' }, { doc: 'officials', kind: 'must' }, { doc: 'rules', kind: 'must' },
-      { doc: 'resolution', kind: 'must' }, { doc: 'minutes', kind: 'must', atLeast: 6 }, { doc: 'statements', kind: 'must', atLeast: 3 },
+      { doc: 'resolution', kind: 'must' }, { doc: 'minutes', kind: 'must', atLeast: 3 }, { doc: 'statements', kind: 'must', atLeast: 3 },
       { doc: 'member_ids', kind: 'must' }, { doc: 'business_books', kind: 'helps', atLeast: 3 },
     ],
   },

@@ -46,19 +46,22 @@ the group page).
 1. **Nothing told anybody when a group went quiet.** A group could stop meeting,
    leave minutes in draft for months or stop writing contributions and no one
    was told. Fixed in this change (rows in bold above).
-2. **Alerts appear only when the person opens the group page.** Telpen Edu sends
-   them daily (cron, notify once per person and level). Stawi needs a small
-   table to remember what was sent and a scheduled job. Both are protected areas
-   (database, schedules) — **owner decision needed**.
+2. **Alerts appeared only when the person opened the group page.** Fixed
+   (owner approved 20/11/26): the existing daily job (`/api/cron`, 03:00 UTC =
+   06:00 Nairobi; no new schedule) sends each official an SMS about their own
+   stalled duty — once per matter, person and level (`AttentionNotice` table,
+   which stores no name, phone or text). Officials only: a matter that reaches
+   every member is shown to members in the app, not sent to every phone. An SMS
+   about one member never carries that member's name. At most 150 SMS a run;
+   `ATTENTION_SMS=off` stops them.
 3. **Month-end statement, daily sales record and tax dates are not watched.**
    Each needs dates the current records do not hold in one place. Next PRs, one
    watch each.
 4. **Books has no senior.** A business has an owner but no ladder. Proposed:
    owner → group Treasurer (when the business belongs to a group) → Chairperson.
    **Owner decision needed.**
-5. **Level 4 tells every member.** This follows the research (hidden records are
-   why groups lose money) but it is a policy choice — **owner to confirm**, or
-   say stop at level 3.
+5. **Level 4 tells every member.** Confirmed by the owner, 20/11/26: a matter
+   nobody acts on for long is shown to every member (in the app).
 
 ## Telpen Edu standing orders — what was adopted
 
