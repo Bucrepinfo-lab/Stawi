@@ -1,5 +1,12 @@
 # Stawi — session memory / start-here
 
+## 20/11/26 (17:50) — Messages inside the app (awaiting owner merge)
+- Owner order: built-in messaging so people ask and answer without calls. "go on build" 15:38.
+- `packages/core/src/messages.ts` (tests): two places — whole group, and "Ask the officials" (asker + officials only); `checkMessage` (500 letters, safety screen), `canSeeMessage`, `threadForNewMessage`, `summariseThreads` (unanswered first), 8 a minute.
+- **Database (additive):** `GroupMessage` (group, channel, threadMemberId, senderMembershipId, body, createdAt) — in `rls.sql`'s group list.
+- `apps/web/lib/messages.ts`, `GET/POST /api/groups/:id/messages`, `/messages` page (12-second refresh), "Messages" main tab, `messages` switch in `modules.ts`. Privacy page updated.
+- Not done: person-to-person, unread counts, notifications, photos or voice, removing a message, an unanswered-question watch, mobile. See `docs/MESSAGES.md`.
+
 ## 20/11/26 (17:20) — Owner said yes: one shared papers list for savings and credit; daily alerts by SMS (awaiting owner merge)
 - Owner 15:36: "yes, go ahead and fix all" to: merge #29–#33 in order; savings and credit reads the shared papers list; and the standing items (level 4 reaches every member; table and schedule for daily alerts). **The merges were blocked by the session's safety check and are still open** — the owner must merge, or allow it.
 - `activationEvidence` (`packages/core/src/sacco-activation.ts`) now returns the document house's "start savings and credit" purpose (`buildHouseFromFacts` + `houseFactsFromStatements`). Same seven ids, same readiness for every existing test; needs 3 sittings and 3 months.

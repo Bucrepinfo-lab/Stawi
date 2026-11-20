@@ -40,7 +40,7 @@ export function DashboardClient({ groups, initialId, modulesById = {} }: { group
         </div>
       </div>
 
-      {mods && <TabsHint records={!onlyBooks} ideas={mods.ideas} books={mods.books} />}
+      {mods && <TabsHint records={!onlyBooks} ideas={mods.ideas} books={mods.books} messages={mods.messages} />}
       {showMoney ? (
         <>
       <h1 className="display" style={{ fontWeight: 600, fontSize: 34, marginTop: 10 }}>

@@ -13,7 +13,7 @@
 
 import type { EscalationRuleId } from './escalation';
 
-export type ModuleId = 'meetings' | 'agendas' | 'officials' | 'money' | 'ideas' | 'books' | 'savings_credit';
+export type ModuleId = 'meetings' | 'agendas' | 'officials' | 'money' | 'messages' | 'ideas' | 'books' | 'savings_credit';
 export type GroupModules = Record<ModuleId, boolean>;
 type Words = { en: string; sw: string };
 
@@ -58,6 +58,12 @@ export const MODULES: ModuleInfo[] = [
     off: { en: 'No money is asked for or shown. Good for a group that keeps its money elsewhere.', sw: 'Hakuna pesa inayoulizwa wala kuonyeshwa. Inafaa kikundi kinachoweka pesa zake kwingine.' },
   },
   {
+    id: 'messages', icon: '💬', pillar: 1,
+    name: { en: 'Messages', sw: 'Ujumbe' },
+    on: { en: 'Members and officials write to each other inside Stawi, and members can ask the officials a question.', sw: 'Wanachama na viongozi wanaandikiana ndani ya Stawi, na wanachama wanaweza kuwauliza viongozi swali.' },
+    off: { en: 'The Messages tab is hidden. Messages already written are kept.', sw: 'Sehemu ya Ujumbe inafichwa. Ujumbe ulioandikwa unabaki.' },
+  },
+  {
     id: 'ideas', icon: '💡', pillar: 2,
     name: { en: 'Business ideas', sw: 'Mawazo ya biashara' },
     on: { en: 'Match the money you have to a business you can run.', sw: 'Linganisha pesa mlizonazo na biashara mnayoweza kuendesha.' },
@@ -93,7 +99,7 @@ export interface StartChoice {
   modules: GroupModules;
 }
 
-const all = (on: boolean): GroupModules => ({ meetings: on, agendas: on, officials: on, money: on, ideas: on, books: on, savings_credit: on });
+const all = (on: boolean): GroupModules => ({ meetings: on, agendas: on, officials: on, money: on, messages: on, ideas: on, books: on, savings_credit: on });
 
 export const START_CHOICES: StartChoice[] = [
   {
@@ -106,7 +112,7 @@ export const START_CHOICES: StartChoice[] = [
     id: 'organise', icon: '📝', type: 'CHAMA',
     name: { en: 'A group — meetings and minutes only', sw: 'Kikundi — mikutano na kumbukumbu tu' },
     about: { en: 'Agendas, attendance and formal minutes. No money is asked for. Keep your bank or SACCO as it is.', sw: 'Ajenda, mahudhurio na kumbukumbu rasmi. Hakuna pesa inayoulizwa. Bakini na benki au SACCO yenu.' },
-    modules: { ...all(false), meetings: true, agendas: true, officials: true },
+    modules: { ...all(false), meetings: true, agendas: true, officials: true, messages: true },
   },
   {
     id: 'books_only', icon: '📒', type: 'BUSINESS',

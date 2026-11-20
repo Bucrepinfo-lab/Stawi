@@ -298,3 +298,33 @@ html.dark .app-tab[aria-current="page"] { color: var(--ink); }
 .door-card h3 { font-family: var(--font-display); font-weight: 600; font-size: 20px; line-height: 1.2; }
 .door-card p { font-size: 14.5px; color: var(--ink-2); line-height: 1.55; }
 .door-go { display: inline-flex; align-items: center; min-height: 44px; padding: 9px 16px; border-radius: 12px; background: var(--pillar, var(--forest)); color: #fffdf8; font-weight: 800; font-size: 14.5px; text-decoration: none; width: fit-content; margin-top: 4px; }
+
+/* ── Messages inside the app (owner 20/11/26) ───────────────────────────── */
+.msg { display: grid; gap: 12px; }
+.msg-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.msg-title { font-weight: 600; font-size: 30px; }
+.msg-group { min-height: 44px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: inherit; font-weight: 700; max-width: 100%; }
+.msg-hint { font-size: 13.5px; color: var(--dim); }
+.msg-none, .msg-empty { color: var(--dim); font-size: 15px; padding: 14px 4px; list-style: none; }
+.msg-list { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 12px 12px; display: grid; gap: 8px; min-height: 220px; max-height: 58vh; overflow-y: auto; align-content: start; }
+.msg-row { display: flex; }
+.msg-row.mine { justify-content: flex-end; }
+.msg-bubble { max-width: 84%; padding: 9px 12px; border-radius: 16px 16px 16px 4px; background: var(--bone-2); }
+.msg-row.mine .msg-bubble { border-radius: 16px 16px 4px 16px; background: color-mix(in srgb, var(--forest) 16%, var(--paper)); }
+.msg-from { font-size: 12.5px; font-weight: 800; color: var(--ink-2); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.msg-badge { font-size: 10.5px; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: var(--gold); color: #16382a; }
+.msg-body { font-size: 15.5px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg-time { font-size: 11px; color: var(--dim); font-family: var(--font-mono); text-align: right; margin-top: 2px; }
+.msg-compose { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+.msg-compose textarea { width: 100%; min-height: 52px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: inherit; font-size: 16px; resize: vertical; }
+.msg-send { min-height: 52px; padding: 0 22px; border-radius: 14px; border: 0; background: var(--forest-deep); color: #fffdf8; font: inherit; font-weight: 800; font-size: 16px; cursor: pointer; box-shadow: inset 0 -4px 0 var(--gold); }
+.msg-send:disabled { background: var(--bone-2); color: var(--dim); box-shadow: none; cursor: default; }
+.msg-threads { list-style: none; display: grid; gap: 8px; }
+.msg-thread { display: grid; gap: 2px; width: 100%; text-align: left; padding: 16px 14px 12px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: inherit; cursor: pointer; box-shadow: var(--shadow); }
+.msg-thread.waiting { border-left: 5px solid var(--clay); }
+.msg-thread .who { font-weight: 800; font-size: 16px; }
+.msg-thread .last { font-size: 14.5px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msg-thread .meta { font-size: 12px; color: var(--dim); }
+.msg-thread.waiting .meta { color: var(--clay); font-weight: 700; }
+.msg-back { justify-self: start; min-height: 40px; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); color: var(--forest); font: inherit; font-weight: 700; cursor: pointer; }
+.msg-send:focus-visible, .msg-thread:focus-visible, .msg-back:focus-visible, .msg-compose textarea:focus-visible, .msg-group:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }

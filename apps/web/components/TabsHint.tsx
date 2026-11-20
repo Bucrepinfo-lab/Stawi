@@ -11,27 +11,27 @@ import { useEffect } from 'react';
 export const TABS_HINT_KEY = 'stawiTabs';
 export const TABS_HINT_EVENT = 'stawi:tabs';
 
-export interface TabsHintValue { records: boolean; ideas: boolean; books: boolean }
+export interface TabsHintValue { records: boolean; ideas: boolean; books: boolean; messages?: boolean }
 
 export function readTabsHint(): TabsHintValue | null {
   try {
     const raw = sessionStorage.getItem(TABS_HINT_KEY);
     if (!raw) return null;
     const v = JSON.parse(raw) as Partial<TabsHintValue>;
-    return { records: v.records !== false, ideas: v.ideas !== false, books: v.books !== false };
+    return { records: v.records !== false, ideas: v.ideas !== false, books: v.books !== false, messages: v.messages !== false };
   } catch {
     return null;
   }
 }
 
-export function TabsHint({ records, ideas, books }: TabsHintValue) {
+export function TabsHint({ records, ideas, books, messages = true }: TabsHintValue) {
   useEffect(() => {
     try {
-      sessionStorage.setItem(TABS_HINT_KEY, JSON.stringify({ records, ideas, books }));
+      sessionStorage.setItem(TABS_HINT_KEY, JSON.stringify({ records, ideas, books, messages }));
     } catch {
       // No storage: the tabs simply show everything.
     }
     window.dispatchEvent(new Event(TABS_HINT_EVENT));
-  }, [records, ideas, books]);
+  }, [records, ideas, books, messages]);
   return null;
 }

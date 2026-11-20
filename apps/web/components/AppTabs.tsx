@@ -18,9 +18,10 @@ const TABS: { href: string; match: RegExp; icon: string; key: string; needs: key
   { href: '/dashboard', match: /^\/(dashboard|groups|formalize)(\/|$)/, icon: '👥', key: 'tab-group', needs: 'records', label: { en: 'My group', sw: 'Kikundi' } },
   { href: '/match', match: /^\/match(\/|$)/, icon: '💡', key: 'tab-ideas', needs: 'ideas', label: { en: 'Ideas', sw: 'Mawazo' } },
   { href: '/books', match: /^\/books(\/|$)/, icon: '📒', key: 'tab-books', needs: 'books', label: { en: 'Books', sw: 'Hesabu' } },
+  { href: '/messages', match: /^\/messages(\/|$)/, icon: '💬', key: 'tab-messages', needs: 'messages', label: { en: 'Messages', sw: 'Ujumbe' } },
 ];
 
-const SHOW_ON = /^\/(dashboard|groups|formalize|match|books|sacco|community)(\/|$)/;
+const SHOW_ON = /^\/(dashboard|groups|formalize|match|books|messages|sacco|community)(\/|$)/;
 const SHARE_LABEL: Record<ValueLang, string> = { en: 'Share', sw: 'Shiriki' };
 
 export function AppTabs() {

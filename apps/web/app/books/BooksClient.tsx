@@ -93,7 +93,7 @@ export function BooksClient({ groups, booksByGroup, initialId, initialPeriod, mo
       <MoneySummary groupId={active.id} />
       {/* A business with no group has no group papers to gather. */}
       {!(modulesById[active.id] && booksOnly(modulesById[active.id]!)) && <DocumentHouse groupId={active.id} focus="funding" />}
-      {modulesById[active.id] && <TabsHint records={!booksOnly(modulesById[active.id]!)} ideas={modulesById[active.id]!.ideas} books={modulesById[active.id]!.books} />}
+      {modulesById[active.id] && <TabsHint records={!booksOnly(modulesById[active.id]!)} ideas={modulesById[active.id]!.ideas} books={modulesById[active.id]!.books} messages={modulesById[active.id]!.messages} />}
     </div>
   );
 }
