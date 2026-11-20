@@ -1,7 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { PLAN_ORDER, getPlan, quoteGroup, formatPrice, YEAR_PLAN_MONTHS_PAID, SMALL_GROUP_MAX_MEMBERS, type PlanTier, type BillingPeriod } from '@stawi/core';
+import { PLAN_ORDER, PER_MEMBER_PRICES, getPlan, quoteGroup, formatPrice, YEAR_PLAN_MONTHS_PAID, SMALL_GROUP_MAX_MEMBERS, type PlanTier, type BillingPeriod } from '@stawi/core';
+
+/**
+ * Where the price is per member (Kenya, owner 20/11/26) the size tiers mean
+ * nothing, so the page shows one group plan and Enterprise. Display only.
+ */
+const PER_MEMBER_FEATURES = [
+  'Any number of members',
+  'Table banking, minutes and papers',
+  'Money statement by day, week and month',
+  'M-Pesa receipts and group messages',
+  'Business matching and books',
+];
 
 type PaddleJs = {
   Environment: { set: (environment: string) => void };
@@ -112,16 +124,25 @@ export function SubscribeGate() {
     return quoteGroup({ country, members: tier === 'FREE' ? SMALL_GROUP_MAX_MEMBERS : SMALL_GROUP_MAX_MEMBERS + 1, period });
   }
 
+  const perMemberPrices = PER_MEMBER_PRICES[country];
+  function perMemberLabel(cents: number): string {
+    return `${formatPrice(period === 'YEAR' ? cents * YEAR_PLAN_MONTHS_PAID : cents, quoteFor('STARTER').currency)} a member${period === 'YEAR' ? '/yr' : '/mo'}`;
+  }
+
   function priceLabel(tier: PlanTier): string {
     const p = getPlan(tier);
     if (p.billing === 'CUSTOM') return 'Custom';
     const q = quoteFor(tier);
     // Per member (Kenya, owner 20/11/26): the price follows the group's size.
-    if (q.perMember) return `${formatPrice(period === 'YEAR' ? 1_000 * YEAR_PLAN_MONTHS_PAID : 1_000, q.currency)} a member${period === 'YEAR' ? '/yr' : '/mo'}`;
+    if (q.perMember && perMemberPrices) return perMemberLabel(perMemberPrices.full.perMemberCents);
     return `${formatPrice(q.amountCents, q.currency)}${period === 'YEAR' ? '/yr' : '/mo'}`;
   }
 
   const sample = quoteFor('STARTER');
+  const shownTiers: PlanTier[] = sample.perMember ? ['STARTER', 'ENTERPRISE'] : PLAN_ORDER;
+  useEffect(() => {
+    if (!shownTiers.includes(selected)) setSelected('STARTER');
+  }, [shownTiers, selected]);
 
   async function activate() {
     if (!accepted) return;
@@ -180,26 +201,29 @@ export function SubscribeGate() {
       </div>
       <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: '0 0 14px', maxWidth: 640 }}>
         {sample.perMember
-          ? <>Priced by the size of the group: {formatPrice(1_000, sample.currency)} a member a month, at least {formatPrice(5_000, sample.currency)} and never more than {formatPrice(29_900, sample.currency)} a group. A group that uses meetings and minutes only pays half. A year paid ahead costs {YEAR_PLAN_MONTHS_PAID} months. </>
+          ? <>Priced by the size of the group: {formatPrice(perMemberPrices?.full.perMemberCents ?? 0, sample.currency)} a member a month, at least {formatPrice(perMemberPrices?.full.floorCents ?? 0, sample.currency)} and never more than {formatPrice(perMemberPrices?.full.ceilingCents ?? 0, sample.currency)} a group. A group that uses meetings and minutes only pays half. A year paid ahead costs {YEAR_PLAN_MONTHS_PAID} months. </>
           : <>Priced per group. Groups of {SMALL_GROUP_MAX_MEMBERS} members or fewer pay the small-group price. </>}
         Groups that join in our first 12 months keep this founding price for as long as they stay subscribed.
         {sample.approved ? '' : ' Prices for this country are indicative until confirmed.'}
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px,1fr))', gap: 14 }}>
-        {PLAN_ORDER.map((tier) => {
+        {shownTiers.map((tier) => {
           const p = getPlan(tier);
           const on = selected === tier;
+          const oneGroupPlan = sample.perMember && tier === 'STARTER';
+          const features = oneGroupPlan ? PER_MEMBER_FEATURES : p.features;
           return (
             <button key={tier} onClick={() => setSelected(tier)} style={{ textAlign: 'left', background: 'var(--paper)', border: `2px solid ${on ? 'var(--forest)' : 'var(--line)'}`, borderRadius: 'var(--radius)', padding: 18, cursor: 'pointer', fontFamily: 'inherit', boxShadow: on ? 'var(--shadow)' : 'none' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--ink)' }}>{p.name}</span>
+                <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--ink)' }}>{oneGroupPlan ? 'Your group' : p.name}</span>
                 {on && <span style={{ color: 'var(--forest)', fontWeight: 700 }}>✓</span>}
               </div>
               <div className="mono" style={{ fontSize: 20, fontWeight: 600, color: 'var(--forest-deep)', marginTop: 6 }}>{priceLabel(tier)}</div>
               {p.trialDays > 0 && p.billing === 'PER_GROUP' ? <div style={{ fontSize: 11.5, color: 'var(--gold-deep)', fontWeight: 700, marginTop: 2 }}>First month free</div> : <div style={{ height: 16 }} />}
+              {oneGroupPlan && perMemberPrices && <div style={{ fontSize: 12.5, color: 'var(--ink-2)', marginTop: 4 }}>Meetings and minutes only: {perMemberLabel(perMemberPrices.meetingsOnly.perMemberCents)}</div>}
               <ul style={{ marginTop: 10, paddingLeft: 16, fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.6 }}>
-                {p.features.map((f) => <li key={f}>{f}</li>)}
+                {features.map((f) => <li key={f}>{f}</li>)}
               </ul>
             </button>
           );

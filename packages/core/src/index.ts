@@ -1,5 +1,4 @@
 export * from './capital';
-export * from './rotation';
 export * from './tax';
 export * from './match';
 export * from './mpesa';
@@ -31,7 +30,6 @@ export * from './intake';
 export * from './sacco-activation';
 export * from './business-activation';
 export * from './pos';
-export * from './automation';
 export * from './journey';
 export * from './features';
 export * from './android';

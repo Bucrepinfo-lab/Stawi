@@ -9,9 +9,9 @@ import { storedLang, track } from './track';
  * which button was used (?via=whatsapp), never who shared it.
  */
 
-const WORDS: Record<ValueLang, { title: string; share: string; whatsapp: string; sms: string; copy: string; copied: string }> = {
-  en: { title: 'Tell another group', share: 'Share', whatsapp: 'WhatsApp', sms: 'Text message', copy: 'Copy link', copied: 'Copied' },
-  sw: { title: 'Waambie kikundi kingine', share: 'Shiriki', whatsapp: 'WhatsApp', sms: 'Ujumbe mfupi', copy: 'Nakili kiungo', copied: 'Imenakiliwa' },
+const WORDS: Record<ValueLang, { title: string; share: string; whatsapp: string; sms: string; copy: string; copied: string; manual: string }> = {
+  en: { title: 'Tell another group', share: 'Share', whatsapp: 'WhatsApp', sms: 'Text message', copy: 'Copy link', copied: 'Copied', manual: 'Hold the link below to copy it' },
+  sw: { title: 'Waambie kikundi kingine', share: 'Shiriki', whatsapp: 'WhatsApp', sms: 'Ujumbe mfupi', copy: 'Nakili kiungo', copied: 'Imenakiliwa', manual: 'Bonyeza kiungo hapa chini kwa muda kukinakili' },
 };
 
 export function ShareBar({ lang: langProp, compact = false }: { lang?: string; compact?: boolean }) {
@@ -19,6 +19,8 @@ export function ShareBar({ lang: langProp, compact = false }: { lang?: string; c
   const [origin, setOrigin] = useState('');
   const [canShare, setCanShare] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Some phones refuse the clipboard: show the link so it can still be copied by hand.
+  const [manual, setManual] = useState(false);
   useEffect(() => {
     setSaved(storedLang());
     setOrigin(window.location.origin);
@@ -41,9 +43,11 @@ export function ShareBar({ lang: langProp, compact = false }: { lang?: string; c
     try {
       await navigator.clipboard.writeText(text('copy'));
       setCopied(true);
+      setManual(false);
       setTimeout(() => setCopied(false), 2500);
     } catch {
       setCopied(false);
+      setManual(true);
     }
   }
 
@@ -58,6 +62,12 @@ export function ShareBar({ lang: langProp, compact = false }: { lang?: string; c
       </a>
       <a className="share-btn" href={smsShareUrl(text('sms'))} onClick={() => track('share', 'share-sms')}>✉️ {w.sms}</a>
       <button type="button" className="share-btn" onClick={copy} aria-live="polite">{copied ? `✓ ${w.copied}` : `🔗 ${w.copy}`}</button>
+      {manual && (
+        <label style={{ display: 'grid', gap: 4, width: '100%', fontSize: 13 }}>
+          {w.manual}
+          <input readOnly value={shareLink(origin || 'https://stawi.fly.dev', 'copy')} onFocus={(e) => e.currentTarget.select()} style={{ font: 'inherit', padding: '6px 8px', borderRadius: 8, border: '1px solid var(--line, #dcd3c2)' }} />
+        </label>
+      )}
     </div>
   );
 }

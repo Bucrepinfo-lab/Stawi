@@ -39,7 +39,7 @@ export const PLANS: Record<PlanTier, Plan> = {
   },
   ENTERPRISE: {
     tier: 'ENTERPRISE', name: 'Enterprise', billing: 'CUSTOM', memberLimit: null, groupLimit: null, trialDays: 30,
-    features: ['Unlimited groups & members', 'Multi-tier admin hierarchy', 'SSO & audit logs', 'Dedicated support & SLA', 'Custom compliance packs'],
+    features: ['Unlimited groups & members', 'Head office sees every branch', 'Company sign-in & a record of who did what', 'Own support person & agreed response times', 'Custom compliance packs'],
   },
 };
 

@@ -366,7 +366,7 @@ Groups. Isolation enforced at the query layer (`getTenantContext`, `assertSameTe
 - ✅ Stripe webhook → `activateSubscriptionForTenant` flips Subscription ACTIVE (live on DB).
 - ✅ `withTenantRls` repo helper sets `app.tenant_id` per transaction.
 - ✅ rls.sql now covers ALL tenant-owned tables (group-, business-, sacco-, loan-chained).
-- ✅ Concrete Paystack (`lib/paystack.ts`) + Flutterwave (`lib/flutterwave.ts`) init/verify, live-on-key.
+- ✅ Paystack init/verify through `lib/local-providers.ts`, live-on-key. (The unused `lib/paystack.ts` and `lib/flutterwave.ts` were removed 20/11/26.)
 - ✅ Pillar 4 wired end-to-end: repo (getSaccoAccounts/openSaccoAccount/postSaccoTxn dual-approval/applyForLoan/accrueMonthlyInterest), server actions (open/txn/loan), data provider seed fallback.
 - ✅ `/api/cron` (CRON_SECRET-guarded): month-end interest accrual (idempotent) + subscription dunning.
 
@@ -469,9 +469,9 @@ funnel to everyone and is the core growth lever.
 business: `business-activation.ts` (accounting pack + owner analytics metrics +
 demand→supply supplier links), `pos.ts` (item **EAN-13 barcodes** on purchase/stock/
 sale, printable receipts, CSV exports, acknowledgeable critical-stock alerts, and
-**payment prompts** for M-Pesa STK / cash-with-change / card), and `automation.ts`
-(auto-reorder purchase orders, SMS/WhatsApp e-receipts, **KRA eTIMS** e-invoicing,
-close-of-day **Z-report**). Surfaced in `/books`.
+**payment prompts** for M-Pesa STK / cash-with-change / card). Surfaced in `/books`.
+(`automation.ts` — auto-reorder, e-receipts, a mock eTIMS invoice and Z-report — was never
+wired into any screen and was removed 20/11/26; real eTIMS needs KRA's own system.)
 
 **Brand & identity.** Logo (`design/stawi-logo.svg`), and vision / mission / core
 values in `BRAND.md`; tagline **"Save · Grow · Thrive."** Reflected across the landing

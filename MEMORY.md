@@ -1,5 +1,18 @@
 # Stawi — session memory / start-here
 
+## 20/11/26 (18:10) — Buttons and wording checked, unused code removed (awaiting owner merge)
+- Removed code nothing used: `components/sign-out-button.tsx` (sign-out lives in Account → Security),
+  `lib/paystack.ts` and `lib/flutterwave.ts` (Paystack runs through `lib/local-providers.ts`),
+  core `automation.ts` (mock eTIMS invoice, never on a screen) and `rotation.ts`, with their tests.
+- Live check of the public pages (landing, /subscribe, /terms, /privacy, /sign-in, /delete-account):
+  every link opens; signed-in links send to sign-in; /sacco stays 404 while SACCO+ is off.
+- /subscribe in Kenya showed three size tiers all at "KES 10 a member" with member caps that are
+  not enforced: now one "Your group" card (price, meetings-only price, plain features) plus Enterprise.
+  Display only; the checkout amount is unchanged. Enterprise features in plain words.
+- Share bar: when a phone refuses the clipboard, the link shows in a box to copy by hand.
+- Landing footer says "for every group and business" instead of "multi-tenant SaaS".
+- Signed-in screens still need a walk-through once the owner signs in to Stawi in Chrome.
+
 ## 20/11/26 (16:45) — Owner approved the researched prices (Kenya)
 - Owner 16:20: "yes confirm the prices, i approve". Kenya groups: KES 10 a member a month, at least 50, at most 299 (year = 10 months); meetings-only groups half (5 a member, 30–149); business books free for a small shop (≤100 sales a month, one person), else KES 99 a month / 30 a week / 5 a day / 990 a year; a subscribed group's first business included. Other countries keep per-group prices until their per-member table is approved.
 - Code: `PER_MEMBER_PRICES`, `perMemberMonthlyCents`, `quoteGroup({ meetingsOnly })`, `BOOKS_PRICES`, `quoteBooks` in `group-pricing.ts` (tests). `/api/billing/local` charges each group's exact price (meetings-only read from `Group.modules`). Subscribe page shows the per-member rule and "Pay KES … by M-Pesa" for the group.
@@ -314,9 +327,8 @@ Expo app's **Supabase session JWT** (HS256, `SUPABASE_JWT_SECRET`) instead of Cl
   (`subscribedPillars`), so any saver/trader/business subscribes to any pillar directly.
 - **Pillar 3 business suite:** `business-activation.ts` (pre-packed accounting pack + owner
   metrics + supplier links) wired into `/books`; `pos.ts` (item **EAN-13 barcodes**, printable
-  receipts, CSV exports, acknowledgeable stock alerts, **M-Pesa/cash/card payment prompts**);
-  `automation.ts` (auto-reorder POs, SMS/WhatsApp e-receipts, **KRA eTIMS** e-invoices,
-  close-of-day **Z-report**). All in `/books`.
+  receipts, CSV exports, acknowledgeable stock alerts, **M-Pesa/cash/card payment prompts**). All in `/books`. (`automation.ts` was never wired
+  in and was removed 20/11/26.)
 - **Brand:** `design/stawi-logo.svg` + `BRAND.md` (vision/mission/values, tagline *Save · Grow · Thrive*).
   Reflected in landing, receipts (demo + app).
 - **Theme + language:** dark mode (`html.dark` vars in globals.css) + EN/SW/FR selector on the
