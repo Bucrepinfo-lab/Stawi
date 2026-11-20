@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { escalationLevelName, type ValueLang } from '@stawi/core';
 import type { AttentionItem } from '@/lib/attention';
 import { storedLang, track, trackOnce } from './track';
@@ -31,7 +31,7 @@ export function AttentionCard({ groupId, items, isOfficial }: { groupId: string;
   if (items.length === 0) {
     if (!isOfficial) return null;
     return (
-      <section className="att s-card plain no-print" style={{ ['--pillar' as string]: 'var(--good)' }} aria-label={T.ok[lang]}>
+      <section className="att s-card plain no-print" style={{ '--pillar': 'var(--good)' } as CSSProperties} aria-label={T.ok[lang]}>
         <div className="att-ok">
           <span className="att-bell" aria-hidden>✅</span>
           <div>
