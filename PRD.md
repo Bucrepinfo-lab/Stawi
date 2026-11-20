@@ -14,6 +14,8 @@
 
 ---
 
+> **v3 restructure draft (20/11/26, awaiting owner approval):** informal, non-literate groups first; voice minutes; contribution tracker and goals; decision toolkit; survival layer for businesses; loan-readiness pack. Research, gap analysis, MVP and build order: [`docs/PRD-V3-RESTRUCTURE.md`](docs/PRD-V3-RESTRUCTURE.md).
+
 ## 1. Name Options (pick one)
 
 | # | Name | Meaning / Rationale | Why it works |
