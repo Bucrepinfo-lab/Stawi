@@ -44,3 +44,26 @@ savings. The card stays the second way to pay for the **subscription**.
 `contributionPayOptions` already answers per country. Mobile money through
 pawaPay needs its deposit call wired for contributions — next PR after the live
 account opens.
+
+## Owner decision 20/11/26 — a group's own Till; by hand meanwhile
+The owner chose **each group's own Till** as the way contributions settle, and
+asked that groups not ready for one keep working:
+
+- **By hand, role-assigned:** only the group's Treasurer writes a payment in
+  (server-checked, unchanged). The Treasurer now says how it came — cash, M-Pesa
+  to the group's Till or Pochi, M-Pesa to an official's phone, or bank — and adds
+  the M-Pesa code or bank reference when there is one. The same M-Pesa code
+  cannot be written twice. The record keeps who wrote each entry.
+- **Encouragement** ("A safer way to receive contributions", folded, under the
+  Treasurer's form): Pochi la Biashara first (works on the line they already
+  have, dial *334#), a Till when ready (Safaricom asks an individual for the
+  form, a national ID and one week of daily receipts), and a plain word that
+  writing payments in by hand is fine meanwhile. Facts from Safaricom's own
+  pages, read 20/11/26, linked on screen.
+- **Not claimed:** Safaricom's Pochi page does not say whether documents are
+  needed, so the screen does not say "no documents". Safaricom's list has no
+  category for chamas or self-help groups, so the screen does not promise a
+  Till in the group's name.
+- **Still to build:** a place for the group's own Till or Pochi number, so the
+  "Pay my contribution" request can go there (needs a field on the group — a
+  small additive database change), then switching member pay on.

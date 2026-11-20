@@ -104,6 +104,8 @@ export async function recordContribution(
     confirmed?: boolean;
     recordedByClerkUserId?: string;
     checkoutRequestId?: string;
+    /** M-Pesa code or bank reference written in by hand. */
+    mpesaRef?: string;
     tenantId?: string;
   },
 ): Promise<{ id: string }> {
@@ -118,6 +120,7 @@ export async function recordContribution(
       status: input.confirmed ? 'CONFIRMED' : 'PENDING',
       recordedByClerkUserId: input.recordedByClerkUserId,
       checkoutRequestId: input.checkoutRequestId,
+      mpesaRef: input.mpesaRef,
     },
     select: { id: true },
   });

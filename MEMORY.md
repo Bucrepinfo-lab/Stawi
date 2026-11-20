@@ -1,5 +1,11 @@
 # Stawi — session memory / start-here
 
+## 20/11/26 (16:20) — Owner chose each group's own Till; by hand meanwhile; researched prices (awaiting owner)
+- Owner 15:53: Till is right; for groups that hesitate, a role-assigned person updates the figures by hand; encourage Pochi la Biashara or a Till kindly (papers are hard for many). Owner 15:53: "merge them" (#29–#36) — #29 merged d958a87; the rest merge one by one at green heads (`merge-stack.sh`, no force-push; each branch's tree is checked unchanged after bringing main in).
+- `packages/core/src/collect-ways.ts` (tests): four ways money comes in (cash, M-Pesa to our Till or Pochi, M-Pesa to an official's phone, bank), M-Pesa code check (10 letters and numbers; asked for, not forced), duplicate-code refusal, three kind tips with Safaricom sources.
+- `recordContributionAction` (Treasurer only, unchanged) now takes `way` and `reference`; `recordContribution` stores `mpesaRef`. Channel CASH / MPESA_C2B / BANK. `CollectTips` under the Treasurer's form.
+- Prices: `docs/PRICING-PROPOSAL-2026-11.md` (PR #28) now has competitor prices and a recommendation: groups KES 10/member (50–299); meetings-only half; books free small-shop plan then KES 99/month, 30/week, 5/day. Awaiting the owner's yes.
+
 ## 20/11/26 (17:50) — Messages inside the app (awaiting owner merge)
 - Owner order: built-in messaging so people ask and answer without calls. "go on build" 15:38.
 - `packages/core/src/messages.ts` (tests): two places — whole group, and "Ask the officials" (asker + officials only); `checkMessage` (500 letters, safety screen), `canSeeMessage`, `threadForNewMessage`, `summariseThreads` (unanswered first), 8 a minute.
