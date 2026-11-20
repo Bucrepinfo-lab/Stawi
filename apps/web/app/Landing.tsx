@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { FAILURE_GAPS } from '@stawi/core';
 import { ValueBanners } from '@/components/ValueBanners';
 import { ShareBar } from '@/components/ShareBar';
+import { OpenDoor } from '@/components/OpenDoor';
 import { CountdownBadge } from '@/components/CountdownBadge';
 import { track } from '@/components/track';
 
@@ -419,6 +420,7 @@ export function Landing({ saccoPlus, foundingDays = null }: { saccoPlus: boolean
         <CountdownBadge days={foundingDays} label={lang === 'sw' ? 'siku zimebaki kujiunga kwa bei ya waanzilishi' : 'days left to join at the founding price'} />
       </div>
       <ValueBanners pillars={[1, 2, 3, 4]} saccoPlus={saccoPlus} lang={lang} />
+      <OpenDoor lang={lang === 'sw' ? 'sw' : 'en'} savingsCredit={saccoPlus} />
       <ShareBar lang={lang} />
 
       {/* Vision · Mission · Values */}

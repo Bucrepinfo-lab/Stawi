@@ -7,6 +7,7 @@ import { SaccoActivationCard } from '@/components/SaccoActivationCard';
 import { getMyGroups } from '@/lib/data';
 import { pickAllowedId } from '@stawi/core';
 import { saccoPlusEnabled } from '@/lib/features';
+import { getModulesMap } from '@/lib/modules';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,10 +19,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   // only one of the caller's own groups can be selected.
   const { group } = await searchParams;
   const activeId = pickAllowedId(group, groups.map((g) => g.id));
+  // Which sections each group uses (owner 20/11/26): the home screen shows only those.
+  const modulesById = await getModulesMap(groups.map((g) => g.id));
   return (
     <main className="pillar-1" style={{ maxWidth: 920, margin: '0 auto', padding: '28px 24px 80px' }}>
       <LiveRefresh />
-      <DashboardClient groups={groups} initialId={activeId} />
+      <DashboardClient groups={groups} initialId={activeId} modulesById={modulesById} />
       <ValueBanners pillars={[1]} startCollapsed />
       <ShareBar />
       {/* SACCO+ marketing (interest, loan tiers) only when the flag is on. */}

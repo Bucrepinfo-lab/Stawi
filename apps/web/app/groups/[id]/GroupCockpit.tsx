@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { createContext, useContext, useMemo, useState } from 'react';
 import {
   addMember,
   removeMember,
@@ -40,6 +40,8 @@ import {
   statementMonths,
   pickStatementMonth,
   uniqueBy,
+  groupTabsFor,
+  type GroupModules,
 } from '@stawi/core';
 import {
   saveCharterAction,
@@ -54,6 +56,8 @@ import { setUrlParams } from '@/lib/url-state';
 
 type Tab = 'charter' | 'minutes' | 'documents' | 'statement' | 'sacco';
 const TABS: readonly Tab[] = ['charter', 'minutes', 'documents', 'statement', 'sacco'];
+/** Which sections this group uses (owner 20/11/26); null = everything. */
+const ModulesCtx = createContext<GroupModules | null>(null);
 
 const card: React.CSSProperties = { background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 'var(--radius)', padding: 22, boxShadow: 'var(--shadow)' };
 const label: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: 'var(--dim)', marginBottom: 6 };
@@ -83,16 +87,18 @@ function Hint({ text }: { text?: string }) {
   );
 }
 
-export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, initialMonth }: { cockpit: Cockpit; canEdit: boolean; saccoPlus?: boolean; initialTab?: string; initialMonth?: string }) {
+export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, initialMonth, modules }: { cockpit: Cockpit; canEdit: boolean; saccoPlus?: boolean; initialTab?: string; initialMonth?: string; modules?: GroupModules }) {
+  // Only the sections the group has switched on are offered.
+  const allowedTabs: readonly string[] = modules ? groupTabsFor(modules) : TABS;
   // Tab and statement month live in the URL (?tab=, ?month=) so a refresh or shared link reopens the same view.
-  const startTab: Tab = (TABS as readonly string[]).includes(initialTab ?? '') && (initialTab !== 'sacco' || saccoPlus) ? (initialTab as Tab) : 'charter';
+  const startTab: Tab = allowedTabs.includes(initialTab ?? '') && (initialTab !== 'sacco' || saccoPlus) ? (initialTab as Tab) : 'charter';
   const [tab, setTabState] = useState<Tab>(startTab);
   const setTab = (t: Tab) => { setTabState(t); setUrlParams({ tab: t, month: t === 'statement' ? undefined : null }); };
   const [charter, setCharter] = useState<GroupCharter>(cockpit.charter);
   const [meetings, setMeetings] = useState<Meeting[]>(cockpit.meetings);
   const [saccoActive, setSaccoActive] = useState(false);
 
-  const tabs: { key: Tab; label: string; icon: string }[] = [
+  const allTabs: { key: Tab; label: string; icon: string }[] = [
     { key: 'charter', label: 'Charter', icon: '📋' },
     { key: 'minutes', label: 'Minutes', icon: '📝' },
     { key: 'documents', label: 'Documents', icon: '📄' },
@@ -100,6 +106,7 @@ export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, 
     // SACCO+ (savings & credit) tab only when the server enables it.
     ...(saccoPlus ? [{ key: 'sacco' as Tab, label: 'SACCO+', icon: '🏦' }] : []),
   ];
+  const tabs = allTabs.filter((t) => allowedTabs.includes(t.key));
 
   // The self-directing spine: turn this group's live state into a whole-app
   // journey with a single "do this next" step spanning all four pillars.
@@ -130,10 +137,12 @@ export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, 
   }
 
   return (
+    <ModulesCtx.Provider value={modules ?? null}>
     <div>
       <style>{`@media print { .no-print { display: none !important; } body { background:#fff; } .print-doc { box-shadow:none !important; border:none !important; } }`}</style>
 
-      <PillarJourney journey={journey} activeTab={tab} onGo={goTo} />
+      {/* The four-pillar journey is for groups using the whole house. */}
+      {(!modules || (modules.meetings && modules.money)) && <PillarJourney journey={journey} activeTab={tab} onGo={goTo} />}
 
       <div className="no-print s-tabs" role="tablist" aria-label="Group records">
         {tabs.map((t) => (
@@ -157,6 +166,7 @@ export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, 
         {saccoPlus && tab === 'sacco' && <SaccoActivationTab charter={charter} meetings={meetings} canEdit={canEdit} groupId={cockpit.groupId} onActivated={() => setSaccoActive(true)} />}
       </div>
     </div>
+    </ModulesCtx.Provider>
   );
 }
 
@@ -630,6 +640,12 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string>();
   const comp = useMemo(() => meetingCompleteness(m), [m]);
+  // A group may switch agenda items or money off; the form then does not ask for them.
+  const mods = useContext(ModulesCtx);
+  const showAgenda = mods?.agendas ?? true;
+  const showMoney = mods?.money ?? true;
+  const nMoney = showAgenda ? 4 : 3;
+  const nAob = nMoney + (showMoney ? 1 : 0);
   const fin = useMemo(() => tableBankingSummary(m.tableBanking), [m.tableBanking]);
   const set = (patch: Partial<Meeting>) => setM({ ...m, ...patch });
   const setTB = (patch: Partial<Meeting['tableBanking']>) => set({ tableBanking: { ...m.tableBanking, ...patch } });
@@ -741,13 +757,16 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
         <div style={{ marginTop: 10, fontSize: 12.5, color: 'var(--dim)' }}>{(() => { const t = attendanceTally(m.attendance); return `${t.present} present · ${t.apology} apology · ${t.absent} absent · quorum ${t.quorumMet ? 'met' : 'not met'}`; })()}</div>
       </div>
 
+      {showAgenda && (
       <div className="s-card" style={card}>
         <SectionTitle n={3} title="Agenda & resolutions" />
         <AgendaEditor agendas={m.agendas} onChange={(agendas) => set({ agendas })} />
       </div>
+      )}
 
+      {showMoney && (
       <div className="s-card" style={card}>
-        <SectionTitle n={4} title="Table-banking / merry-go-round" />
+        <SectionTitle n={nMoney} title="Table-banking / merry-go-round" />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
           <div><label style={label}>Opening balance (KES)</label><input style={input} inputMode="decimal" value={fromCents(m.tableBanking.openingBalanceCents ?? 0)} onChange={(e) => setTB({ openingBalanceCents: toCents(e.target.value) })} /></div>
         </div>
@@ -783,13 +802,15 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
         </div>
       </div>
 
+      )}
+
       <div className="s-card" style={card}>
-        <SectionTitle n={5} title="Any other business (AOB)" />
+        <SectionTitle n={nAob} title="Any other business (AOB)" />
         <AobEditor aobs={m.aobs} onChange={(aobs) => set({ aobs })} />
       </div>
 
       <div className="s-card" style={card}>
-        <SectionTitle n={6} title="Adjournment" />
+        <SectionTitle n={nAob + 1} title="Adjournment" />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div><label style={label}>Adjourned at</label><input style={input} value={m.adjournmentTime} onChange={(e) => set({ adjournmentTime: e.target.value })} placeholder="6:00 PM" /></div>
           <div><label style={label}>Next meeting date{m.nextMeetingDate ? ` · ${formatDate(m.nextMeetingDate, { year: 'yyyy' })}` : ' (dd/mm/yyyy)'}</label><input type="date" style={input} value={m.nextMeetingDate ?? ''} min={m.date || undefined} onChange={(e) => set({ nextMeetingDate: e.target.value || undefined })} /></div>

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { shareLink, shareMessage, whatsappShareUrl, type ValueLang } from '@stawi/core';
 import { storedLang, track } from './track';
+import { TABS_HINT_EVENT, readTabsHint, type TabsHintValue } from './TabsHint';
 
 /**
  * The main tabs (owner 20/11/26): the same four big buttons on every working
@@ -13,10 +14,10 @@ import { storedLang, track } from './track';
  * at once.
  */
 
-const TABS: { href: string; match: RegExp; icon: string; key: string; label: Record<ValueLang, string> }[] = [
-  { href: '/dashboard', match: /^\/(dashboard|groups|formalize)(\/|$)/, icon: '👥', key: 'tab-group', label: { en: 'My group', sw: 'Kikundi' } },
-  { href: '/match', match: /^\/match(\/|$)/, icon: '💡', key: 'tab-ideas', label: { en: 'Ideas', sw: 'Mawazo' } },
-  { href: '/books', match: /^\/books(\/|$)/, icon: '📒', key: 'tab-books', label: { en: 'Books', sw: 'Hesabu' } },
+const TABS: { href: string; match: RegExp; icon: string; key: string; needs: keyof TabsHintValue; label: Record<ValueLang, string> }[] = [
+  { href: '/dashboard', match: /^\/(dashboard|groups|formalize)(\/|$)/, icon: '👥', key: 'tab-group', needs: 'records', label: { en: 'My group', sw: 'Kikundi' } },
+  { href: '/match', match: /^\/match(\/|$)/, icon: '💡', key: 'tab-ideas', needs: 'ideas', label: { en: 'Ideas', sw: 'Mawazo' } },
+  { href: '/books', match: /^\/books(\/|$)/, icon: '📒', key: 'tab-books', needs: 'books', label: { en: 'Books', sw: 'Hesabu' } },
 ];
 
 const SHOW_ON = /^\/(dashboard|groups|formalize|match|books|sacco|community)(\/|$)/;
@@ -27,6 +28,14 @@ export function AppTabs() {
   const visible = SHOW_ON.test(pathname);
   const [lang, setLang] = useState<ValueLang>('en');
   useEffect(() => { setLang(storedLang()); }, []);
+  // Show only the tabs for the sections the group on screen uses (see TabsHint).
+  const [hint, setHint] = useState<TabsHintValue | null>(null);
+  useEffect(() => {
+    const read = () => setHint(readTabsHint());
+    read();
+    window.addEventListener(TABS_HINT_EVENT, read);
+    return () => window.removeEventListener(TABS_HINT_EVENT, read);
+  }, []);
   useEffect(() => {
     document.body.classList.toggle('has-app-tabs', visible);
     return () => document.body.classList.remove('has-app-tabs');
@@ -49,7 +58,7 @@ export function AppTabs() {
 
   return (
     <nav className="app-tabs" aria-label="Main">
-      {TABS.map((t) => (
+      {TABS.filter((t) => !hint || hint[t.needs] || t.match.test(pathname)).map((t) => (
         <Link key={t.href} href={t.href} className="app-tab" aria-current={t.match.test(pathname) ? 'page' : undefined} onClick={() => track('tab', t.key)}>
           <span className="i" aria-hidden>{t.icon}</span>
           <span>{t.label[lang]}</span>

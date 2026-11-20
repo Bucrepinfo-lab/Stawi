@@ -6,7 +6,7 @@
  * colleague's list cannot be read from the page.
  */
 import {
-  findEscalations, memberIdForPhone, visibleEscalations, isOfficial,
+  findEscalations, memberIdForPhone, visibleEscalations, isOfficial, watchAllowed, type GroupModules,
   type EscalationFinding, type EscalationLevel,
 } from '@stawi/core';
 import type { Cockpit } from './cockpit';
@@ -31,7 +31,7 @@ export interface GroupAttention {
   isOfficial: boolean;
 }
 
-export async function groupAttention(cockpit: Cockpit, viewer: ViewerRole): Promise<GroupAttention> {
+export async function groupAttention(cockpit: Cockpit, viewer: ViewerRole, modules?: GroupModules): Promise<GroupAttention> {
   const members = cockpit.charter.members ?? [];
   let memberId: string | null = null;
   if (dbEnabled()) {
@@ -43,7 +43,8 @@ export async function groupAttention(cockpit: Cockpit, viewer: ViewerRole): Prom
   }
   const me = members.find((m) => m.id === memberId);
   const findings = visibleEscalations(
-    findEscalations({ charter: cockpit.charter, meetings: cockpit.meetings }),
+    // A watch is raised only for a section the group has switched on.
+    findEscalations({ charter: cockpit.charter, meetings: cockpit.meetings }).filter((f) => !modules || watchAllowed(f.rule, modules)),
     { memberId, overseer: viewer === 'SUPER_ADMIN' },
   );
   return {
