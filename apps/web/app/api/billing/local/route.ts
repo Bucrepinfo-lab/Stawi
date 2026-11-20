@@ -70,10 +70,10 @@ export async function GET() {
   const key = phone ? phone.replace(/\D/g, '').slice(-9) : '';
   const rows = await prisma.membership.findMany({
     where: { OR: [{ clerkUserId: userId }, ...(key.length === 9 ? [{ phone: { endsWith: key } }] : [])] },
-    select: { group: { select: { id: true, name: true, countryCode: true, _count: { select: { members: true } } } } },
+    select: { group: { select: { id: true, name: true, countryCode: true, type: true, modules: true, _count: { select: { members: true } } } } },
   });
   const seen = new Set<string>();
-  const groups: Array<{ id: string; name: string; members: number; method: string }> = [];
+  const groups: Array<{ id: string; name: string; members: number; method: string; monthlyCents: number; currency: string; perMember: boolean }> = [];
   for (const { group } of rows) {
     if (seen.has(group.id)) continue;
     seen.add(group.id);
@@ -81,7 +81,10 @@ export async function GET() {
     if (!local) continue;
     const role = await groupRoleFor(group.id, { userId, phone });
     if (role && PLAN_PAYER_ROLES.has(role)) {
-      groups.push({ id: group.id, name: group.name, members: group._count.members, method: local.label });
+      const { resolveModules } = await import('@stawi/core');
+      const mods = resolveModules(group.modules, { groupType: group.type });
+      const q = quoteGroup({ country: group.countryCode, members: group._count.members, env: process.env, meetingsOnly: mods.meetings && !mods.money });
+      groups.push({ id: group.id, name: group.name, members: group._count.members, method: local.label, monthlyCents: q.monthlyCents, currency: q.currency, perMember: q.perMember });
     }
   }
   return NextResponse.json({ groups });
@@ -127,11 +130,15 @@ export async function POST(req: Request) {
   const { prisma, createPlanPayment } = await import('@stawi/db');
   const group = await prisma.group.findUnique({
     where: { id: groupId },
-    select: { countryCode: true, _count: { select: { members: true } } },
+    select: { countryCode: true, type: true, modules: true, _count: { select: { members: true } } },
   });
   if (!group) return NextResponse.json({ error: 'Group not found.' }, { status: 404 });
+  // A group using meetings and minutes only pays half where prices are per member (owner 20/11/26).
+  const { resolveModules } = await import('@stawi/core');
+  const mods = resolveModules(group.modules, { groupType: group.type });
+  const meetingsOnly = mods.meetings && !mods.money;
   const members = group._count.members;
-  if (tier === 'FREE' && members > SMALL_GROUP_MAX_MEMBERS) {
+  if (tier === 'FREE' && members > SMALL_GROUP_MAX_MEMBERS && !quoteGroup({ country: group.countryCode, members }).perMember) {
     return NextResponse.json(
       { error: `The small-group plan is for groups of ${SMALL_GROUP_MAX_MEMBERS} members or fewer.` },
       { status: 400 },
@@ -139,7 +146,7 @@ export async function POST(req: Request) {
   }
   const local = localRailFor(group.countryCode, members);
   if (!local) return NextResponse.json({ error: 'Pay by card for now; local payments for your country open soon.' }, { status: 400 });
-  const quote = quoteGroup({ country: group.countryCode, members, period, env: process.env });
+  const quote = quoteGroup({ country: group.countryCode, members, period, env: process.env, meetingsOnly });
   if (quote.currency !== local.currency || quote.amountCents < 100) {
     return NextResponse.json({ error: 'This price cannot be charged locally.' }, { status: 400 });
   }
