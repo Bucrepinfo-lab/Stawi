@@ -132,7 +132,7 @@ function JoinTab() {
 
   return (
     <section style={{ display: 'grid', gap: 16 }}>
-      <div style={card}>
+      <div className="s-card" style={card}>
         <span style={label}>Who is joining?</span>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {(Object.keys(ENTITY_ONBOARDING) as SaccoEntityType[]).map((t) => (
@@ -226,7 +226,7 @@ function SaveTab({ account }: { account?: WebSaccoAccount }) {
 
   return (
     <section style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
-      <div style={card}>
+      <div className="s-card" style={card}>
         <h3 style={{ marginTop: 0 }}>Deposits earn while they sit</h3>
         <label style={label} htmlFor="bal">Savings balance</label>
         <input id="bal" type="number" style={input} value={balance / 100}
@@ -243,7 +243,7 @@ function SaveTab({ account }: { account?: WebSaccoAccount }) {
         </button>
         {note && <p role="status" style={{ fontSize: 13, fontWeight: 700, marginTop: 8, color: 'var(--forest-deep, #1f4d3a)' }}>{note}</p>}
       </div>
-      <div style={card}>
+      <div className="s-card" style={card}>
         <h3 style={{ marginTop: 0 }}>Share capital pays dividends</h3>
         <label style={label} htmlFor="sh">Share capital held</label>
         <input id="sh" type="number" style={input} value={shares / 100}
@@ -253,7 +253,7 @@ function SaveTab({ account }: { account?: WebSaccoAccount }) {
           <Stat label="Annual dividend" value={formatMoney(dividend)} highlight />
         </div>
       </div>
-      <div style={card}>
+      <div className="s-card" style={card}>
         <h3 style={{ marginTop: 0 }}>Send money for less</h3>
         <label style={label} htmlFor="rm">Amount to send</label>
         <input id="rm" type="number" style={input} value={remit / 100}
@@ -331,7 +331,7 @@ function BorrowTab({ account }: { account?: WebSaccoAccount }) {
       </div>
 
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
-        <div style={card}>
+        <div className="s-card" style={card}>
           <h3 style={{ marginTop: 0 }}>Your numbers</h3>
           <label style={label} htmlFor="dep">My deposits</label>
           <input id="dep" type="number" style={input} value={deposits / 100}
@@ -350,7 +350,7 @@ function BorrowTab({ account }: { account?: WebSaccoAccount }) {
             onChange={(e) => setTenure(Math.max(0, Number(e.target.value) || 0))} />
         </div>
 
-        <div style={card}>
+        <div className="s-card" style={card}>
           <h3 style={{ marginTop: 0 }}>System decision — in seconds</h3>
           <div
             style={{
@@ -489,7 +489,7 @@ function GrowTab({ account, viewerRole = 'MEMBER' }: { account?: WebSaccoAccount
 
   return (
     <section style={{ display: 'grid', gap: 16 }}>
-      <div style={card}>
+      <div className="s-card" style={card}>
         <h3 style={{ marginTop: 0 }}>Your credit graduation — earned by wholistic performance</h3>
         <p style={{ margin: '0 0 14px', fontSize: 13.5, color: 'var(--ink-2)', maxWidth: 640 }}>
           Every party on the credit trail — member, group or business — graduates through
@@ -550,7 +550,7 @@ function GrowTab({ account, viewerRole = 'MEMBER' }: { account?: WebSaccoAccount
         )}
       </div>
 
-      <div style={card}>
+      <div className="s-card" style={card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
           <h3 style={{ marginTop: 0 }}>Your institution's ladder</h3>
           <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: isOfficial ? 'var(--gold-deep, #b97e15)' : 'var(--faint, #8b8375)' }}>
@@ -598,7 +598,7 @@ function GrowTab({ account, viewerRole = 'MEMBER' }: { account?: WebSaccoAccount
       </div>
 
       {a.nextStage && isOfficial && (
-        <div style={card}>
+        <div className="s-card" style={card}>
           <h3 style={{ marginTop: 0 }}>What&apos;s between you and {STAGE_LABELS[a.nextStage]} <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--gold-deep, #b97e15)' }}>· OFFICIALS ONLY</span></h3>
           <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none' }}>
             {a.checks.map((c) => (
@@ -616,7 +616,7 @@ function GrowTab({ account, viewerRole = 'MEMBER' }: { account?: WebSaccoAccount
         </div>
       )}
 
-      <div style={card}>
+      <div className="s-card" style={card}>
         <h3 style={{ marginTop: 0 }}>Why others failed — and how Stawi closes each gap</h3>
         <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
           {FAILURE_GAPS.map((g) => (

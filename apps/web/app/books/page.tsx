@@ -17,7 +17,7 @@ export default async function BooksPage({ searchParams }: { searchParams: Promis
   const activeId = pickAllowedId(sp.group, ids);
   const period = parsePeriod(sp.period);
   return (
-    <main style={{ maxWidth: 960, margin: '0 auto', padding: '28px 24px 80px' }}>
+    <main className="pillar-3" style={{ maxWidth: 960, margin: '0 auto', padding: '28px 24px 80px' }}>
       <BooksClient groups={groups} booksByGroup={booksByGroup} initialId={activeId} initialPeriod={period} />
       <ValueBanners pillars={[3]} startCollapsed />
       {saccoPlusEnabled() && <SaccoActivationCard compact />}

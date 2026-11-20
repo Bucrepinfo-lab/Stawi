@@ -5,6 +5,8 @@ import { getCockpit } from '@/lib/cockpit';
 import { getViewerRole, dbEnabled } from '@/lib/data';
 import { myGroupRole, RECORD_EDITOR_ROLES } from '@/lib/group-access';
 import { saccoPlusEnabled } from '@/lib/features';
+import { AttentionCard } from '@/components/AttentionCard';
+import { groupAttention } from '@/lib/attention';
 
 export default async function GroupWorkspacePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; month?: string }> }) {
   const { id } = await params;
@@ -17,8 +19,10 @@ export default async function GroupWorkspacePage({ params, searchParams }: { par
   const canEdit = dbEnabled()
     ? viewer === 'SUPER_ADMIN' || (!!groupRole && RECORD_EDITOR_ROLES.has(groupRole))
     : viewer === 'OFFICIAL' || viewer === 'SUPER_ADMIN';
+  // Flow & escalation: only this viewer's own duties and what has climbed to them (decided here, on the server).
+  const attention = await groupAttention(cockpit, viewer);
   return (
-    <main style={{ maxWidth: 860, margin: '0 auto', padding: '28px 24px 90px' }}>
+    <main className="pillar-1" style={{ maxWidth: 860, margin: '0 auto', padding: '28px 24px 90px' }}>
       <LiveRefresh />
       <a href="/dashboard" className="no-print" style={{ fontSize: 13, color: 'var(--forest)', fontWeight: 600, textDecoration: 'none' }}>← Dashboard</a>
       <div style={{ marginTop: 10 }}>
@@ -29,6 +33,7 @@ export default async function GroupWorkspacePage({ params, searchParams }: { par
           bank-ready documents and a month-end statement that feed the rest of the platform.
         </p>
       </div>
+      <AttentionCard groupId={cockpit.groupId} items={attention.items} isOfficial={attention.isOfficial} />
       <div style={{ marginTop: 22 }}>
         <GroupCockpit cockpit={cockpit} canEdit={canEdit} saccoPlus={saccoPlusEnabled()} initialTab={tab} initialMonth={month} />
       </div>

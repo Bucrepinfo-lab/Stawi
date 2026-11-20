@@ -74,3 +74,45 @@ logs keep their own date format.
 ## 12. Schedules cost minutes
 Each scheduled workflow states why its frequency is needed; prefer the least
 frequent schedule that meets the need (GitHub Actions minutes are a budget).
+
+## 13. Work that stops moving is raised (flow and escalation)
+Adopted 20/11/26 from the Telpen Edu flow audit (10/10/26). Every section with a
+duty has one person who acts first. If nothing happens the matter climbs: the
+responsible official → the Chairperson (the Vice Chairperson for the
+Chairperson's own duty) → all officials → every member, with fall-through so it
+never lands on nobody. The watches, their owners and what is deliberately not
+watched are listed in `docs/FLOW-ESCALATION-AUDIT.md`; the code is
+`packages/core/src/escalation.ts` (one registry line and one selector per watch).
+A new section ships with its watch, or with a written reason it has none.
+
+## 14. Least privilege, decided on the server
+Adopted 20/11/26 from Telpen Edu (02/11/26 and 09/11/26). Each person sees and
+acts only on their own post's work. A raised matter is shown to the responsible
+person and those above them only: colleagues never see each other's lists, and a
+matter that names one member never goes beyond the officials. The server decides
+what a viewer receives; hiding a menu is never the control.
+
+## 15. Every screen shows a worked example
+Adopted 20/11/26 from Telpen Edu (23/10/26, "three examples in every tab"). A
+tab or section never opens empty in the sample group: it carries at least three
+realistic examples so a new group can see what good looks like. A new tab ships
+with its examples.
+
+## 16. A country goes live only after its own audit
+Adopted 20/11/26 from the Telpen Edu approval order (24/10/26). Before a country
+is opened: its sample data passes, its key screens render at 375 px with no
+errors, its gaps are fixed without changing any other country, its own currency,
+wording, rules and clock hold (rule 9), and its raised-matter alerts work.
+
+## 17. The way most people pay comes first
+Owner standing order, 19/11/26 (all products, every country). Lead with the way
+most people in the country pay — M-Pesa in Kenya, mobile money elsewhere, bank
+transfer or USSD where that is the habit. The card is always the second choice
+and goes through the merchant of record, which remits the tax.
+
+## 18. Plain words, verifiable claims
+Owner brief, 20/11/26. Screens use words a member with little schooling
+understands; no technical terms. Every figure shown to persuade carries its
+source and is never rounded in our favour. Home screens stay light: what can be
+folded away is folded away.
+

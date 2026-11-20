@@ -19,7 +19,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const { group } = await searchParams;
   const activeId = pickAllowedId(group, groups.map((g) => g.id));
   return (
-    <main style={{ maxWidth: 920, margin: '0 auto', padding: '28px 24px 80px' }}>
+    <main className="pillar-1" style={{ maxWidth: 920, margin: '0 auto', padding: '28px 24px 80px' }}>
       <LiveRefresh />
       <DashboardClient groups={groups} initialId={activeId} />
       <ValueBanners pillars={[1]} startCollapsed />
