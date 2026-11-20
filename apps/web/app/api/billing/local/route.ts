@@ -13,7 +13,7 @@ import {
   subscriptionRails,
   type PlanTier,
 } from '@stawi/core';
-import { getSupabaseUser, getUserId, getUserPhone } from '@/lib/auth';
+import { getLoginPhone, getSupabaseUser, getUserId, getUserPhone } from '@/lib/auth';
 import { groupRoleFor } from '@/lib/group-access';
 import { initiateStkPush, darajaConfig, MpesaConfigError } from '@/lib/mpesa';
 import { pawapayDeposit, pawapayOn, paystackInitialize, paystackOn } from '@/lib/local-providers';
@@ -154,9 +154,11 @@ export async function POST(req: Request) {
 
   try {
     if (local.rail === 'MPESA') {
-      if (!phone) return NextResponse.json({ error: 'Sign in with your M-Pesa phone number first.' }, { status: 400 });
+      // The prompt goes to the phone they sign in with; they approve it on that phone.
+      const payer = phone ?? (await getLoginPhone().catch(() => null));
+      if (!payer) return NextResponse.json({ error: 'Sign in with your M-Pesa phone number first.' }, { status: 400 });
       if (quote.amountCents % 100 !== 0) return NextResponse.json({ error: 'This price cannot be charged by M-Pesa.' }, { status: 400 });
-      const stk = await initiateStkPush({ amountCents: quote.amountCents, payerPhone: phone, accountReference: 'Stawi plan', description });
+      const stk = await initiateStkPush({ amountCents: quote.amountCents, payerPhone: payer, accountReference: 'Stawi plan', description });
       await createPlanPayment(prisma, {
         groupId, checkoutRequestId: stk.CheckoutRequestID, tier, period, amountCents: quote.amountCents,
         requestedByUserId: userId, provider: 'mpesa', currency: 'KES',
@@ -167,8 +169,9 @@ export async function POST(req: Request) {
     const reference = `stawi-${crypto.randomUUID()}`;
     const amount = quote.amountCents / 100;
     if (local.rail === 'MOBILE_MONEY') {
-      if (!phone) return NextResponse.json({ error: 'Sign in with your mobile money phone number first.' }, { status: 400 });
-      const res = await pawapayDeposit({ env: process.env, amount, currency: quote.currency, phone, message: 'Stawi plan', reference });
+      const payer = phone ?? (await getLoginPhone().catch(() => null));
+      if (!payer) return NextResponse.json({ error: 'Sign in with your mobile money phone number first.' }, { status: 400 });
+      const res = await pawapayDeposit({ env: process.env, amount, currency: quote.currency, phone: payer, message: 'Stawi plan', reference });
       if (!res.ok) {
         const reason = res.reason === 'no_wallet' ? 'That phone number has no mobile money wallet we can reach.' : 'Mobile money did not take the request. Try again in a minute.';
         return NextResponse.json({ error: reason }, { status: 502 });

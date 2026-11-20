@@ -2,29 +2,30 @@ import { WindowLimiter, OTP_LIMITS } from '@stawi/core';
 
 /**
  * Server-side sign-in throttles (in memory, per app instance — Fly runs one
- * always-on machine; Supabase's own project-level SMS limits sit underneath).
- * Kept on globalThis so dev hot-reload does not reset them.
+ * always-on machine). Kept on globalThis so dev hot-reload does not reset them.
+ * No SMS is sent to sign in (owner 20/11/26): these guard PIN and joining-code
+ * guesses per phone number and per IP.
  */
 interface Throttles {
-  sendPhone: WindowLimiter;
-  sendIp: WindowLimiter;
+  /** Joining-code tries. */
   verifyPhone: WindowLimiter;
   verifyIp: WindowLimiter;
+  /** PIN tries (the PIN row itself locks after 5 wrong). */
+  pinPhone: WindowLimiter;
   pinIp: WindowLimiter;
-  /** When the current code for a phone was sent (deleted once used). */
-  otpSentAt: Map<string, number>;
+  /** New accounts opened from one IP. */
+  startIp: WindowLimiter;
 }
 
 const g = globalThis as unknown as { __stawiThrottles?: Throttles };
 
 export function throttles(): Throttles {
   g.__stawiThrottles ??= {
-    sendPhone: new WindowLimiter(OTP_LIMITS.sendPerPhone),
-    sendIp: new WindowLimiter(OTP_LIMITS.sendPerIp),
     verifyPhone: new WindowLimiter(OTP_LIMITS.verifyPerPhone),
     verifyIp: new WindowLimiter(OTP_LIMITS.verifyPerIp),
+    pinPhone: new WindowLimiter({ max: 10, windowMs: 15 * 60_000 }),
     pinIp: new WindowLimiter({ max: 30, windowMs: 15 * 60_000 }),
-    otpSentAt: new Map(),
+    startIp: new WindowLimiter({ max: 5, windowMs: 60 * 60_000 }),
   };
   return g.__stawiThrottles;
 }

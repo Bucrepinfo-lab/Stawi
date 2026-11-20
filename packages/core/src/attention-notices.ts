@@ -2,13 +2,14 @@
  * Daily alerts for stalled work (owner approved 20/11/26).
  *
  * Once a day the stalled duties of every group are worked out and the people
- * they concern are told by SMS — once per matter, per person, per level, never
- * again. It is an alert about the person's own duty, not promotion.
+ * they concern are told in the group's own Messages (owner 20/11/26: no SMS)
+ * — once per matter, per person, per level, never again. It is an alert about
+ * the person's own duty, not promotion.
  *
  * Kept small on purpose:
- *   - only the officials are sent an SMS; a matter that has reached every
- *     member (level 4) is shown to members in the app, not sent to all phones;
- *   - a matter about one member never puts that member's name in an SMS;
+ *   - only the officials are told directly; a matter that has reached every
+ *     member (level 4) shows on the members' attention card;
+ *   - a matter about one member never puts that member's name in the notice;
  *   - a run is capped, so a first day can never send a flood.
  *
  * Pure: decides who should be told what. Sending and remembering are the
@@ -29,7 +30,7 @@ export interface AttentionNoticePlan {
   text: string;
 }
 
-/** The most SMS one daily run may send across all groups. */
+/** The most notices one daily run may post across all groups. */
 export const ATTENTION_SMS_CAP = 150;
 
 /** Titles that name nobody, for matters about one member. */
@@ -43,7 +44,7 @@ export function attentionNoticeId(key: string, level: number, memberId: string):
   return `${key}|${level}|${memberId}`;
 }
 
-/** One SMS: Kiswahili and English, the group's name, no member's name. Fits one message where it can. */
+/** One notice: Kiswahili and English, the group's name, no member's name. Short. */
 export function attentionSmsText(groupName: string, f: Pick<EscalationFinding, 'rule' | 'title' | 'level'>): string {
   const t = NAMELESS[f.rule] ?? f.title;
   const name = groupName.trim().slice(0, 28) || 'Stawi';

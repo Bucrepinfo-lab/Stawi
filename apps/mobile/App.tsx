@@ -18,7 +18,7 @@ const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 
 interface Session { phone: string; getToken: () => Promise<string | null>; signOut: () => void; }
 
-// Root: use Supabase phone-OTP auth when configured, else the self-contained demo flow.
+// Root: phone + PIN sign-in (no SMS) when Supabase is configured, else the self-contained demo flow.
 export default function App() {
   if (SUPABASE_URL) return <SupabaseGate />;
   return <MainApp />;

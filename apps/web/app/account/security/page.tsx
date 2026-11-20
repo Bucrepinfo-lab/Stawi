@@ -24,7 +24,7 @@ export default async function SecurityPage() {
       <Link href="/dashboard" style={{ fontSize: 13, color: 'var(--forest)', fontWeight: 600, textDecoration: 'none' }}>← Dashboard</Link>
       <h1 className="display" style={{ fontWeight: 600, fontSize: 28, marginTop: 12 }}>Sign-in &amp; devices</h1>
       <p style={{ color: 'var(--ink-2)', fontSize: 14.5 }}>
-        Phones where you can sign in with your 4-digit PIN. A new phone, a forgotten PIN or 5 wrong PINs always needs an SMS code.
+        Phones and browsers you have signed in on. You can sign in anywhere with your phone number and 4-digit PIN; a forgotten PIN or 5 wrong PINs needs a joining code from a group official.
       </p>
       <ul style={{ listStyle: 'none', padding: 0, margin: '16px 0', display: 'grid', gap: 8 }}>
         {devices.length === 0 && <li style={{ color: 'var(--dim)', fontSize: 14 }}>No trusted devices.</li>}

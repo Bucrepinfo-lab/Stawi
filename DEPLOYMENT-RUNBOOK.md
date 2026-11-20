@@ -24,9 +24,8 @@ fly secrets set --app stawi \
   DATABASE_URL="postgresql://USER:PASSWORD@HOST/stawi?sslmode=require" \
   NEXT_PUBLIC_SUPABASE_URL="https://<project-ref>.supabase.co" \
   NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon key>" \
-  SUPABASE_SEND_SMS_HOOK_SECRET="v1,whsec_<...>" \
   SUPABASE_JWT_SECRET="<jwt secret>" \
-  AT_USERNAME="<...>" AT_API_KEY="<...>" AT_SENDER_ID="<optional>" \
+  SUPABASE_SERVICE_ROLE_KEY="<service role key>" AUTH_DEVICE_SECRET="<long random>" \
   CRON_SECRET="<random>" \
   NEXT_PUBLIC_APP_URL="https://stawi.fly.dev" \
   NEXT_PUBLIC_ROOT_DOMAIN="stawi.fly.dev"
@@ -44,8 +43,7 @@ the full list is in `.env.example` and `docs/PLAY-LISTING.md`.
 
 ## Secret / env NAMES (runtime, `fly secrets set`)
 `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-`SUPABASE_SEND_SMS_HOOK_SECRET`, `SUPABASE_JWT_SECRET`, `AT_USERNAME`, `AT_API_KEY`,
-`AT_SENDER_ID`, `CRON_SECRET`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_ROOT_DOMAIN`,
+`SUPABASE_JWT_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_DEVICE_SECRET`, `CRON_SECRET`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_ROOT_DOMAIN`,
 `MOBILE_API_KEY` (optional), `MPESA_*` (see `.env.example`), `STRIPE_SECRET_KEY` /
 `STRIPE_WEBHOOK_SECRET` (optional), `MEMBER_EXPLANATION_PROVIDER` /
 `ANTHROPIC_API_KEY` (optional). `SACCO_PLUS_ENABLED` is set to `"false"` in
@@ -57,9 +55,11 @@ the full list is in `.env.example` and `docs/PLAY-LISTING.md`.
    with the four `--build-arg NEXT_PUBLIC_*=...` values.
 3. Optional demo data: `npm run -w @stawi/db seed` then
    `npx tsx packages/db/prisma/seed-demo.ts` from a machine with `DATABASE_URL`.
-4. Supabase: Auth → Hooks → Send SMS → `https://stawi.fly.dev/api/auth/send-sms`.
-   Auth → Providers → Phone: **SMS OTP expiry = 300 seconds**, OTP length 6 (the app also
-   refuses codes older than 5 minutes and rate-limits per number and per IP).
+4. Supabase: no SMS (owner 20/11/26). Auth → Hooks → **turn the Send SMS hook off**;
+   Auth → Providers → Phone stays enabled (logins are phone + server-held password)
+   but needs no SMS provider. Sign-in is phone + PIN; first time, a joining code
+   from a group official (`docs/SIGN-IN.md`). The old `AT_*` and
+   `SUPABASE_SEND_SMS_HOOK_SECRET` secrets can be unset.
 5. Verify: `curl https://stawi.fly.dev/api/health` → `{"status":"ok"}`.
 
 ## Rollback

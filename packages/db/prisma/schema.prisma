@@ -104,6 +104,7 @@ model Group {
   planPayments  PlanPayment[]
   attentionNotices AttentionNotice[]
   messages      GroupMessage[]
+  joinCodes     JoinCode[]
   salesRepId    String?
   salesRep      SalesAgent? @relation(fields: [salesRepId], references: [id])
 
@@ -543,6 +544,8 @@ model MonthlyStatement {
 
 model AuthPin {
   userId       String    @id
+  /// E.164 phone the account signs in with (phone + PIN on any device, owner 20/11/26).
+  phone        String?
   /// bcrypt hash of the 4-digit PIN — the PIN itself is never stored.
   pinHash      String
   failedCount  Int       @default(0)
@@ -551,6 +554,29 @@ model AuthPin {
   sessionEpoch Int       @default(0)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  @@index([phone])
+}
+
+/// A one-time joining code a group official gives a member (owner 20/11/26):
+/// replaces the SMS sign-in code. Tied to one group and one phone, works once,
+/// expires after 48 hours, burned after 5 wrong tries. Only a keyed hash is kept.
+model JoinCode {
+  id          String    @id @default(cuid())
+  group       Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId     String
+  /// Last 9 digits of the member's phone.
+  phoneKey    String
+  codeHash    String
+  expiresAt   DateTime
+  usedAt      DateTime?
+  tries       Int       @default(0)
+  /// Membership.id of the official who gave it.
+  issuedBy    String
+  createdAt   DateTime  @default(now())
+
+  @@index([phoneKey])
+  @@index([groupId])
 }
 
 model TrustedDevice {

@@ -30,6 +30,9 @@ export interface MessagesView {
   threads: (ThreadSummary & { name: string })[];
 }
 
+/** Sender id of notices Stawi itself posts (daily alerts): shown as "Stawi". */
+export const STAWI_SENDER = 'stawi';
+
 interface Row { id: string; channel: string; threadMemberId: string | null; senderMembershipId: string; body: string; createdAt: Date }
 
 /** Demo mode (no database): messages live for the life of the server process. */
@@ -88,7 +91,7 @@ export async function readMessages(groupId: string, channel: MessageChannel, thr
   // The rule that matters, applied to every row whatever the query returned.
   rows = rows.filter((r) => canSeeMessage({ channel, threadMemberId: r.threadMemberId }, viewer));
 
-  const name = (id: string) => ctx.people.get(id)?.fullName?.trim() || 'Member';
+  const name = (id: string) => (id === STAWI_SENDER ? 'Stawi' : ctx.people.get(id)?.fullName?.trim() || 'Member');
   const isOfficial = (id: string) => ctx.showPosts && RECORD_EDITOR_ROLES.has((ctx.people.get(id)?.role ?? 'MEMBER') as GroupRole);
 
   let threads: MessagesView['threads'] = [];

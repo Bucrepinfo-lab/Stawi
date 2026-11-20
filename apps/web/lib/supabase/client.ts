@@ -1,6 +1,6 @@
 import { createBrowserClient } from '@supabase/ssr';
 
-/** Supabase client for the phone → OTP sign-in/up screens. */
+/** Browser Supabase client (signing out on this device). */
 export function createSupabaseBrowserClient() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

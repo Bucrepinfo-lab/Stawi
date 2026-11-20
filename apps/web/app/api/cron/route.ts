@@ -15,9 +15,9 @@ export const runtime = 'nodejs';
  *  2. dunning   — subscriptions past currentPeriodEnd flip ACTIVE → PAST_DUE.
  *  3. (reconciliation roll-ups are computed on read in @stawi/core
  *     accounting — nothing to materialize until reports move off-line.)
- *  4. attention — stalled group work is told to the officials it concerns by
- *     SMS, once per matter, person and level (owner approved 20/11/26).
- *     Capped per run; off with ATTENTION_SMS=off.
+ *  4. attention — stalled group work is told to the officials it concerns in
+ *     the group's own Messages, once per matter, person and level (owner
+ *     20/11/26: no SMS). Off with ATTENTION_SMS=off (name kept for old secrets).
  */
 async function run(req: Request) {
   const url = new URL(req.url);

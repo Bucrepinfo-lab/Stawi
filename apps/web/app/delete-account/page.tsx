@@ -15,7 +15,7 @@ export default function DeleteAccountInfoPage() {
     <LegalPage kicker="Your data" title="Delete your Stawi account" updated="07/11/26">
       <LegalSection h="Delete it in the app (fastest)">
         <ol style={ol}>
-          <li><Link href="/sign-in?next=/account/delete">Sign in</Link> with your phone number and the SMS code.</li>
+          <li><Link href="/sign-in?next=/account/delete">Sign in</Link> with your phone number and your PIN.</li>
           <li>Open <Link href="/account/delete">/account/delete</Link> (Account → Delete account).</li>
           <li>Type <b>DELETE</b> and confirm. You are signed out straight away.</li>
         </ol>
