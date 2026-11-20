@@ -1,5 +1,9 @@
 # Stawi — session memory / start-here
 
+## 20/11/26 (afternoon) — PRD v3 restructure drafted (awaiting owner approval)
+- Owner brief: serve informal, non-literate table-banking groups first; members type a few points or **speak** (owner confirmed voice) and Stawi writes formal minutes; group goals; per-member contribution tracker; decision toolkit for business ideas; survival layer for businesses; loan-readiness pack so lenders' documents come out in one tap; fill every failure gap of groups, businesses and SACCOs and copy what strong SACCOs do.
+- Research, gap analysis, 15-point MVP and build order in `docs/PRD-V3-RESTRUCTURE.md`; nothing built yet. Open owner decisions listed in its §7.
+
 ## 20/11/26 — All African local prices approved (owner: "approve all prices")
 - Second round approved the same day ("approve the second-round prices"), group / small group a month: Zambia ZMW 50/25, Malawi MWK 4,000/2,000, Mozambique MZN 150/75, Cameroon, Congo, Gabon XAF 1,300/650, Côte d'Ivoire, Senegal, Benin, Burkina Faso XOF 1,300/650, DR Congo CDF 5,300/2,700, Lesotho LSL 40/20, Sierra Leone SLE 55/27, Zimbabwe USD 2.99/1.49, Ethiopia ETB 380/190. Recorded only: those countries need Stawi country profiles (compliance) before a group can be set there.
 - `FOUNDING_GROUP_PRICES` approved, group / small group (10 or fewer) a month: Kenya KES 299/149, Uganda UGX 8,400/4,200, Tanzania TZS 6,000/3,000, Rwanda RWF 3,000/1,500 (new rows), Nigeria NGN 3,500/1,750, South Africa ZAR 45/22, Ghana GHS 30/15. The rest of the world stays indicative (card through Paddle).
