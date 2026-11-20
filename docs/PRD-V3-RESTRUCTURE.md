@@ -73,7 +73,7 @@
 
 ### 2.4 Why their businesses fail (6 months, 1 year, 3 years)
 
-- Kenya: **46% of small businesses closed in their first year**; 2.2 million closed in 5 years (KNBS 2016 MSME survey, [Standard](https://www.standardmedia.co.ke/business/amp/news/article/2000221491/why-400000-smes-are-dying-annually)). Reasons given: **rising operating costs, falling income, losses**; also licences, competition, market access, credit. Experts add **copycat businesses** and **starting a business for lack of a job**.
+- Kenya: 2.2 million small businesses closed in 5 years, and **46% of those closures happened in the first year** (KNBS 2016 MSME survey, [Standard](https://www.standardmedia.co.ke/business/amp/news/article/2000221491/why-400000-smes-are-dying-annually)). Reasons given: **rising operating costs, falling income, losses**; also licences, competition, market access, credit. Experts add **copycat businesses** and **starting a business for lack of a job**.
 - Global: **20.4% fail in year 1, 49.4% within 5 years, 65.3% within 10** (US BLS via [US Chamber](https://uschamber.com/co/start/strategy/why-small-businesses-fail)). Top causes: **cash flow**, **no real demand**, poor management, **mixing business and personal money**, weak marketing, **inventory mistakes** (over- and under-stocking).
 
 ### 2.5 Why SACCOs fail or stop growing — and what the strong ones do
@@ -121,7 +121,7 @@
 | 5 | Can't get a bank account or loan: missing documents | **Registration pack** and **loan-readiness pack** generated from data already in Stawi | 1, 4 |
 | 6 | Investing without research; copycats; Ponzi | **Decision toolkit** and **viability verdict**; red-flag checker for "guaranteed returns" offers | 2 |
 | 7 | No demand (≈45% of failures globally) | **Demand check** before confirming: who buys, how many nearby, price they pay | 2 |
-| 8 | Cash-flow death in year 1 (46% in Kenya) | **Cash-flow forecast**, minimum cash buffer, **early-warning alerts**; the first 90 days coached step by step | 3 |
+| 8 | Cash-flow death in year 1 (46% of Kenyan closures) | **Cash-flow forecast**, minimum cash buffer, **early-warning alerts**; the first 90 days coached step by step | 3 |
 | 9 | Mixing business and personal money | Separate business wallet and ledger; owner's drawings recorded as drawings | 3 |
 | 10 | Over- and under-stocking | Fast/slow/dead stock with **what to stock more / less**; reorder points | 3 |
 | 11 | Tax penalties (eTIMS, levies) | All Kenyan taxes and levies computed; reminders before due dates; other countries via compliance packs | 3 |
@@ -143,6 +143,17 @@
 - Phone-first by default; the same data on a full desktop layout for officials and businesses.
 
 ---
+
+## 5b. AI enhancement (owner request, 20/11/26 14:42)
+
+Stawi already has one opt-in AI helper (member statement explanations, `apps/web/lib/member-statement-ai.ts`): off by default, a plain template when off, the member's own figures only, re-screened before showing, never moving money. The same pattern extends to:
+
+- **Minutes polish:** tidy the typed or spoken points into formal minutes (the offline writer stays the fallback).
+- **Idea adviser:** explain in plain words why an idea fits or does not fit the group's money, using the decision-toolkit figures.
+- **Books adviser:** read the month's figures back as three plain sentences and one thing to do next.
+- **Loan-pack summary:** a one-page cover note built from the group's own records.
+
+Rules: provider-neutral adapter, a monthly spend cap, opt-in per group, priced as an add-on, no advice presented as licensed financial advice, and every figure taken from the group's own records.
 
 ## 6. Build order (one PR per block, Pillar 1 first)
 
