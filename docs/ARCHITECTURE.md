@@ -156,7 +156,6 @@ stepping on each other:
 | Write path (all mutations) | `apps/web/app/actions.ts` |
 | Money rail | `mpesa.ts`, `payments.ts`, `receipt.ts` |
 | POS & ops (P3) | `pos.ts` (barcodes, receipts, payment prompts, alerts) |
-| Business automation (P3) | `automation.ts` (auto-reorder, e-receipts, KRA eTIMS, Z-report) |
 | Retention across pillars | `moments.ts` |
 | Pillar-1 deep dive | `docs/PILLAR-1-COCKPIT.md` |
 | Product scope & pillars | `PRD.md` |

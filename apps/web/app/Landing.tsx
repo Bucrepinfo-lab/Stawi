@@ -489,7 +489,7 @@ export function Landing({ saccoPlus, foundingDays = null }: { saccoPlus: boolean
 
       <footer style={{ marginTop: 60, paddingTop: 24, borderTop: '1px solid var(--line)', color: 'var(--faint)', fontSize: 13, display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
         <span className="display" style={{ color: 'var(--forest-deep)', fontWeight: 600 }}>Stawi</span>
-        <span>Save · Grow · Thrive — multi-tenant SaaS</span>
+        <span>Save · Grow · Thrive — for every group and business</span>
         <Link href="/terms" style={{ color: 'var(--faint)' }}>Terms</Link>
         <Link href="/privacy" style={{ color: 'var(--faint)' }}>Privacy</Link>
         <Link href="/delete-account" style={{ color: 'var(--faint)' }}>Delete account</Link>
