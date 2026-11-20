@@ -8,6 +8,7 @@ import type { WebBooks } from '@/lib/data';
 import { canWriteBooks, type LedgerEntry, type Period } from '@stawi/core';
 import { setUrlParams } from '@/lib/url-state';
 import { DocumentHouse } from '@/components/DocumentHouse';
+import { MoneySummary } from '@/components/MoneySummary';
 
 interface Props {
   groups: GroupAccount[];
@@ -87,6 +88,7 @@ export function BooksClient({ groups, booksByGroup, initialId, initialPeriod }: 
           </a>
         </div>
       )}
+      <MoneySummary groupId={active.id} />
       <DocumentHouse groupId={active.id} focus="funding" />
     </div>
   );

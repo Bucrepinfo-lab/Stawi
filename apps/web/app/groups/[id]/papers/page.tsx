@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import {
   HOUSE_PURPOSES, checkPurpose, computePnL, formatMoney, houseRoomName, monthLabel, paraphraseMinutes,
-  postedMeetings, reconcilePostedMonth, statementMonths, escalationToday, type LedgerEntry,
+  postedMeetings, reconcilePostedMonth, statementMonths, escalationToday, harmoniseMoney, stepLabel, type LedgerEntry,
 } from '@stawi/core';
 import { loadGroupHouse } from '@/lib/house';
 import { saccoPlusEnabled } from '@/lib/features';
@@ -59,6 +59,10 @@ export default async function PapersPage({ params, searchParams }: { params: Pro
     });
   }
   const bizMonths = [...byMonth.entries()].sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12);
+
+  // One statement for group and business together, with the checks that show it agrees.
+  const money = harmoniseMoney({ meetings, entries: house.business?.entries ?? [] });
+  const showTogether = monthsWanted > 0 && money.hasGroup && money.hasBusiness && showBusiness;
 
   const signers = (['Chairperson', 'Secretary', 'Treasurer'] as const).map((post) => ({
     post,
@@ -161,6 +165,25 @@ export default async function PapersPage({ params, searchParams }: { params: Pro
               </tbody>
             </table>
           )}
+        </section>
+      )}
+
+      {(months.length > 0 || showBusiness) && (
+        <section className="print-doc" style={sheet}>
+          <h2 style={h2}>{showTogether ? 'Group and business together, month by month' : 'The record was checked'}</h2>
+          {showTogether && (
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 12 }}>
+              <thead><tr><th style={th}>Month</th><th style={{ ...th, textAlign: 'right' }}>Money in</th><th style={{ ...th, textAlign: 'right' }}>Money out</th><th style={{ ...th, textAlign: 'right' }}>Left</th></tr></thead>
+              <tbody>
+                {money.month.together.slice(0, 12).map((r) => (
+                  <tr key={r.start}><td style={td}>{stepLabel(r.start, 'month')}</td><td style={num}>{formatMoney(r.inCents)}</td><td style={num}>{formatMoney(r.outCents)}</td><td style={num}>{formatMoney(r.leftCents)}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <ul style={{ listStyle: 'none', display: 'grid', gap: 6 }}>
+            {money.checks.map((c) => <li key={c.id} style={{ fontSize: 14 }}>{c.ok ? '✓' : '!'} {c.text.en}</li>)}
+          </ul>
         </section>
       )}
 

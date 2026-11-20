@@ -8,6 +8,7 @@ import { saccoPlusEnabled } from '@/lib/features';
 import { AttentionCard } from '@/components/AttentionCard';
 import { groupAttention } from '@/lib/attention';
 import { DocumentHouse } from '@/components/DocumentHouse';
+import { MoneySummary } from '@/components/MoneySummary';
 
 export default async function GroupWorkspacePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; month?: string }> }) {
   const { id } = await params;
@@ -38,6 +39,7 @@ export default async function GroupWorkspacePage({ params, searchParams }: { par
       <div style={{ marginTop: 22 }}>
         <GroupCockpit cockpit={cockpit} canEdit={canEdit} saccoPlus={saccoPlusEnabled()} initialTab={tab} initialMonth={month} />
       </div>
+      <MoneySummary groupId={cockpit.groupId} />
       <DocumentHouse groupId={cockpit.groupId} />
     </main>
   );
