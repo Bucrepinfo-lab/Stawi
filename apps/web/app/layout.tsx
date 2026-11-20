@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
+import { AppTabs } from '@/components/AppTabs';
 
 export const metadata: Metadata = {
   title: 'Stawi — Save · Grow · Thrive',
@@ -37,6 +38,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         {children}
+        <AppTabs />
         <ServiceWorkerRegister />
       </body>
     </html>

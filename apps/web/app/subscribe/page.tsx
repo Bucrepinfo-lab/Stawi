@@ -1,6 +1,14 @@
 import { cookies, headers } from 'next/headers';
 import { PLAY_APP_COOKIE, PLAY_APP_PURCHASE_UNAVAILABLE, planPurchasesAllowed } from '@stawi/core';
 import { SubscribeGate } from './SubscribeGate';
+import { ValueBanners } from '@/components/ValueBanners';
+import { ShareBar } from '@/components/ShareBar';
+import { CountdownBadge } from '@/components/CountdownBadge';
+import { daysLeft, foundingUntil } from '@stawi/core';
+import { saccoPlusEnabled } from '@/lib/features';
+
+// Flags and the founding-price date are read per request, never baked in at build.
+export const dynamic = 'force-dynamic';
 
 export default async function SubscribePage() {
   // Play payments policy (17/11/26): plans are not sold inside the Play app (TWA).
@@ -14,11 +22,16 @@ export default async function SubscribePage() {
         Every paid plan starts with a free first month. Prices show in your local
         currency at checkout. You must accept the Subscription Terms to continue.
       </p>
+      <div style={{ marginTop: 12 }}>
+        <CountdownBadge days={daysLeft(foundingUntil(process.env))} label="days left to join at the founding price" />
+      </div>
       {allowed ? (
         <SubscribeGate />
       ) : (
         <p style={{ marginTop: 18, color: 'var(--ink-2)' }}>{PLAY_APP_PURCHASE_UNAVAILABLE}</p>
       )}
+      <ValueBanners pillars={[1, 2, 3, 4]} saccoPlus={saccoPlusEnabled()} limit={3} startCollapsed />
+      <ShareBar />
     </main>
   );
 }

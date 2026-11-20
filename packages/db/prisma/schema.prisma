@@ -562,3 +562,19 @@ model TrustedDevice {
 
   @@index([userId])
 }
+
+// ───────────────────────── Engagement counts ──────────────────────────────
+
+/// Daily counts of what people view, open, tap and share (owner 20/11/26).
+/// Counts only: no user, phone, group, tenant or IP is stored, so this table
+/// is not tenant-owned and holds no personal data.
+model EngagementCount {
+  id    String @id @default(cuid())
+  day   String // UTC day, "2026-11-20"
+  event String // view | open | cta | share | tab | sort | source
+  key   String // e.g. "p1-minutes", "tab-books", "share-whatsapp"
+  count Int    @default(0)
+
+  @@unique([day, event, key])
+  @@index([day])
+}

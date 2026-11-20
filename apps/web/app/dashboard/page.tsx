@@ -1,6 +1,8 @@
 import { DashboardClient } from './DashboardClient';
 import { LiveRefresh } from '@/components/LiveRefresh';
 import { MomentsStrip } from '@/components/MomentsStrip';
+import { ValueBanners } from '@/components/ValueBanners';
+import { ShareBar } from '@/components/ShareBar';
 import { SaccoActivationCard } from '@/components/SaccoActivationCard';
 import { getMyGroups } from '@/lib/data';
 import { pickAllowedId } from '@stawi/core';
@@ -20,6 +22,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     <main style={{ maxWidth: 920, margin: '0 auto', padding: '28px 24px 80px' }}>
       <LiveRefresh />
       <DashboardClient groups={groups} initialId={activeId} />
+      <ValueBanners pillars={[1]} startCollapsed />
+      <ShareBar />
       {/* SACCO+ marketing (interest, loan tiers) only when the flag is on. */}
       {saccoPlusEnabled() && <MomentsStrip />}
       {saccoPlusEnabled() && <SaccoActivationCard />}

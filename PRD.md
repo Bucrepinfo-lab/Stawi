@@ -14,6 +14,8 @@
 
 ---
 
+> **Value-first presentation (20/11/26):** every pillar screen carries collapsible "problem · proof · what Stawi does" banners with a linked source per fact (`packages/core/src/value-props.ts`), main tabs (My group · Ideas · Books · Share), sharing tools, countdown badges and anonymous engagement counts (`/api/track`, `EngagementCount`).
+
 ## 1. Name Options (pick one)
 
 | # | Name | Meaning / Rationale | Why it works |

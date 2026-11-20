@@ -1,4 +1,5 @@
 import { BusinessMatch } from './BusinessMatch';
+import { ValueBanners } from '@/components/ValueBanners';
 
 export default function MatchPage() {
   return (
@@ -23,6 +24,7 @@ export default function MatchPage() {
         before the group decides.
       </p>
       <BusinessMatch />
+      <ValueBanners pillars={[2]} startCollapsed />
     </main>
   );
 }

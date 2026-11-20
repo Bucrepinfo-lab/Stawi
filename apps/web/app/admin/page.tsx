@@ -1,5 +1,9 @@
 import { formatMoney, notifyPaymentConfirmed, notifySubscriptionDue, notificationsForStock, classifyStock } from '@stawi/core';
 import { NotificationBell } from '@/components/NotificationBell';
+import { engagementSummary } from '@/lib/engagement';
+
+// Engagement counts are read per request.
+export const dynamic = 'force-dynamic';
 
 const card: React.CSSProperties = {
   background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 'var(--radius)',
@@ -30,7 +34,9 @@ const GROUPS = [
 
 const STATUS_COLOR: Record<string, string> = { Active: 'var(--good)', Trial: 'var(--sky)', 'Past due': 'var(--danger)' };
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  // What people viewed, opened, tapped and shared in the last 7 days (counts only).
+  const engagement = (await engagementSummary(7)).slice(0, 20);
   // Demo notification feed assembled from the core builders.
   const stock = classifyStock([
     { id: 's3', name: 'Sugar 1kg', quantity: 3, reorderLevel: 12, soldInWindow: 42, supplierName: 'Mumias' },
@@ -64,6 +70,41 @@ export default function AdminPage() {
           </div>
         ))}
       </div>
+
+      <details style={card}>
+        <summary style={{ cursor: 'pointer', fontWeight: 800, fontSize: 16 }}>What people look at and share · last 7 days</summary>
+        <p style={{ color: 'var(--dim)', fontSize: 13, marginTop: 8 }}>
+          Counts only. Stawi does not record who viewed, tapped or shared.
+        </p>
+        {engagement.length === 0 ? (
+          <p style={{ marginTop: 10, color: 'var(--ink-2)' }}>Nothing counted yet.</p>
+        ) : (
+          <div style={{ overflowX: 'auto', marginTop: 10 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+              <thead>
+                <tr style={{ textAlign: 'left', color: 'var(--dim)' }}>
+                  <th style={{ padding: '6px 8px' }}>Item</th>
+                  <th style={{ padding: '6px 8px' }}>Views</th>
+                  <th style={{ padding: '6px 8px' }}>Opened</th>
+                  <th style={{ padding: '6px 8px' }}>Taps</th>
+                  <th style={{ padding: '6px 8px' }}>Shares</th>
+                </tr>
+              </thead>
+              <tbody>
+                {engagement.map((e) => (
+                  <tr key={e.key} style={{ borderTop: '1px solid var(--line)' }}>
+                    <td style={{ padding: '6px 8px', fontWeight: 700 }}>{e.key}</td>
+                    <td className="mono" style={{ padding: '6px 8px' }}>{e.views}</td>
+                    <td className="mono" style={{ padding: '6px 8px' }}>{e.opens}</td>
+                    <td className="mono" style={{ padding: '6px 8px' }}>{e.taps}</td>
+                    <td className="mono" style={{ padding: '6px 8px' }}>{e.shares}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </details>
 
       <div style={card}>
         <h2 className="display" style={{ fontWeight: 600, fontSize: 20 }}>Sales &amp; supervision hierarchy</h2>
