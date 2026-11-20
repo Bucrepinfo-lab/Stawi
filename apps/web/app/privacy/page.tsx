@@ -26,7 +26,7 @@ export default function PrivacyPage() {
           <li><b>Name</b> and, if your group adds them, your <b>role</b> (e.g. treasurer) and <b>photo</b>, plus the group&apos;s <b>logo</b> an official uploads. A photo of written meeting notes is read on your device to fill in the minutes.</li>
           <li><b>Group membership</b> — which groups you belong to and the group&apos;s charter, roster and meeting minutes that officials record (officials may enter a member&apos;s ID number in the roster for registration paperwork).</li>
           <li><b>Contributions</b> — amounts, dates and channel (cash or M-Pesa) recorded for you, fines and payouts, and the month-end statements built from them.</li>
-          <li><b>M-Pesa transaction metadata</b> — for treasurer-initiated payment requests: the paying phone number, amount, M-Pesa receipt number, request IDs and result status returned by Safaricom. We never see or store your M-Pesa PIN.</li>
+          <li><b>M-Pesa transaction metadata</b> — for payment requests a treasurer sends you, or that you start yourself with “Pay my contribution”: the paying phone number, amount, M-Pesa receipt number, request IDs and result status returned by Safaricom. We never see or store your M-Pesa PIN.</li>
           <li><b>Technical data</b> — sign-in session and trusted-device cookies, and standard server logs (IP address, time, page) used for security, rate limiting and troubleshooting.</li>
           <li><b>Anonymous counts</b> — to learn which parts of Stawi help, we count how many times a section is seen, opened, tapped or shared each day. A count is only a number beside a section name. It holds no name, phone number, group, location or device, so it cannot be traced to you.</li>
         </ul>

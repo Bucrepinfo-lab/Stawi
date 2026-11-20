@@ -5,6 +5,7 @@ import { GroupSwitcher } from '@/components/GroupSwitcher';
 import { TableBanking } from './TableBanking';
 import type { GroupAccount } from '@/lib/groups';
 import { setUrlParams } from '@/lib/url-state';
+import { PayContribution } from '@/components/PayContribution';
 
 export function DashboardClient({ groups, initialId }: { groups: GroupAccount[]; initialId?: string }) {
   const [activeId, setActiveIdState] = useState(initialId || groups[0]?.id || '');
@@ -36,6 +37,8 @@ export function DashboardClient({ groups, initialId }: { groups: GroupAccount[];
         <a href="/formalize" style={{ color: 'var(--forest)', fontWeight: 600 }}>Formalize this group →</a>{' '}
         <a href={`/groups/${active.id}`} style={{ color: 'var(--forest)', fontWeight: 600 }}>Open group workspace &rarr;</a>
       </p>
+
+      <PayContribution groupId={active.id} />
 
       <TableBanking key={active.id} groupId={active.id} groupName={active.name} seed={active.members} canRecord={active.myRole === 'Treasurer'} />
     </div>

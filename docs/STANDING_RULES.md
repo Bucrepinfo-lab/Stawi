@@ -18,7 +18,7 @@ any other country's or tenant's output.
 ## 3. Escalate, don't fix
 Stop and ask the owner instead of fixing when a fix would touch any of:
 
-- money: M-Pesa, payments, billing, savings, credit, capital, interest/dividends, accounting, statements and receipts: `apps/web/lib/{mpesa,billing}.ts`, `apps/web/app/api/{mpesa,billing}/`, `packages/core/src/{mpesa,payments,plans,savings,credit,capital,accounting,statement,receipt,rotation,pos,tiers}.ts`
+- money: M-Pesa, payments, billing, savings, credit, capital, interest/dividends, accounting, statements and receipts: `apps/web/lib/{mpesa,billing}.ts`, `apps/web/app/api/{mpesa,billing,contributions}/`, `packages/core/src/{mpesa,contribution-pay,payments,plans,savings,credit,capital,accounting,statement,receipt,rotation,pos,tiers}.ts`
 - tax, compliance, KYC and SACCO rules: `packages/core/src/{tax,compliance,identity,formalization,graduation,sacco-activation,charter}.ts`, `legal/`, `COMPLIANCE.md`
 - sign-in and tenancy: `apps/web/lib/auth.ts`, `apps/web/app/api/auth/`, `packages/core/src/tenancy.ts`, `TENANCY.md`
 - database and RLS: `packages/db/` (schema, `rls.sql`)

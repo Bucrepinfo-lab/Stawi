@@ -172,3 +172,24 @@ html.dark .app-tab[aria-current="page"] { color: var(--ink); }
 .att-ok { display: flex; align-items: center; gap: 12px; }
 .att-ok .att-bell { background: color-mix(in srgb, var(--good) 14%, var(--paper)); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--good) 35%, transparent); }
 .vb-tab:focus-visible, .vb-cta:focus-visible, .share-btn:focus-visible, .app-tab:focus-visible, .vb-card > summary:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* ── Pay my contribution (owner 20/11/26) ───────────────────────────────── */
+.pay { --pillar: var(--good); background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 16px 16px; margin-top: 18px; display: grid; gap: 12px; }
+.pay-head { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; }
+.pay-icon { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; background: color-mix(in srgb, var(--good) 14%, var(--paper)); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--good) 35%, transparent), 0 0 0 3px var(--paper), 0 0 0 4px color-mix(in srgb, var(--gold) 55%, transparent); }
+.pay-title { font-family: var(--font-display); font-weight: 600; font-size: 22px; line-height: 1.15; }
+.pay-sub { font-size: 14px; color: var(--ink-2); }
+.pay-amounts { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.pay-amt { min-height: 52px; border-radius: 14px; border: 2px solid var(--line); background: var(--bone); color: var(--ink); font-family: var(--font-mono); font-weight: 600; font-size: 17px; cursor: pointer; }
+.pay-amt .cur { font-family: var(--font-body); font-size: 11px; font-weight: 800; color: var(--dim); letter-spacing: .06em; }
+.pay-amt[aria-pressed="true"] { border-color: var(--forest); background: color-mix(in srgb, var(--forest) 10%, var(--paper)); box-shadow: inset 0 -4px 0 var(--gold); }
+.pay-field { display: grid; gap: 4px; font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.pay-field input { min-height: 48px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bone); color: var(--ink); font-family: var(--font-mono); font-size: 18px; width: 100%; }
+.pay-more > summary { cursor: pointer; font-size: 13.5px; font-weight: 700; color: var(--forest); min-height: 36px; display: flex; align-items: center; }
+.pay-hint { font-size: 13.5px; color: var(--dim); }
+.pay-go { min-height: 54px; border-radius: 14px; border: 0; background: var(--forest-deep); color: #fffdf8; font: inherit; font-weight: 800; font-size: 17px; cursor: pointer; box-shadow: inset 0 -4px 0 var(--gold); }
+.pay-go:disabled { background: var(--bone-2); color: var(--dim); box-shadow: none; cursor: default; }
+.pay-note { padding: 10px 12px; border-radius: 12px; font-size: 14.5px; font-weight: 600; }
+.pay-note.ok { background: color-mix(in srgb, var(--good) 14%, var(--paper)); color: var(--good); }
+.pay-note.bad { background: color-mix(in srgb, var(--danger) 12%, var(--paper)); color: var(--danger); }
+.pay-amt:focus-visible, .pay-go:focus-visible, .pay-field input:focus-visible, .pay-more > summary:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
