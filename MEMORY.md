@@ -1,5 +1,10 @@
 # Stawi — session memory / start-here
 
+## 20/11/26 (19:00) — Sign-in reopened: secret fallback and owner bootstrap (fix forward)
+- Production had no `AUTH_DEVICE_SECRET`, so after #40 sign-in said "not set up". The secret now falls back to one derived from `SUPABASE_SERVICE_ROLE_KEY`; a session password that no longer matches is set again after the PIN/code check.
+- Accounts from before PINs have none: `OWNER_PHONES` + `OWNER_BOOTSTRAP_CODE` (Fly secrets) let the owner redeem a fixed code once, set a PIN, then give joining codes to others.
+- `SUPABASE_SEND_SMS_HOOK_SECRET` deleted from Fly (staged until this deploy).
+
 ## 20/11/26 (18:40) — Sign-in without SMS: phone + PIN, joining codes (owner approved; awaiting merge)
 - Owner: no paid SMS codes (Africa's Talking is not global); phone + own PIN; officials give a
   joining code the first time; no alerts or codes from Africa's Talking — the app's Messages instead.

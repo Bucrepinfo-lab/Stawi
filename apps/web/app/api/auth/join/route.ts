@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkJoinCode, cleanJoinCode, isJoinCodeShape, phoneKey, toE164 } from '@stawi/core';
-import { deviceCrypto, ensurePhoneUser, markPinSetupAllowed, openSession, pinFeatureEnabled } from '@/lib/pin';
+import { deviceCrypto, ensurePhoneUser, markPinSetupAllowed, matchesOwnerBootstrap, openSession, pinFeatureEnabled } from '@/lib/pin';
 import { throttles, clientIp } from '@/lib/auth-throttle';
 
 export const runtime = 'nodejs';
@@ -34,7 +34,8 @@ export async function POST(req: Request) {
   const { prisma, openJoinCodes, addJoinCodeTry, useJoinCode, linkMembershipsByPhone } = await import('@stawi/db');
   const key = phoneKey(phone);
   const rows = await openJoinCodes(prisma, key, new Date());
-  const result = checkJoinCode(rows, code, new Date(), deviceCrypto.hmac);
+  const owner = matchesOwnerBootstrap(phone, code);
+  const result = owner ? ({ ok: true, groupId: null, rowId: undefined } as const) : checkJoinCode(rows, code, new Date(), deviceCrypto.hmac);
   if (!result.ok) {
     if (result.rowId) await addJoinCodeTry(prisma, result.rowId);
     const why = result.reason === 'none'
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
         : 'That joining code is not right. Check it and try again.';
     return NextResponse.json({ error: why }, { status: 400 });
   }
-  await useJoinCode(prisma, result.rowId!);
+  if (result.rowId) await useJoinCode(prisma, result.rowId);
 
   const user = await ensurePhoneUser(phone, true);
   if (!user.ok) return NextResponse.json({ error: user.error }, { status: 503 });
