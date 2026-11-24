@@ -343,3 +343,33 @@ html.dark .app-tab[aria-current="page"] { color: var(--ink); }
 .tips-steps { font-weight: 700; color: var(--forest) !important; }
 .tips-card a { font-size: 13px; font-weight: 700; color: var(--forest); }
 .tips > summary:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* ── Tabs and touch feel (owner 24/11/26: tabs and icons responsive and attractive) ──
+   Refines the rules above. Taps never flash grey; every control shows the gold
+   keyboard ring (never on a mouse click); buttons press in; the value-banner
+   pills get a hover and smooth colour change; sideways strips snap and fade at
+   the right edge on phones; the bottom-tab picture pops gently when its tab
+   becomes current. Reduced motion (above) still switches all of it off. */
+html { -webkit-tap-highlight-color: transparent; }
+:where(a, button, [role="button"], [tabindex], input, select, textarea, summary):focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+:where(button, [role="button"], .att-go, .vb-cta):not(:disabled):active { transform: translateY(1px) scale(.985); }
+.app-tab:active { transform: none; }
+
+.vb-tab { transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .15s ease; }
+.vb-tab:not([aria-selected="true"]):hover { border-color: var(--pillar, var(--forest)); color: var(--forest-deep); transform: translateY(-1px); }
+html.dark .vb-tab:not([aria-selected="true"]):hover { color: var(--ink); }
+.vb-tab, .s-tab { scroll-snap-align: start; white-space: nowrap; }
+.vb-tabs, .s-tabs { scroll-snap-type: x proximity; scroll-padding-inline: 8px; }
+@media (max-width: 899px) {
+  .vb-tabs { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); }
+}
+.s-tab:not([aria-selected="true"]):hover { color: var(--ink); }
+
+.att-go { transition: background-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.att-go:hover { background: var(--forest); box-shadow: 0 8px 18px -10px rgba(22, 56, 42, .8); }
+
+@keyframes tab-pop { 0% { transform: scale(.8); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
+.app-tab[aria-current="page"] .i { animation: tab-pop .32s cubic-bezier(.22, 1, .36, 1) both; }
+@media (min-width: 900px) {
+  .app-tab:not([aria-current="page"]):hover .i { background: color-mix(in srgb, var(--gold) 22%, var(--bone-2)); transform: translateY(-1px); }
+}
