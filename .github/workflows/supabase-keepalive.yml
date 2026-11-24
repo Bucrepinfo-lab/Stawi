@@ -1,8 +1,8 @@
 # Keeps the free-plan Supabase project "stawi" from being paused for inactivity.
 # Supabase pauses a free project after about a week without activity, which would
 # take sign-in offline. The app's own health check never calls Supabase, so this
-# job sends two read-only requests every three days: the Auth health endpoint and
-# the REST API root, using the same public URL and public (anon) key the web app
+# job sends two read-only requests every three days to Supabase Auth (health and
+# public settings; the REST root refuses the anon key), using the same public URL and public (anon) key the web app
 # already ships with. Nothing is written. A failed run emails the repo owner.
 name: Supabase keep-alive
 
@@ -29,6 +29,5 @@ jobs:
           fi
           curl -fsS -o /dev/null -w "auth health: %{http_code}\n" \
             -H "apikey: $SUPABASE_ANON_KEY" "$SUPABASE_URL/auth/v1/health"
-          curl -fsS -o /dev/null -w "rest root: %{http_code}\n" \
-            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
-            "$SUPABASE_URL/rest/v1/"
+          curl -fsS -o /dev/null -w "auth settings: %{http_code}\n" \
+            -H "apikey: $SUPABASE_ANON_KEY" "$SUPABASE_URL/auth/v1/settings"
