@@ -1,5 +1,10 @@
 # Stawi — session memory / start-here
 
+## 24/11/26 — Tabs and touch feel (owner: tabs and icons responsive and attractive)
+- `apps/web/app/globals.css` closing block, CSS only: no grey tap flash anywhere; the gold keyboard ring on every control (it was only on some); buttons and "Go" links press in slightly; value-banner pills gain a hover (pillar border, lift) and smooth colour change; banner and section tab strips snap, never wrap a label, and the banner strip fades at the right edge on phones; "Go" links deepen on hover; the bottom-tab picture pops gently when its tab becomes current; on a computer the tab pictures warm to gold on hover. Reduced motion still switches everything off.
+- Judgement call: the bottom tabs keep their emoji pictures (owner 20/11/26: pictures and plain words, for people who do not read menus); only their motion changed.
+- Local check: package-lock.json on main does not match apps/mobile (async-storage and Supabase packages added without a lock update), so `npm ci` fails; flagged, not changed here.
+
 ## 24/11/26 — Supabase keep-alive (owner yes 24/11/26)
 - Supabase emailed (23/11) that the free project `stawi` was about to be paused for inactivity, which would stop sign-in. The database is Neon, so the daily `/api/cron` and Fly health checks never reach Supabase.
 - Activity made by hand on 24/11 at the owner's request (read-only `select now();` in the SQL editor). New `.github/workflows/supabase-keepalive.yml`: every third day at 08:17 Nairobi, two read-only requests (Auth health and Auth settings; the REST root refuses the anon key with 401, seen on the first run 24/11) with the existing `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` GitHub variables. Writes nothing; a failed run emails the owner. If Supabase warns again despite green runs, the next step is a read-only RPC.
