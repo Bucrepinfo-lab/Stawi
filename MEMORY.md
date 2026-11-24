@@ -1,5 +1,9 @@
 # Stawi — session memory / start-here
 
+## 24/11/26 — Supabase keep-alive (owner yes 24/11/26)
+- Supabase emailed (23/11) that the free project `stawi` was about to be paused for inactivity, which would stop sign-in. The database is Neon, so the daily `/api/cron` and Fly health checks never reach Supabase.
+- Owner ran it by hand on 24/11 (read-only `select now();` in the SQL editor). New `.github/workflows/supabase-keepalive.yml`: every third day at 08:17 Nairobi, two read-only requests (Auth health, REST root) with the existing `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` GitHub variables. Writes nothing; a failed run emails the owner. If Supabase warns again despite green runs, the next step is a read-only RPC.
+
 ## 20/11/26 (19:00) — Sign-in reopened: secret fallback and owner bootstrap (fix forward)
 - Production had no `AUTH_DEVICE_SECRET`, so after #40 sign-in said "not set up". The secret now falls back to one derived from `SUPABASE_SERVICE_ROLE_KEY`; a session password that no longer matches is set again after the PIN/code check.
 - Accounts from before PINs have none: `OWNER_PHONES` + `OWNER_BOOTSTRAP_CODE` (Fly secrets) let the owner redeem a fixed code once, set a PIN, then give joining codes to others.
