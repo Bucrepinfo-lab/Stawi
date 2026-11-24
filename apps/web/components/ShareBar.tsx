@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { shareLink, shareMessage, smsShareUrl, valueLang, whatsappShareUrl, type ShareChannel, type ValueLang } from '@stawi/core';
 import { storedLang, track } from './track';
+import { Picture } from './Pictures';
 
 /**
  * Tell family, friends and other groups (owner 20/11/26). The link says only
@@ -53,15 +54,15 @@ export function ShareBar({ lang: langProp, compact = false }: { lang?: string; c
 
   return (
     <div className="share-bar" aria-label={w.title}>
-      {!compact && <strong style={{ fontSize: 15 }}>📣 {w.title}</strong>}
+      {!compact && <strong style={{ fontSize: 15 }}><Picture name="share" size={22} /> {w.title}</strong>}
       {canShare && (
         <button type="button" className="share-btn primary" onClick={deviceShare}>↗ {w.share}</button>
       )}
       <a className={`share-btn${canShare ? '' : ' primary'}`} href={whatsappShareUrl(text('whatsapp'))} target="_blank" rel="noopener noreferrer" onClick={() => track('share', 'share-whatsapp')}>
-        💬 {w.whatsapp}
+        <Picture name="messages" size={20} /> {w.whatsapp}
       </a>
-      <a className="share-btn" href={smsShareUrl(text('sms'))} onClick={() => track('share', 'share-sms')}>✉️ {w.sms}</a>
-      <button type="button" className="share-btn" onClick={copy} aria-live="polite">{copied ? `✓ ${w.copied}` : `🔗 ${w.copy}`}</button>
+      <a className="share-btn" href={smsShareUrl(text('sms'))} onClick={() => track('share', 'share-sms')}><Picture name="envelope" size={20} /> {w.sms}</a>
+      <button type="button" className="share-btn" onClick={copy} aria-live="polite">{copied ? `✓ ${w.copied}` : <><Picture name="link" size={20} /> {w.copy}</>}</button>
       {manual && (
         <label style={{ display: 'grid', gap: 4, width: '100%', fontSize: 13 }}>
           {w.manual}

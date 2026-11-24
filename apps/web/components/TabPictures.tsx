@@ -12,19 +12,19 @@
  */
 export type TabPictureName = 'group' | 'ideas' | 'books' | 'messages' | 'share';
 
-const INK = '#16261f';
-const FOREST = '#1f4d3a';
-const LEAF = '#2f855a';
-const GOLD = '#e0a32e';
-const GOLD_DEEP = '#b97e15';
-const CLAY = '#c5613c';
-const SKY = '#3c7d8c';
-const PAGE = '#fffdf8';
-const TILE = '#fbf3e2';
+export const INK = '#16261f';
+export const FOREST = '#1f4d3a';
+export const LEAF = '#2f855a';
+export const GOLD = '#e0a32e';
+export const GOLD_DEEP = '#b97e15';
+export const CLAY = '#c5613c';
+export const SKY = '#3c7d8c';
+export const PAGE = '#fffdf8';
+export const TILE = '#fbf3e2';
 
-const outline = { stroke: INK, strokeWidth: 1.1, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const };
+export const outline = { stroke: INK, strokeWidth: 1.1, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const };
 
-function Group() {
+export function Group() {
   // Members seated around the group's pot (the chama kitty), a coin inside.
   return (
     <>
@@ -41,7 +41,7 @@ function Group() {
   );
 }
 
-function Ideas() {
+export function Ideas() {
   // A seedling growing out of a coin: a business that grows from savings.
   return (
     <>
@@ -54,7 +54,7 @@ function Ideas() {
   );
 }
 
-function Books() {
+export function Books() {
   // An open exercise book with ruled lines, and a small stack of coins.
   return (
     <>
@@ -69,7 +69,7 @@ function Books() {
   );
 }
 
-function Messages() {
+export function Messages() {
   // A speech bubble, as people know it from WhatsApp, with three dots.
   return (
     <>
@@ -81,7 +81,7 @@ function Messages() {
   );
 }
 
-function Share() {
+export function Share() {
   // A megaphone: tell others about Stawi.
   return (
     <>

@@ -26,3 +26,34 @@ describe('main tabs use our own drawn pictures (standing rule 19, 24/11/26)', ()
     for (const hex of hexes) expect(brand.has(hex), hex).toBe(true);
   });
 });
+
+describe('pictures inside pages are our own drawings too (standing rule 19)', () => {
+  const library = readFileSync(join(web, 'Pictures.tsx'), 'utf8');
+  const core = join(__dirname, '..', 'src');
+  const mapped = new Set([...library.split('FOR_EMOJI')[1]!.split('};')[0]!.matchAll(/'([^']+)': '[a-z]+'/g)].map((m) => m[1]));
+  const drawn = new Set([...library.matchAll(/^  ([a-z]+): (?:\(\) =>|[A-Z])/gm)].map((m) => m[1]));
+
+  it('has a drawing for every picture the shared data names', () => {
+    const files = ['modules.ts', 'value-props.ts', 'document-house.ts', 'collect-ways.ts'].map((f) => join(core, f));
+    files.push(join(web, '..', 'app', 'groups', '[id]', 'GroupCockpit.tsx'));
+    for (const file of files) {
+      for (const m of readFileSync(file, 'utf8').matchAll(/icon: '([^']+)'/g)) {
+        const icon = m[1]!.replace(/️/g, '');
+        expect(mapped.has(icon), `${icon} in ${file}`).toBe(true);
+      }
+    }
+  });
+  it('maps every emoji to a picture that is really drawn', () => {
+    for (const m of library.split('FOR_EMOJI')[1]!.split('};')[0]!.matchAll(/'[^']+': '([a-z]+)'/g)) {
+      expect(drawn.has(m[1]!), m[1]).toBe(true);
+    }
+  });
+  it('has no emoji left in the Share bar', () => {
+    const share = readFileSync(join(web, 'ShareBar.tsx'), 'utf8');
+    expect(/\p{Extended_Pictographic}/u.test(share.replace(/[✓↗]/g, ''))).toBe(false);
+  });
+  it('adds no colour outside the brand palette', () => {
+    const hexes = [...library.matchAll(/#[0-9a-f]{6}/gi)].map((m) => m[0].toLowerCase());
+    for (const hex of hexes) expect(hex).toBe('#e8dcc4');
+  });
+});

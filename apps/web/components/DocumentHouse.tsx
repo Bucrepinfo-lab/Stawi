@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { houseRoomName, type HouseCheck, type HousePurposeId, type ValueLang } from '@stawi/core';
 import { storedLang, track, trackOnce } from './track';
+import { Pic } from './Pictures';
 
 /**
  * "Your papers, ready" — one house, four rooms (owner 20/11/26). Pick what the
@@ -61,7 +62,7 @@ export function DocumentHouse({ groupId, focus }: { groupId: string; focus?: Hou
         {info.checks.map((c) => (
           <button key={c.purpose.id} type="button" role="tab" aria-selected={c.purpose.id === check.purpose.id} className="house-purpose"
             onClick={() => { setPicked(c.purpose.id); track('sort', `papers-${c.purpose.id.replace(/_/g, '-')}`); }}>
-            <span aria-hidden>{c.purpose.icon}</span>
+            <span aria-hidden><Pic icon={c.purpose.icon} size={26} /></span>
             <span>{c.purpose.name[lang]}</span>
             {c.complete && <span className="tick" aria-hidden>✓</span>}
           </button>
