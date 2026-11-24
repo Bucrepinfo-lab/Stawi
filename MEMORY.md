@@ -1,5 +1,9 @@
 # Stawi — session memory / start-here
 
+## 24/11/26 — package-lock.json synced with package.json (owner: "fix all these appropriately")
+- Regenerated from a clean clone with the repo's npm 10.9.8 (`npm install --package-lock-only`): 144 packages out (the Clerk tree; package.json had already moved to Supabase), 25 in (Supabase, async-storage, url-polyfill and their deps), 18 transitive consolidations; async-storage pinned to 1.23.1 as apps/mobile asks (Expo 51). Next, React, Prisma, TypeScript, Expo and React Native versions unchanged. `npm ci` now works; lint and tests (core 444, db 13) pass.
+- Not changed (deploy config, protected): CI (`ci.yml`) and the Dockerfile use `npm install`, which re-resolves on every build; proposed to the owner to switch both to `npm ci`.
+
 ## 24/11/26 — Tabs and touch feel (owner: tabs and icons responsive and attractive)
 - `apps/web/app/globals.css` closing block, CSS only: no grey tap flash anywhere; the gold keyboard ring on every control (it was only on some); buttons and "Go" links press in slightly; value-banner pills gain a hover (pillar border, lift) and smooth colour change; banner and section tab strips snap, never wrap a label, and the banner strip fades at the right edge on phones; "Go" links deepen on hover; the bottom-tab picture pops gently when its tab becomes current; on a computer the tab pictures warm to gold on hover. Reduced motion still switches everything off.
 - Judgement call: the bottom tabs keep their emoji pictures (owner 20/11/26: pictures and plain words, for people who do not read menus); only their motion changed.
