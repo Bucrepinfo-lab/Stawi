@@ -20,7 +20,9 @@ COPY apps/web/package.json apps/web/package.json
 COPY packages/core/package.json packages/core/package.json
 COPY packages/db/package.json packages/db/package.json
 COPY apps/mobile/package.json apps/mobile/package.json
-RUN npm install --no-audit --no-fund
+# npm ci (owner 24/11/26): install exactly what package-lock.json lists, so every
+# image gets the same packages; a lockfile out of step fails the build.
+RUN npm ci --no-audit --no-fund
 
 # ── build: prisma client + next build ──
 FROM node:${NODE_VERSION}-bookworm-slim AS build
