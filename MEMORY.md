@@ -1,5 +1,9 @@
 # Stawi — session memory / start-here
 
+## 24/11/26 — Builds install exactly the lockfile (owner: "Yes, go ahead")
+- `.github/workflows/ci.yml` and the Dockerfile deps stage now run `npm ci` (was `npm install`). Every build gets the packages in `package-lock.json`; a package.json change without a lockfile update now fails CI instead of silently resolving new versions. After changing any package.json, run `npm install` (npm 10.9.8 via packageManager) and commit the lockfile in the same change.
+- Checked before the switch: the Dockerfile's deps layout (root + four workspace manifests + lockfile + .npmrc) installs with `npm ci` under npm 10.8.2, the npm that ships with CI's Node 20.
+
 ## 24/11/26 — package-lock.json synced with package.json (owner: "fix all these appropriately")
 - Regenerated from a clean clone with the repo's npm 10.9.8 (`npm install --package-lock-only`): 144 packages out (the Clerk tree; package.json had already moved to Supabase), 25 in (Supabase, async-storage, url-polyfill and their deps), 18 transitive consolidations; async-storage pinned to 1.23.1 as apps/mobile asks (Expo 51). Next, React, Prisma, TypeScript, Expo and React Native versions unchanged. `npm ci` now works; lint and tests (core 444, db 13) pass.
 - Not changed (deploy config, protected): CI (`ci.yml`) and the Dockerfile use `npm install`, which re-resolves on every build; proposed to the owner to switch both to `npm ci`.
