@@ -116,3 +116,12 @@ understands; no technical terms. Every figure shown to persuade carries its
 source and is never rounded in our favour. Home screens stay light: what can be
 folded away is folded away.
 
+
+## 19. Our own pictures, with the words kept
+Owner standing rule, 24/11/26 (all products). Navigation and tab pictures are
+our own simple drawings in the brand colours, never emoji: emoji are drawn
+differently by every phone maker and Android version (older phones show an
+empty box) and are read differently by age and culture. The words always stay
+under the picture, in the person's language. A new or changed picture is shown
+to real members without its words first (`docs/PICTURE-TEST.md`); one that most
+people do not name correctly is redrawn before it ships widely.
