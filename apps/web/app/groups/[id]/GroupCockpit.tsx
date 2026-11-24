@@ -54,6 +54,7 @@ import {
 import type { Cockpit } from '@/lib/cockpit';
 import { setUrlParams } from '@/lib/url-state';
 import { JoiningCodes } from './JoiningCodes';
+import { Pic } from '@/components/Pictures';
 
 type Tab = 'charter' | 'minutes' | 'documents' | 'statement' | 'sacco';
 const TABS: readonly Tab[] = ['charter', 'minutes', 'documents', 'statement', 'sacco'];
@@ -148,7 +149,7 @@ export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, 
       <div className="no-print s-tabs" role="tablist" aria-label="Group records">
         {tabs.map((t) => (
           <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} className="s-tab" onClick={() => setTab(t.key)}>
-            <span aria-hidden>{t.icon}</span>{t.label}
+            <span aria-hidden><Pic icon={t.icon} size={22} /></span>{t.label}
           </button>
         ))}
       </div>

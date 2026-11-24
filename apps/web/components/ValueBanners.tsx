@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { PILLAR_NAMES, PILLAR_PROMISE, valueLang, valuePropsFor, type ValueLang, type ValuePillar, type ValueProp } from '@stawi/core';
 import { storedLang, track, trackOnce } from './track';
+import { Pic } from './Pictures';
 
 /**
  * "The problem · the proof · what Stawi does" banners (owner 20/11/26).
@@ -41,7 +42,7 @@ function Banner({ prop, lang, startOpen }: { prop: ValueProp; lang: ValueLang; s
       onToggle={(e) => { if ((e.currentTarget as HTMLDetailsElement).open) trackOnce('open', prop.id); }}
     >
       <summary>
-        <span className="vb-icon" aria-hidden>{prop.icon}</span>
+        <span className="vb-icon" aria-hidden><Pic icon={prop.icon} size={34} /></span>
         <span className="vb-pain">{prop.pain[lang]}</span>
         <span className="vb-chev" aria-hidden>⌄</span>
       </summary>

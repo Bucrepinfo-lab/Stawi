@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { COLLECT_TIPS, type ValueLang } from '@stawi/core';
 import { storedLang, track } from './track';
+import { Pic } from './Pictures';
 
 /**
  * "A safer way to receive contributions" — a kind note for the treasurer about
@@ -31,7 +32,7 @@ export function CollectTips() {
       <div className="tips-body">
         {COLLECT_TIPS.map((t) => (
           <article key={t.id} className="tips-card">
-            <h3><span aria-hidden>{t.icon}</span> {t.title[lang]}</h3>
+            <h3><span aria-hidden><Pic icon={t.icon} size={26} /></span> {t.title[lang]}</h3>
             <p>{t.body[lang]}</p>
             {t.steps && <p className="tips-steps">{t.steps[lang]}</p>}
             {t.source && (

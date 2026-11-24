@@ -1,4 +1,5 @@
 import { welcomeNotes, type ValueLang } from '@stawi/core';
+import { Pic } from './Pictures';
 
 /**
  * "Use only what you need" — a warm, honest welcome for people who want one
@@ -25,7 +26,7 @@ export function OpenDoor({ lang = 'en', savingsCredit = false, heading = true }:
       <div className="door-list">
         {notes.map((n) => (
           <article key={n.id} className={`door-card s-card pillar-${n.pillar}`}>
-            <span className="door-icon" aria-hidden>{n.icon}</span>
+            <span className="door-icon" aria-hidden><Pic icon={n.icon} size={34} /></span>
             <h3>{n.title[lang]}</h3>
             <p>{n.body[lang]}</p>
             <a className="door-go" href={`/groups/new?start=${n.start}`}>{n.cta[lang]}</a>

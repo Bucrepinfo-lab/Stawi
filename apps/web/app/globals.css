@@ -373,3 +373,26 @@ html.dark .vb-tab:not([aria-selected="true"]):hover { color: var(--ink); }
 @media (min-width: 900px) {
   .app-tab:not([aria-current="page"]):hover .i { background: color-mix(in srgb, var(--gold) 22%, var(--bone-2)); transform: translateY(-1px); }
 }
+
+/* ── Drawn tab pictures (owner 24/11/26: Stawi's own drawings, not emoji) ──
+   Each picture carries its own light tile, so the bubble behind it is dropped;
+   the current tab is shown by a gold ring round the tile, a bold label and the
+   gentle pop above. */
+.app-tab .i.pic { width: auto; height: auto; background: none; border-radius: 11px; }
+.app-tab .i.pic .tab-pic { display: block; width: 30px; height: 30px; border-radius: 10px; transition: transform .15s ease, box-shadow .15s ease; }
+.app-tab[aria-current="page"] .i.pic { width: auto; background: none; box-shadow: none; }
+.app-tab[aria-current="page"] .i.pic .tab-pic { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--gold); }
+@media (min-width: 900px) {
+  .app-tab .i.pic, .app-tab[aria-current="page"] .i.pic { width: auto; height: auto; background: none; }
+  .app-tab .i.pic .tab-pic { width: 28px; height: 28px; }
+  .app-tab:not([aria-current="page"]):hover .i.pic { background: none; }
+  .app-tab:not([aria-current="page"]):hover .i.pic .tab-pic { transform: translateY(-1px); box-shadow: 0 4px 10px -6px rgba(22, 38, 31, .6); }
+  .app-tab[aria-current="page"] .i.pic .tab-pic { box-shadow: 0 0 0 2px var(--gold); }
+}
+
+/* ── Drawn pictures inside pages (standing rule 19, owner 24/11/26) ─────── */
+.stawi-pic { display: inline-block; vertical-align: middle; flex: none; border-radius: 10px; }
+.vb-icon .stawi-pic, .door-icon .stawi-pic, .use-emoji .stawi-pic, .start-icon .stawi-pic { display: block; }
+.vb-icon, .door-icon { background: none; box-shadow: none; }
+.use-emoji { display: grid; place-items: center; }
+.s-tab .stawi-pic { border-radius: 7px; }

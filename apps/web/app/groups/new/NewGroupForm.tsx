@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { START_CHOICES, startChoice, type StartChoiceId, type ValueLang } from '@stawi/core';
 import { createGroupAction } from '@/app/actions';
 import { storedLang, track } from '@/components/track';
+import { Pic } from '@/components/Pictures';
 
 /**
  * Start a group or a business (owner 20/11/26): pick what you came for, give
@@ -51,7 +52,7 @@ export function NewGroupForm({ initialStart }: { initialStart?: string }) {
       <div className="start-list" role="radiogroup" aria-label={T.what[lang]}>
         {START_CHOICES.map((c) => (
           <button key={c.id} type="button" role="radio" aria-checked={start === c.id} className={`start-card s-card pillar-${c.type === 'BUSINESS' ? 3 : 1}`} onClick={() => setStart(c.id)}>
-            <span className="start-icon" aria-hidden>{c.icon}</span>
+            <span className="start-icon" aria-hidden><Pic icon={c.icon} size={38} /></span>
             <span className="start-name">{c.name[lang]}</span>
             <span className="start-about">{c.about[lang]}</span>
           </button>

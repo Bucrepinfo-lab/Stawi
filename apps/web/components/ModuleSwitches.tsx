@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { MODULES, resolveModules, type GroupModules, type ModuleId, type ValueLang } from '@stawi/core';
 import { saveModulesAction } from '@/app/actions';
 import { storedLang, track } from './track';
+import { Pic } from './Pictures';
 
 /**
  * "Choose what you use" — big on/off switches, one per section (owner
@@ -76,7 +77,7 @@ export function ModuleSwitches({ groupId, modules, offered }: { groupId: string;
             const blocked = !!m.needs && !state[m.needs];
             return (
               <li key={m.id} className={`use-row pillar-${m.pillar} ${on ? 'on' : 'off'}`}>
-                <span className="use-emoji" aria-hidden>{m.icon}</span>
+                <span className="use-emoji" aria-hidden><Pic icon={m.icon} size={34} /></span>
                 <div>
                   <p className="use-name">{m.name[lang]}</p>
                   <p className="use-what">{on ? m.on[lang] : m.off[lang]}</p>
