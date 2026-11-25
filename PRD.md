@@ -15,6 +15,7 @@
 ---
 
 > **Value-first presentation (20/11/26):** every pillar screen carries collapsible "problem · proof · what Stawi does" banners with a linked source per fact (`packages/core/src/value-props.ts`), main tabs (My group · Ideas · Books · Share), sharing tools, countdown badges and anonymous engagement counts (`/api/track`, `EngagementCount`).
+> **v3 restructure draft (20/11/26, merged 25/11/26 on the owner's "fix them appropriately"; the open decisions in its §7 and the price proposal still need the owner's yes):** informal, non-literate groups first; voice minutes; contribution tracker and goals; decision toolkit; survival layer for businesses; loan-readiness pack. Research, gap analysis, MVP and build order: [`docs/PRD-V3-RESTRUCTURE.md`](docs/PRD-V3-RESTRUCTURE.md).
 
 ## 1. Name Options (pick one)
 

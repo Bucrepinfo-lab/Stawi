@@ -1,5 +1,8 @@
 # Stawi — session memory / start-here
 
+## 25/11/26 — PRD v3 restructure merged (owner: "Two draft pull requests sitting idle fix them appropriately")
+- PR #28 is brought up to date with main and merged as the plan of record. Nothing new is built. The open decisions in `docs/PRD-V3-RESTRUCTURE.md` §7 and `docs/PRICING-PROPOSAL-2026-11.md` still need the owner's yes, and prices in code are unchanged.
+
 ## 25/11/26 — Paper minutes read in English and Kiswahili, self-hosted (owner standing rule: best OCR and photo tools, all projects)
 - "Import written notes" (GroupCockpit) used Tesseract.js 5.1.0 from a third-party CDN, English only. It now uses Tesseract.js 7 with English + Kiswahili compact models, served from our own site (/ocr, copied at build by `apps/web/scripts/copy-ocr-assets.mjs`, git-ignored). The photo never leaves the phone; members check the words before "Use these notes". The middleware skips .gz/.wasm files.
 - Handwriting: Tesseract reads printed text well and neat handwriting fairly; messy handwriting still needs typing. The text box stays editable for that reason.
@@ -133,6 +136,10 @@
 - Web: `ValueBanners` (collapsible, tabs per pillar), `ShareBar` (device share, WhatsApp, SMS, copy), `CountdownBadge`, `AppTabs` (My group · Ideas · Books · Share: bottom on phones, top on computers). On the home page, dashboard, match, books, sacco and subscribe. The home page's long "why others failed" grid is now collapsed.
 - Counting: public `POST /api/track` (whitelisted, rate-limited, 512-byte cap) → `EngagementCount` (day, event, key, count). **No user, phone, group, tenant or IP is stored.** Admin page shows the last 7 days. Protected areas touched at the owner's request: one additive table and one public route in the middleware list.
 - Not done here: the privacy page does not yet mention these anonymous counts; AI enhancement (owner asked 14:42) is planned as its own PR on the existing opt-in adapter pattern.
+
+## 20/11/26 (afternoon) — PRD v3 restructure drafted (awaiting owner approval)
+- Owner brief: serve informal, non-literate table-banking groups first; members type a few points or **speak** (owner confirmed voice) and Stawi writes formal minutes; group goals; per-member contribution tracker; decision toolkit for business ideas; survival layer for businesses; loan-readiness pack so lenders' documents come out in one tap; fill every failure gap of groups, businesses and SACCOs and copy what strong SACCOs do.
+- Research, gap analysis, 15-point MVP and build order in `docs/PRD-V3-RESTRUCTURE.md`; nothing built yet. Open owner decisions listed in its §7.
 
 ## 20/11/26 — All African local prices approved (owner: "approve all prices")
 - Second round approved the same day ("approve the second-round prices"), group / small group a month: Zambia ZMW 50/25, Malawi MWK 4,000/2,000, Mozambique MZN 150/75, Cameroon, Congo, Gabon XAF 1,300/650, Côte d'Ivoire, Senegal, Benin, Burkina Faso XOF 1,300/650, DR Congo CDF 5,300/2,700, Lesotho LSL 40/20, Sierra Leone SLE 55/27, Zimbabwe USD 2.99/1.49, Ethiopia ETB 380/190. Recorded only: those countries need Stawi country profiles (compliance) before a group can be set there.
