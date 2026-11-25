@@ -915,16 +915,25 @@ function DocHeader({ charter, subtitle }: { charter: GroupCharter; subtitle: str
   );
 }
 
-function loadTesseract(): Promise<any> {
-  const w = window as any;
-  if (w.Tesseract) return Promise.resolve(w.Tesseract);
-  return new Promise((resolve, reject) => {
-    const el = document.createElement('script');
-    el.src = 'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js';
-    el.onload = () => resolve((window as any).Tesseract);
-    el.onerror = () => reject(new Error('offline'));
-    document.head.appendChild(el);
+/**
+ * Read paper minutes on the phone (owner standing rule 25/11/26): Tesseract.js 7
+ * with English AND Kiswahili, engine and models served from our own site
+ * (/ocr, copied at build by scripts/copy-ocr-assets.mjs). Before, v5 loaded
+ * from a third-party CDN and read English only. The photo never leaves the phone.
+ */
+async function readPhotoText(file: File): Promise<string> {
+  const { createWorker } = await import('tesseract.js');
+  const worker = await createWorker(['eng', 'swa'], 1, {
+    workerPath: '/ocr/worker.min.js',
+    corePath: '/ocr',
+    langPath: '/ocr/lang',
   });
+  try {
+    const { data } = await worker.recognize(file);
+    return (data.text ?? '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  } finally {
+    await worker.terminate();
+  }
 }
 
 function NotesImport({ onApply }: { onApply: (p: ReturnType<typeof parseImportedNotes>) => void }) {
@@ -941,9 +950,7 @@ function NotesImport({ onApply }: { onApply: (p: ReturnType<typeof parseImported
     if (kind === 'photo' || file.type.startsWith('image/')) {
       setBusy(true);
       try {
-        const T = await loadTesseract();
-        const res = await T.recognize(file, 'eng');
-        setText(((res?.data?.text as string) ?? '').trim());
+        setText(await readPhotoText(file));
         setMsg('Read from photo — please check the words below.');
       } catch {
         setMsg('Could not read the photo automatically. Type the key points below.');
@@ -977,7 +984,7 @@ function NotesImport({ onApply }: { onApply: (p: ReturnType<typeof parseImported
         </label>
         {fileName && <span style={{ fontSize: 12, color: 'var(--dim)', alignSelf: 'center' }}>📄 {fileName}</span>}
       </div>
-      {busy && <p style={{ fontSize: 12.5, color: 'var(--dim)', marginTop: 10 }}>Reading your notes… (first run downloads the reader)</p>}
+      {busy && <p style={{ fontSize: 12.5, color: 'var(--dim)', marginTop: 10 }}>Reading your notes in English or Kiswahili… (the first time takes a little longer)</p>}
       {msg && <p style={{ fontSize: 12.5, color: 'var(--dim)', marginTop: 10 }}>{msg}</p>}
       <textarea style={{ ...input, minHeight: 130, resize: 'vertical', marginTop: 12, fontFamily: 'var(--font-mono)', fontSize: 12.5 }} value={text} onChange={(e) => setText(e.target.value)}
         placeholder={'Present: Amina, Grace, Faith\nApologies: David\nAgenda 1: Purchase of chairs\nResolved that we buy 20 chairs'} />
