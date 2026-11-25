@@ -16,7 +16,7 @@ export function SecurityActions() {
   }
 
   async function signOutEverywhere() {
-    if (!confirm('Sign out of all devices? Every phone will need a new SMS code to sign in.')) return;
+    if (!confirm('Sign out of all devices? You will sign in again with your phone number and PIN.')) return;
     setBusy(true);
     await fetch('/api/auth/devices/revoke', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ all: true }) }).catch(() => null);
     router.replace('/sign-in');

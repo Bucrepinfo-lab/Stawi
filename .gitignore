@@ -36,3 +36,4 @@ coverage/
 .vscode/
 .idea/
 .fuse_hidden*
+apps/web/public/ocr/

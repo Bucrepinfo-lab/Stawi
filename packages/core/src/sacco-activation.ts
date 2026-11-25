@@ -24,6 +24,8 @@ import { ENTITY_ONBOARDING } from './savings';
 import type { SaccoAccountState } from './savings';
 import { LOAN_PRODUCTS, scoreEligibility } from './credit';
 import type { LoanProductId, EligibilityResult } from './credit';
+import { HOUSE_PURPOSES, buildHouseFromFacts, checkPurpose, houseFactsFromStatements, houseRoomName } from './document-house';
+import type { HouseDocId } from './document-house';
 
 /** A member's savings history distilled from Pillar-1 capture. */
 export interface MemberSavingsProfile {
@@ -145,77 +147,39 @@ export function memberSavingsProfiles(
  * These are the documents a Kenyan bank / DT-SACCO routinely asks a group for
  * before opening a credit facility.
  */
+/**
+ * The papers savings and credit asks for. ONE list (owner 20/11/26): this is
+ * the shared document house's "start savings and credit" purpose, so a group
+ * is never asked here for something another section already holds, and the
+ * two can never disagree. See `document-house.ts`.
+ */
+const EVIDENCE_ID: Partial<Record<HouseDocId, string>> = {
+  registration: 'registration',
+  officials: 'officials',
+  rules: 'constitution',
+  resolution: 'resolution',
+  minutes: 'minutes',
+  statements: 'financials',
+  member_ids: 'kyc',
+};
+
 export function activationEvidence(
   charter: GroupCharter,
   statements: MonthEndStatement[],
 ): EvidenceItem[] {
-  const roster = charter.members;
-  const offs = officials(roster);
-  const hasChair = offs.some((m) => m.designation === 'Chairperson');
-  const hasSecretary = offs.some(
-    (m) => m.designation === 'Secretary' || m.designation === 'Assistant Secretary',
-  );
-  const hasTreasurer = offs.some(
-    (m) => m.designation === 'Treasurer' || m.designation === 'Assistant Treasurer',
-  );
-  const withId = roster.filter((m) => (m.idNumber ?? '').trim().length > 0).length;
-  const kycAll = roster.length > 0 && withId === roster.length;
-  const anyResolution = statements.some((s) => (s.resolutions?.length ?? 0) > 0);
-  const monthsOfHistory = statements.length;
-
-  return [
-    {
-      id: 'registration',
-      label: 'Group registration certificate / number',
-      satisfied: !!(charter.registeredNumber && charter.registeredNumber.trim()),
-      source: 'Pillar 1 · Charter (registered number / Formalization wizard)',
-      detail: charter.registeredNumber ? `Reg. ${charter.registeredNumber}` : 'Add the registration number on the Charter.',
-    },
-    {
-      id: 'officials',
-      label: 'Officials list — chairperson, secretary, treasurer',
-      satisfied: hasChair && hasSecretary && hasTreasurer,
-      source: 'Pillar 1 · Charter roster (designations)',
-      detail: `${offs.length} official${offs.length === 1 ? '' : 's'} on record.`,
-    },
-    {
-      id: 'constitution',
-      label: 'Constitution & by-laws',
-      satisfied: !!(
-        (charter.constitution && charter.constitution.trim()) ||
-        charter.constitutionFileUrl
-      ),
-      source: 'Pillar 1 · Charter (constitution text or uploaded file)',
-    },
-    {
-      id: 'resolution',
-      label: 'Board / members resolution to open an account & borrow',
-      satisfied: anyResolution,
-      source: 'Pillar 1 · Minutes (posted resolutions)',
-      detail: anyResolution ? undefined : 'Pass and post a resolution in Minutes.',
-    },
-    {
-      id: 'minutes',
-      label: 'Recent meeting minutes',
-      satisfied: monthsOfHistory >= 1,
-      source: 'Pillar 1 · Minutes / Documents',
-      detail: `${monthsOfHistory} month${monthsOfHistory === 1 ? '' : 's'} of posted minutes.`,
-    },
-    {
-      id: 'financials',
-      label: 'Financial statements / contribution records (3+ months preferred)',
-      satisfied: monthsOfHistory >= 3,
-      source: 'Pillar 1 · Month-End statements',
-      detail: `${monthsOfHistory} month${monthsOfHistory === 1 ? '' : 's'} reconciled.`,
-    },
-    {
-      id: 'kyc',
-      label: 'Member KYC — full names, phones & ID numbers',
-      satisfied: kycAll,
-      source: 'Pillar 1 · Charter roster',
-      detail: `${withId}/${roster.length} members have an ID number.`,
-    },
-  ];
+  const house = buildHouseFromFacts(charter, houseFactsFromStatements(statements));
+  const purpose = HOUSE_PURPOSES.find((p) => p.id === 'savings_credit')!;
+  return checkPurpose(house, purpose).lines
+    .filter((line) => line.kind === 'must')
+    .map((line) => ({
+      id: EVIDENCE_ID[line.doc.id] ?? line.doc.id,
+      label: line.doc.name.en,
+      satisfied: line.ok,
+      source: houseRoomName(line.doc.room),
+      detail: line.ok
+        ? line.doc.have.en
+        : `${line.doc.have.en}${line.shortBy > 0 ? ` — ${line.shortBy} more needed` : ''}. ${line.doc.fix.en}`,
+    }));
 }
 
 /** Requested amount used for the pre-qualification preview: a member's own cap. */

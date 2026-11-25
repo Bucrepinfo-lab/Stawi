@@ -14,7 +14,8 @@
 
 ---
 
-> **v3 restructure draft (20/11/26, awaiting owner approval):** informal, non-literate groups first; voice minutes; contribution tracker and goals; decision toolkit; survival layer for businesses; loan-readiness pack. Research, gap analysis, MVP and build order: [`docs/PRD-V3-RESTRUCTURE.md`](docs/PRD-V3-RESTRUCTURE.md).
+> **Value-first presentation (20/11/26):** every pillar screen carries collapsible "problem · proof · what Stawi does" banners with a linked source per fact (`packages/core/src/value-props.ts`), main tabs (My group · Ideas · Books · Share), sharing tools, countdown badges and anonymous engagement counts (`/api/track`, `EngagementCount`).
+> **v3 restructure draft (20/11/26, merged 25/11/26 on the owner's "fix them appropriately"; the open decisions in its §7 and the price proposal still need the owner's yes):** informal, non-literate groups first; voice minutes; contribution tracker and goals; decision toolkit; survival layer for businesses; loan-readiness pack. Research, gap analysis, MVP and build order: [`docs/PRD-V3-RESTRUCTURE.md`](docs/PRD-V3-RESTRUCTURE.md).
 
 ## 1. Name Options (pick one)
 
@@ -232,7 +233,7 @@ earned. Acquisition thesis: win the books first, win the wallet later.
 - **DB:** PostgreSQL (DigitalOcean Managed). Real-time via Postgres LISTEN/NOTIFY or a websocket layer (e.g. Supabase Realtime/Ably) for live dashboards.
 - **Payments:** M-Pesa **Daraja 3.0** (STK Push, C2B, B2C) behind a payment-provider abstraction (so Flutterwave/Paystack/banks slot in per country).
 - **Files/receipts:** PDF generation service; object storage (DO Spaces).
-- **Notifications:** push (Expo), SMS (Africa's Talking), in-app, email.
+- **Notifications:** in-app (group Messages, attention card), push (Expo), email. No SMS (owner 20/11/26).
 - **Deploy:** DigitalOcean App Platform (web + API), Managed Postgres, Spaces. CI/CD from GitHub. **All work pushed to GitHub.**
 
 ---
@@ -318,7 +319,7 @@ packages/db   Prisma schema (13 models / 10 enums) + tenant-scoped repository + 
 | **Paddle** card checkout (merchant of record; Paddle remits the tax, owner decision 19/11/26) + signed webhook `/api/billing/webhook/paddle` | live on `PADDLE_ENABLED=true` + keys |
 | **Stripe** Checkout (subscription, 30-day trial) + webhook (HMAC verify, refuses without `STRIPE_WEBHOOK_SECRET`) | dormant; Paddle is the card rail when enabled |
 | **Paystack / Flutterwave** | routed by country, stubs until keyed |
-| **Africa's Talking** SMS acknowledgements | live on AT keys |
+| ~~Africa's Talking SMS acknowledgements~~ | removed 20/11/26: M-Pesa texts its own confirmation; receipts in-app |
 | **Postgres (Prisma)** tenant-scoped queries + `rls.sql` | live on `DATABASE_URL` |
 
 ### Multi-tenant model
@@ -366,7 +367,7 @@ Groups. Isolation enforced at the query layer (`getTenantContext`, `assertSameTe
 - ✅ Stripe webhook → `activateSubscriptionForTenant` flips Subscription ACTIVE (live on DB).
 - ✅ `withTenantRls` repo helper sets `app.tenant_id` per transaction.
 - ✅ rls.sql now covers ALL tenant-owned tables (group-, business-, sacco-, loan-chained).
-- ✅ Concrete Paystack (`lib/paystack.ts`) + Flutterwave (`lib/flutterwave.ts`) init/verify, live-on-key.
+- ✅ Paystack init/verify through `lib/local-providers.ts`, live-on-key. (The unused `lib/paystack.ts` and `lib/flutterwave.ts` were removed 20/11/26.)
 - ✅ Pillar 4 wired end-to-end: repo (getSaccoAccounts/openSaccoAccount/postSaccoTxn dual-approval/applyForLoan/accrueMonthlyInterest), server actions (open/txn/loan), data provider seed fallback.
 - ✅ `/api/cron` (CRON_SECRET-guarded): month-end interest accrual (idempotent) + subscription dunning.
 
@@ -425,13 +426,17 @@ reconciliation → downloadable statement).
 Pillar 1 is complete end to end and the tree is locked pending go-live:
 - **Cockpit** (charter · self-directing minutes · paraphrasing OS · month-end statement) — web + full **Expo mobile** parity.
 - **Import written notes** — photo (OCR) or file → parsed → pre-filled minutes. **Customizable per-country phone length** (`PHONE_RULES`).
-- **Phone-first identity** — phone number is the primary credential; roster numbers are the join key; optional **Clerk** phone-OTP on mobile, verified server-side.
+- **Phone-first identity** — phone number + the person's own 4-digit PIN, no SMS (owner 20/11/26); roster numbers are the join key, proven by a one-time joining code an official gives (`docs/SIGN-IN.md`).
 - **Live data** — mobile ⇄ web JSON API (`/api/mobile/*`), tenant-scoped repo, RLS.
 - **Persistence** — `GroupCharter`/`Meeting`/`MonthlyStatement` + phone-keyed memberships; local Postgres via `docker-compose.yml`; `DB-SETUP.md`. **Production requires `DATABASE_URL`** — no silent seed fall-back (mobile API returns 503).
 
 **History:** GitHub base `46bf634` → `1018ea0` → `419625b` → `f10851e` → `9ed18fe` → `b00c231` → (this commit). Working tree clean.
 
 **NEXT SESSION = DigitalOcean deployment only.** Resume from `PRE-DEPLOY-CHECKLIST.md` (steps 1–15) + `DEPLOYMENT-RUNBOOK.md`. First question: DigitalOcean account status. No further feature work until deployed.
+
+
+### Flow and escalation (added 20/11/26)
+Every section with a duty has one person who acts first; stalled work climbs responsible official → Chairperson → all officials → every member. Seven watches live in `packages/core/src/escalation.ts`; the group page shows "Needs attention" to the responsible person and those above them only. Coverage, gaps and owner decisions: `docs/FLOW-ESCALATION-AUDIT.md`. Standing rules 13–18 (`docs/STANDING_RULES.md`) record the Telpen Edu orders adopted.
 
 ## 13. Skills & Tools Used
 
@@ -465,9 +470,9 @@ funnel to everyone and is the core growth lever.
 business: `business-activation.ts` (accounting pack + owner analytics metrics +
 demand→supply supplier links), `pos.ts` (item **EAN-13 barcodes** on purchase/stock/
 sale, printable receipts, CSV exports, acknowledgeable critical-stock alerts, and
-**payment prompts** for M-Pesa STK / cash-with-change / card), and `automation.ts`
-(auto-reorder purchase orders, SMS/WhatsApp e-receipts, **KRA eTIMS** e-invoicing,
-close-of-day **Z-report**). Surfaced in `/books`.
+**payment prompts** for M-Pesa STK / cash-with-change / card). Surfaced in `/books`.
+(`automation.ts` — auto-reorder, e-receipts, a mock eTIMS invoice and Z-report — was never
+wired into any screen and was removed 20/11/26; real eTIMS needs KRA's own system.)
 
 **Brand & identity.** Logo (`design/stawi-logo.svg`), and vision / mission / core
 values in `BRAND.md`; tagline **"Save · Grow · Thrive."** Reflected across the landing

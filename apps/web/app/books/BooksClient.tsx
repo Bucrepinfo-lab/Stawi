@@ -7,6 +7,10 @@ import type { GroupAccount } from '@/lib/groups';
 import type { WebBooks } from '@/lib/data';
 import { canWriteBooks, type LedgerEntry, type Period } from '@stawi/core';
 import { setUrlParams } from '@/lib/url-state';
+import { DocumentHouse } from '@/components/DocumentHouse';
+import { MoneySummary } from '@/components/MoneySummary';
+import { TabsHint } from '@/components/TabsHint';
+import { booksOnly, type GroupModules } from '@stawi/core';
 
 interface Props {
   groups: GroupAccount[];
@@ -15,7 +19,7 @@ interface Props {
   initialPeriod?: Period;
 }
 
-export function BooksClient({ groups, booksByGroup, initialId, initialPeriod }: Props) {
+export function BooksClient({ groups, booksByGroup, initialId, initialPeriod, modulesById = {} }: Props & { modulesById?: Record<string, GroupModules> }) {
   const [activeId, setActiveIdState] = useState(
     initialId || (groups.find((g) => booksByGroup[g.id])?.id ?? groups[0]?.id ?? ''),
   );
@@ -86,6 +90,10 @@ export function BooksClient({ groups, booksByGroup, initialId, initialPeriod }: 
           </a>
         </div>
       )}
+      <MoneySummary groupId={active.id} />
+      {/* A business with no group has no group papers to gather. */}
+      {!(modulesById[active.id] && booksOnly(modulesById[active.id]!)) && <DocumentHouse groupId={active.id} focus="funding" />}
+      {modulesById[active.id] && <TabsHint records={!booksOnly(modulesById[active.id]!)} ideas={modulesById[active.id]!.ideas} books={modulesById[active.id]!.books} messages={modulesById[active.id]!.messages} />}
     </div>
   );
 }

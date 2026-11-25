@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { SaccoStudio } from './SaccoStudio';
 import { saccoPlusEnabled } from '@/lib/features';
 import { LiveRefresh } from '@/components/LiveRefresh';
+import { ValueBanners } from '@/components/ValueBanners';
 import { getSaccoAccountsData, getViewerRole } from '@/lib/data';
 
 // Flag is read per request (runtime env), never baked in at build time.
@@ -15,7 +16,7 @@ export default async function SaccoPage() {
   const accounts = await getSaccoAccountsData();
   const viewerRole = await getViewerRole();
   return (
-    <main style={{ maxWidth: 980, margin: '0 auto', padding: '28px 24px 80px' }}>
+    <main className="pillar-4" style={{ maxWidth: 980, margin: '0 auto', padding: '28px 24px 80px' }}>
       <p
         style={{
           fontSize: 12,
@@ -38,6 +39,7 @@ export default async function SaccoPage() {
       </p>
       <LiveRefresh />
       <SaccoStudio accounts={accounts} viewerRole={viewerRole} />
+      <ValueBanners pillars={[4]} saccoPlus startCollapsed />
     </main>
   );
 }

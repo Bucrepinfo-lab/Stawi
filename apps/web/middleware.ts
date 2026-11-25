@@ -17,10 +17,12 @@ const PUBLIC: RegExp[] = [
   /^\/api\/mpesa\/callback/,
   /^\/api\/billing\/webhook/,
   /^\/api\/webhooks\/clerk/,
-  /^\/api\/auth\/send-sms/,
-  /^\/api\/auth\/otp\/(send|verify)$/,
+  // Sign-in without SMS (owner 20/11/26): phone + PIN, joining code, new account.
   /^\/api\/auth\/pin\/(status|sign-in)$/,
+  /^\/api\/auth\/(join|start)$/,
   /^\/api\/mobile/,
+  // Engagement counts (owner 20/11/26): counts only, no personal data, rate-limited.
+  /^\/api\/track$/,
 ];
 
 const isPublic = (pathname: string) => PUBLIC.some((re) => re.test(pathname));
@@ -96,7 +98,7 @@ async function route(request: NextRequest): Promise<NextResponse> {
 
 export const config = {
   matcher: [
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|gz|wasm|webmanifest)).*)',
     '/(api|trpc)(.*)',
   ],
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { createContext, useContext, useMemo, useState } from 'react';
 import {
   addMember,
   removeMember,
@@ -40,6 +40,8 @@ import {
   statementMonths,
   pickStatementMonth,
   uniqueBy,
+  groupTabsFor,
+  type GroupModules,
 } from '@stawi/core';
 import {
   saveCharterAction,
@@ -51,9 +53,13 @@ import {
 } from '@/app/actions';
 import type { Cockpit } from '@/lib/cockpit';
 import { setUrlParams } from '@/lib/url-state';
+import { JoiningCodes } from './JoiningCodes';
+import { Pic } from '@/components/Pictures';
 
 type Tab = 'charter' | 'minutes' | 'documents' | 'statement' | 'sacco';
 const TABS: readonly Tab[] = ['charter', 'minutes', 'documents', 'statement', 'sacco'];
+/** Which sections this group uses (owner 20/11/26); null = everything. */
+const ModulesCtx = createContext<GroupModules | null>(null);
 
 const card: React.CSSProperties = { background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 'var(--radius)', padding: 22, boxShadow: 'var(--shadow)' };
 const label: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: 'var(--dim)', marginBottom: 6 };
@@ -83,16 +89,18 @@ function Hint({ text }: { text?: string }) {
   );
 }
 
-export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, initialMonth }: { cockpit: Cockpit; canEdit: boolean; saccoPlus?: boolean; initialTab?: string; initialMonth?: string }) {
+export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, initialMonth, modules }: { cockpit: Cockpit; canEdit: boolean; saccoPlus?: boolean; initialTab?: string; initialMonth?: string; modules?: GroupModules }) {
+  // Only the sections the group has switched on are offered.
+  const allowedTabs: readonly string[] = modules ? groupTabsFor(modules) : TABS;
   // Tab and statement month live in the URL (?tab=, ?month=) so a refresh or shared link reopens the same view.
-  const startTab: Tab = (TABS as readonly string[]).includes(initialTab ?? '') && (initialTab !== 'sacco' || saccoPlus) ? (initialTab as Tab) : 'charter';
+  const startTab: Tab = allowedTabs.includes(initialTab ?? '') && (initialTab !== 'sacco' || saccoPlus) ? (initialTab as Tab) : 'charter';
   const [tab, setTabState] = useState<Tab>(startTab);
   const setTab = (t: Tab) => { setTabState(t); setUrlParams({ tab: t, month: t === 'statement' ? undefined : null }); };
   const [charter, setCharter] = useState<GroupCharter>(cockpit.charter);
   const [meetings, setMeetings] = useState<Meeting[]>(cockpit.meetings);
   const [saccoActive, setSaccoActive] = useState(false);
 
-  const tabs: { key: Tab; label: string; icon: string }[] = [
+  const allTabs: { key: Tab; label: string; icon: string }[] = [
     { key: 'charter', label: 'Charter', icon: '📋' },
     { key: 'minutes', label: 'Minutes', icon: '📝' },
     { key: 'documents', label: 'Documents', icon: '📄' },
@@ -100,6 +108,7 @@ export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, 
     // SACCO+ (savings & credit) tab only when the server enables it.
     ...(saccoPlus ? [{ key: 'sacco' as Tab, label: 'SACCO+', icon: '🏦' }] : []),
   ];
+  const tabs = allTabs.filter((t) => allowedTabs.includes(t.key));
 
   // The self-directing spine: turn this group's live state into a whole-app
   // journey with a single "do this next" step spanning all four pillars.
@@ -130,16 +139,17 @@ export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, 
   }
 
   return (
+    <ModulesCtx.Provider value={modules ?? null}>
     <div>
       <style>{`@media print { .no-print { display: none !important; } body { background:#fff; } .print-doc { box-shadow:none !important; border:none !important; } }`}</style>
 
-      <PillarJourney journey={journey} activeTab={tab} onGo={goTo} />
+      {/* The four-pillar journey is for groups using the whole house. */}
+      {(!modules || (modules.meetings && modules.money)) && <PillarJourney journey={journey} activeTab={tab} onGo={goTo} />}
 
-      <div className="no-print" style={{ display: 'flex', gap: 6, background: 'var(--bone-2)', padding: 6, borderRadius: 14, width: 'fit-content', flexWrap: 'wrap', marginTop: 16 }}>
+      <div className="no-print s-tabs" role="tablist" aria-label="Group records">
         {tabs.map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)}
-            style={{ padding: '9px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, background: tab === t.key ? 'var(--forest-deep)' : 'transparent', color: tab === t.key ? 'var(--bone)' : 'var(--ink-2)' }}>
-            <span aria-hidden style={{ marginRight: 6 }}>{t.icon}</span>{t.label}
+          <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} className="s-tab" onClick={() => setTab(t.key)}>
+            <span aria-hidden><Pic icon={t.icon} size={22} /></span>{t.label}
           </button>
         ))}
       </div>
@@ -158,6 +168,7 @@ export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, 
         {saccoPlus && tab === 'sacco' && <SaccoActivationTab charter={charter} meetings={meetings} canEdit={canEdit} groupId={cockpit.groupId} onActivated={() => setSaccoActive(true)} />}
       </div>
     </div>
+    </ModulesCtx.Provider>
   );
 }
 
@@ -306,7 +317,7 @@ function SaccoActivationTab({ charter, meetings, canEdit, groupId, onActivated }
       </div>
 
       {/* Evidence checklist — what a bank asks for, reflected from Pillar 1 */}
-      <div style={card}>
+      <div className="s-card" style={card}>
         <h4 style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--forest-deep)', margin: '0 0 4px' }}>What a lender asks for — already on file</h4>
         <p style={{ fontSize: 12.5, color: 'var(--dim)', margin: '0 0 12px' }}>Every item below is pulled straight from your Pillar 1 records.</p>
         <div style={{ marginBottom: 14 }}><ProgressBar pct={packet.readinessPct} /></div>
@@ -325,7 +336,7 @@ function SaccoActivationTab({ charter, meetings, canEdit, groupId, onActivated }
       </div>
 
       {/* Savings reflected + pre-qualified credit */}
-      <div style={card}>
+      <div className="s-card" style={card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
           <h4 style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--forest-deep)', margin: 0 }}>Your members' savings, reflected as credit</h4>
           <span style={{ fontSize: 12.5, color: 'var(--dim)' }}>{packet.monthsOfHistory} month{packet.monthsOfHistory === 1 ? '' : 's'} of history · pooled {formatKes(packet.openingState.balanceCents)}</span>
@@ -393,7 +404,7 @@ function CharterTab({ charter, setCharter, canEdit, groupId }: { charter: GroupC
 
   return (
     <div style={{ display: 'grid', gap: 18 }}>
-      <div style={card}>
+      <div className="s-card" style={card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
           <span style={{ fontWeight: 700, fontSize: 15 }}>Charter completeness</span>
           <span className="mono" style={{ fontWeight: 700, color: comp.readyForDocument ? 'var(--good)' : 'var(--gold-deep)' }}>{comp.pct}%</span>
@@ -405,7 +416,7 @@ function CharterTab({ charter, setCharter, canEdit, groupId }: { charter: GroupC
       </div>
 
       {/* Identity */}
-      <div style={card}>
+      <div className="s-card" style={card}>
         <SectionTitle n={1} title="Group identity" />
         <div style={{ display: 'grid', gap: 14 }}>
           <div>
@@ -426,7 +437,7 @@ function CharterTab({ charter, setCharter, canEdit, groupId }: { charter: GroupC
       </div>
 
       {/* Meeting schedule */}
-      <div style={card}>
+      <div className="s-card" style={card}>
         <SectionTitle n={2} title="Where & when you meet" />
         <div style={{ display: 'grid', gap: 14 }}>
           <div>
@@ -460,13 +471,14 @@ function CharterTab({ charter, setCharter, canEdit, groupId }: { charter: GroupC
       </div>
 
       {/* Roster */}
-      <div style={card}>
+      <div className="s-card" style={card}>
         <SectionTitle n={3} title="Members & officials" />
         <RosterEditor members={charter.members} disabled={disabled} country={charter.countryCode} onChange={(members) => set({ members })} />
+        {canEdit && <JoiningCodes groupId={groupId} members={charter.members} country={charter.countryCode} />}
       </div>
 
       {/* Governance docs */}
-      <div style={card}>
+      <div className="s-card" style={card}>
         <SectionTitle n={4} title="Constitution & by-laws" />
         <textarea style={{ ...input, minHeight: 140, resize: 'vertical' }} value={charter.constitution} disabled={disabled} onChange={(e) => set({ constitution: e.target.value })}
           placeholder="Write your constitution and by-laws here — membership rules, contributions, elections, fines, banking… Or upload a file below." />
@@ -481,7 +493,7 @@ function CharterTab({ charter, setCharter, canEdit, groupId }: { charter: GroupC
       </div>
 
       {/* Motto / mission / vision / values */}
-      <div style={card}>
+      <div className="s-card" style={card}>
         <SectionTitle n={5} title="Motto, mission, vision & values" />
         <div style={{ display: 'grid', gap: 14 }}>
           <div><label style={label}>Motto</label><input style={input} value={charter.motto} disabled={disabled} onChange={(e) => set({ motto: e.target.value })} placeholder="e.g. Together we rise" /></div>
@@ -597,7 +609,7 @@ function MinutesTab({ charter, meetings, setMeetings, canEdit, groupId }: { char
   }
 
   if (charter.members.filter((m) => m.fullName.trim()).length < 2) {
-    return <div style={card}><p style={{ color: 'var(--ink-2)' }}>Add your members on the <b>Charter</b> tab first — the minutes attendance sheet is built from your roster.</p></div>;
+    return <div className="s-card" style={card}><p style={{ color: 'var(--ink-2)' }}>Add your members on the <b>Charter</b> tab first — the minutes attendance sheet is built from your roster.</p></div>;
   }
 
   return (
@@ -605,7 +617,7 @@ function MinutesTab({ charter, meetings, setMeetings, canEdit, groupId }: { char
       {canEdit && (
         <button style={btnGold} onClick={newMeeting}>＋ Record a new meeting</button>
       )}
-      {meetings.length === 0 && <div style={card}><p style={{ color: 'var(--dim)' }}>No meetings recorded yet.</p></div>}
+      {meetings.length === 0 && <div className="s-card" style={card}><p style={{ color: 'var(--dim)' }}>No meetings recorded yet.</p></div>}
       {meetings.map((m) => {
         const t = attendanceTally(m.attendance);
         return (
@@ -631,6 +643,12 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string>();
   const comp = useMemo(() => meetingCompleteness(m), [m]);
+  // A group may switch agenda items or money off; the form then does not ask for them.
+  const mods = useContext(ModulesCtx);
+  const showAgenda = mods?.agendas ?? true;
+  const showMoney = mods?.money ?? true;
+  const nMoney = showAgenda ? 4 : 3;
+  const nAob = nMoney + (showMoney ? 1 : 0);
   const fin = useMemo(() => tableBankingSummary(m.tableBanking), [m.tableBanking]);
   const set = (patch: Partial<Meeting>) => setM({ ...m, ...patch });
   const setTB = (patch: Partial<Meeting['tableBanking']>) => set({ tableBanking: { ...m.tableBanking, ...patch } });
@@ -689,7 +707,7 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
           <button style={btnGhost} onClick={() => setPreview(null)}>← Back to form</button>
         </div>
         <MinutesDocument doc={preview.doc} charter={charter} />
-        <div className="no-print" style={card}>
+        <div className="no-print s-card" style={card}>
           <label style={label}>✎ Fine-tune wording before posting (official edit)</label>
           <textarea style={{ ...input, minHeight: 220, resize: 'vertical', fontFamily: 'var(--font-mono)', fontSize: 12.5, lineHeight: 1.6 }} value={preview.text} onChange={(e) => setPreview({ ...preview, text: e.target.value })} />
           <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 14, flexWrap: 'wrap' }}>
@@ -712,7 +730,7 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
 
       <NotesImport onApply={applyParsed} />
 
-      <div style={card}>
+      <div className="s-card" style={card}>
         <SectionTitle n={1} title="Meeting details" />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div><label style={label}>Date held{m.date ? ` · ${formatDate(m.date, { year: 'yyyy' })}` : ' (dd/mm/yyyy)'}</label><input type="date" style={input} value={m.date} max={todayIso()} onChange={(e) => set({ date: e.target.value, day: e.target.value ? weekdayOf(e.target.value) || m.day : m.day })} /></div>
@@ -724,7 +742,7 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
         </div>
       </div>
 
-      <div style={card}>
+      <div className="s-card" style={card}>
         <SectionTitle n={2} title="Attendance" />
         <p style={{ color: 'var(--dim)', fontSize: 13, marginTop: -8, marginBottom: 12 }}>Tap each member to cycle: Present → Apology → Absent.</p>
         <div style={{ display: 'grid', gap: 7 }}>
@@ -742,13 +760,16 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
         <div style={{ marginTop: 10, fontSize: 12.5, color: 'var(--dim)' }}>{(() => { const t = attendanceTally(m.attendance); return `${t.present} present · ${t.apology} apology · ${t.absent} absent · quorum ${t.quorumMet ? 'met' : 'not met'}`; })()}</div>
       </div>
 
-      <div style={card}>
+      {showAgenda && (
+      <div className="s-card" style={card}>
         <SectionTitle n={3} title="Agenda & resolutions" />
         <AgendaEditor agendas={m.agendas} onChange={(agendas) => set({ agendas })} />
       </div>
+      )}
 
-      <div style={card}>
-        <SectionTitle n={4} title="Table-banking / merry-go-round" />
+      {showMoney && (
+      <div className="s-card" style={card}>
+        <SectionTitle n={nMoney} title="Table-banking / merry-go-round" />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
           <div><label style={label}>Opening balance (KES)</label><input style={input} inputMode="decimal" value={fromCents(m.tableBanking.openingBalanceCents ?? 0)} onChange={(e) => setTB({ openingBalanceCents: toCents(e.target.value) })} /></div>
         </div>
@@ -784,13 +805,15 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
         </div>
       </div>
 
-      <div style={card}>
-        <SectionTitle n={5} title="Any other business (AOB)" />
+      )}
+
+      <div className="s-card" style={card}>
+        <SectionTitle n={nAob} title="Any other business (AOB)" />
         <AobEditor aobs={m.aobs} onChange={(aobs) => set({ aobs })} />
       </div>
 
-      <div style={card}>
-        <SectionTitle n={6} title="Adjournment" />
+      <div className="s-card" style={card}>
+        <SectionTitle n={nAob + 1} title="Adjournment" />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div><label style={label}>Adjourned at</label><input style={input} value={m.adjournmentTime} onChange={(e) => set({ adjournmentTime: e.target.value })} placeholder="6:00 PM" /></div>
           <div><label style={label}>Next meeting date{m.nextMeetingDate ? ` · ${formatDate(m.nextMeetingDate, { year: 'yyyy' })}` : ' (dd/mm/yyyy)'}</label><input type="date" style={input} value={m.nextMeetingDate ?? ''} min={m.date || undefined} onChange={(e) => set({ nextMeetingDate: e.target.value || undefined })} /></div>
@@ -892,16 +915,25 @@ function DocHeader({ charter, subtitle }: { charter: GroupCharter; subtitle: str
   );
 }
 
-function loadTesseract(): Promise<any> {
-  const w = window as any;
-  if (w.Tesseract) return Promise.resolve(w.Tesseract);
-  return new Promise((resolve, reject) => {
-    const el = document.createElement('script');
-    el.src = 'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js';
-    el.onload = () => resolve((window as any).Tesseract);
-    el.onerror = () => reject(new Error('offline'));
-    document.head.appendChild(el);
+/**
+ * Read paper minutes on the phone (owner standing rule 25/11/26): Tesseract.js 7
+ * with English AND Kiswahili, engine and models served from our own site
+ * (/ocr, copied at build by scripts/copy-ocr-assets.mjs). Before, v5 loaded
+ * from a third-party CDN and read English only. The photo never leaves the phone.
+ */
+async function readPhotoText(file: File): Promise<string> {
+  const { createWorker } = await import('tesseract.js');
+  const worker = await createWorker(['eng', 'swa'], 1, {
+    workerPath: '/ocr/worker.min.js',
+    corePath: '/ocr',
+    langPath: '/ocr/lang',
   });
+  try {
+    const { data } = await worker.recognize(file);
+    return (data.text ?? '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  } finally {
+    await worker.terminate();
+  }
 }
 
 function NotesImport({ onApply }: { onApply: (p: ReturnType<typeof parseImportedNotes>) => void }) {
@@ -918,9 +950,7 @@ function NotesImport({ onApply }: { onApply: (p: ReturnType<typeof parseImported
     if (kind === 'photo' || file.type.startsWith('image/')) {
       setBusy(true);
       try {
-        const T = await loadTesseract();
-        const res = await T.recognize(file, 'eng');
-        setText(((res?.data?.text as string) ?? '').trim());
+        setText(await readPhotoText(file));
         setMsg('Read from photo — please check the words below.');
       } catch {
         setMsg('Could not read the photo automatically. Type the key points below.');
@@ -939,7 +969,7 @@ function NotesImport({ onApply }: { onApply: (p: ReturnType<typeof parseImported
   }
 
   return (
-    <div className="no-print" style={card}>
+    <div className="no-print s-card" style={card}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <strong style={{ fontSize: 15 }}>Import written notes</strong>
         <button style={{ ...btnGhost, padding: '4px 10px', fontSize: 12 }} onClick={() => setOpen(false)}>Close</button>
@@ -954,7 +984,7 @@ function NotesImport({ onApply }: { onApply: (p: ReturnType<typeof parseImported
         </label>
         {fileName && <span style={{ fontSize: 12, color: 'var(--dim)', alignSelf: 'center' }}>📄 {fileName}</span>}
       </div>
-      {busy && <p style={{ fontSize: 12.5, color: 'var(--dim)', marginTop: 10 }}>Reading your notes… (first run downloads the reader)</p>}
+      {busy && <p style={{ fontSize: 12.5, color: 'var(--dim)', marginTop: 10 }}>Reading your notes in English or Kiswahili… (the first time takes a little longer)</p>}
       {msg && <p style={{ fontSize: 12.5, color: 'var(--dim)', marginTop: 10 }}>{msg}</p>}
       <textarea style={{ ...input, minHeight: 130, resize: 'vertical', marginTop: 12, fontFamily: 'var(--font-mono)', fontSize: 12.5 }} value={text} onChange={(e) => setText(e.target.value)}
         placeholder={'Present: Amina, Grace, Faith\nApologies: David\nAgenda 1: Purchase of chairs\nResolved that we buy 20 chairs'} />
@@ -1010,7 +1040,7 @@ function MinutesDocument({ doc, charter }: { doc: ProfessionalMinutes; charter: 
 function DocumentsTab({ charter, meetings }: { charter: GroupCharter; meetings: Meeting[] }) {
   const posted = meetings.filter((m) => m.status === 'POSTED');
   const [openNo, setOpenNo] = useState<number | null>(posted[0]?.meetingNo ?? null);
-  if (posted.length === 0) return <div style={card}><p style={{ color: 'var(--ink-2)' }}>No posted documents yet. Record a meeting, generate the minutes and post them — they will appear here, ready to download and present to a bank or SACCO.</p></div>;
+  if (posted.length === 0) return <div className="s-card" style={card}><p style={{ color: 'var(--ink-2)' }}>No posted documents yet. Record a meeting, generate the minutes and post them — they will appear here, ready to download and present to a bank or SACCO.</p></div>;
   const open = posted.find((m) => m.meetingNo === openNo) ?? posted[0]!;
   const doc = paraphraseMinutes(open, charter);
   return (
@@ -1054,7 +1084,7 @@ function StatementTab({ charter, meetings, canEdit, groupId, initialMonth }: { c
     if (r.ok) setPosted(true); else setPostErr(r.error ?? 'Could not post the statement.');
   }
 
-  if (months.length === 0) return <div style={card}><p style={{ color: 'var(--ink-2)' }}>Post the minutes of at least one dated meeting to generate a month-end statement (drafts are not counted).</p></div>;
+  if (months.length === 0) return <div className="s-card" style={card}><p style={{ color: 'var(--ink-2)' }}>Post the minutes of at least one dated meeting to generate a month-end statement (drafts are not counted).</p></div>;
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>

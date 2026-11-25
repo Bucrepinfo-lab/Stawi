@@ -9,6 +9,8 @@ import {
 } from '@stawi/core';
 import { receiptPath } from '@stawi/core';
 import { recordContributionAction } from '@/app/actions';
+import { COLLECT_WAYS, type CollectWay } from '@stawi/core';
+import { CollectTips } from '@/components/CollectTips';
 
 interface SeedMember extends MemberContribution {
   role: string;
@@ -44,13 +46,17 @@ export function TableBanking({
   const [amount, setAmount] = useState('5000');
   const [phone, setPhone] = useState(''); // payer's M-Pesa number (no sandbox default in production paths)
   const [stkBusy, setStkBusy] = useState(false);
+  // How the money came in, when the treasurer writes it by hand (owner 20/11/26).
+  const [way, setWay] = useState<CollectWay>('CASH');
+  const [ref, setRef] = useState('');
 
   const snapshot = useMemo(() => computeCapitalShares(members), [members]);
 
   async function record() {
     const cents = Math.round((parseFloat(amount) || 0) * 100);
     if (cents <= 0) return;
-    const res = await recordContributionAction({ groupId, membershipId: selected, amountCents: cents }).catch(() => null);
+    const res = await recordContributionAction({ groupId, membershipId: selected, amountCents: cents, way, reference: ref }).catch(() => null);
+    if (res?.ok) setRef('');
     if (!res?.ok) {
       setFlash(res?.error ?? 'Could not record the contribution — try again.');
       setTimeout(() => setFlash(null), 4000);
@@ -124,8 +130,21 @@ export function TableBanking({
           <span style={lab}>Amount (KES)</span>
           <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="numeric" className="mono" style={inp} />
         </label>
+        <label style={{ flex: '1 1 200px' }}>
+          <span style={lab}>How it was paid</span>
+          <select value={way} onChange={(e) => setWay(e.target.value as CollectWay)} style={inp}>
+            {COLLECT_WAYS.map((w) => (<option key={w.id} value={w.id}>{w.icon} {w.label.en}</option>))}
+          </select>
+        </label>
+        {way !== 'CASH' && (
+          <label style={{ flex: '1 1 160px' }}>
+            <span style={lab}>{way === 'BANK' ? 'Bank reference' : 'M-Pesa code'} (if you have it)</span>
+            <input value={ref} onChange={(e) => setRef(e.target.value.toUpperCase().slice(0, 30))} placeholder={way === 'BANK' ? 'FT-…' : 'SKL4AB12CD'} className="mono" style={inp} autoCapitalize="characters" />
+          </label>
+        )}
         <button onClick={record} style={btnGold}>＋ Record contribution</button>
       </div>
+      <CollectTips />
 
       <div style={{ marginTop: 12, background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 'var(--radius-sm)', padding: 16, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end' }}>
         <label style={{ flex: '1 1 180px' }}>

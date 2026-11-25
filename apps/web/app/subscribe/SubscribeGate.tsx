@@ -1,7 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { PLAN_ORDER, getPlan, quoteGroup, formatPrice, YEAR_PLAN_MONTHS_PAID, SMALL_GROUP_MAX_MEMBERS, type PlanTier, type BillingPeriod } from '@stawi/core';
+import { PLAN_ORDER, PER_MEMBER_PRICES, getPlan, quoteGroup, formatPrice, YEAR_PLAN_MONTHS_PAID, SMALL_GROUP_MAX_MEMBERS, type PlanTier, type BillingPeriod } from '@stawi/core';
+
+/**
+ * Where the price is per member (Kenya, owner 20/11/26) the size tiers mean
+ * nothing, so the page shows one group plan and Enterprise. Display only.
+ */
+const PER_MEMBER_FEATURES = [
+  'Any number of members',
+  'Table banking, minutes and papers',
+  'Money statement by day, week and month',
+  'M-Pesa receipts and group messages',
+  'Business matching and books',
+];
 
 type PaddleJs = {
   Environment: { set: (environment: string) => void };
@@ -37,7 +49,7 @@ function loadPaddle(card: CardCheckout): Promise<PaddleJs> {
 }
 
 
-type LocalGroup = { id: string; name: string; members: number; method: string };
+type LocalGroup = { id: string; name: string; members: number; method: string; monthlyCents?: number; currency?: string; perMember?: boolean };
 export function SubscribeGate() {
   const [country, setCountry] = useState('KE');
   const [selected, setSelected] = useState<PlanTier>('STARTER');
@@ -66,7 +78,12 @@ export function SubscribeGate() {
     };
   }, []);
 
-  const localMethod = localGroups.find((g) => g.id === groupId)?.method ?? localGroups[0]?.method ?? '';
+  const localGroup = localGroups.find((g) => g.id === groupId) ?? localGroups[0];
+  const localMethod = localGroup?.method ?? '';
+  // The group's own price, from the server (per member where that applies).
+  const localPrice = localGroup?.monthlyCents && localGroup.currency
+    ? formatPrice(localGroup.monthlyCents * (period === 'YEAR' ? YEAR_PLAN_MONTHS_PAID : 1), localGroup.currency)
+    : '';
 
   async function payLocally() {
     if (!accepted || !groupId) return;
@@ -107,14 +124,25 @@ export function SubscribeGate() {
     return quoteGroup({ country, members: tier === 'FREE' ? SMALL_GROUP_MAX_MEMBERS : SMALL_GROUP_MAX_MEMBERS + 1, period });
   }
 
+  const perMemberPrices = PER_MEMBER_PRICES[country];
+  function perMemberLabel(cents: number): string {
+    return `${formatPrice(period === 'YEAR' ? cents * YEAR_PLAN_MONTHS_PAID : cents, quoteFor('STARTER').currency)} a member${period === 'YEAR' ? '/yr' : '/mo'}`;
+  }
+
   function priceLabel(tier: PlanTier): string {
     const p = getPlan(tier);
     if (p.billing === 'CUSTOM') return 'Custom';
     const q = quoteFor(tier);
+    // Per member (Kenya, owner 20/11/26): the price follows the group's size.
+    if (q.perMember && perMemberPrices) return perMemberLabel(perMemberPrices.full.perMemberCents);
     return `${formatPrice(q.amountCents, q.currency)}${period === 'YEAR' ? '/yr' : '/mo'}`;
   }
 
   const sample = quoteFor('STARTER');
+  const shownTiers: PlanTier[] = sample.perMember ? ['STARTER', 'ENTERPRISE'] : PLAN_ORDER;
+  useEffect(() => {
+    if (!shownTiers.includes(selected)) setSelected('STARTER');
+  }, [shownTiers, selected]);
 
   async function activate() {
     if (!accepted) return;
@@ -142,7 +170,9 @@ export function SubscribeGate() {
         return;
       }
       setDone(
-        data.note
+        data.note && sample.perMember
+          ? `${p.name} selected. ${data.note}`
+          : data.note
           ? `${p.name} selected. ${data.note} (Once a payment provider is connected, you'll be sent to secure checkout — first month free.)`
           : `${p.name} plan started — first month free.`,
       );
@@ -170,25 +200,30 @@ export function SubscribeGate() {
         ))}
       </div>
       <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: '0 0 14px', maxWidth: 640 }}>
-        Priced per group. Groups of {SMALL_GROUP_MAX_MEMBERS} members or fewer pay the small-group price. Groups that join
-        in our first 12 months keep this founding price for as long as they stay subscribed.
+        {sample.perMember
+          ? <>Priced by the size of the group: {formatPrice(perMemberPrices?.full.perMemberCents ?? 0, sample.currency)} a member a month, at least {formatPrice(perMemberPrices?.full.floorCents ?? 0, sample.currency)} and never more than {formatPrice(perMemberPrices?.full.ceilingCents ?? 0, sample.currency)} a group. A group that uses meetings and minutes only pays half. A year paid ahead costs {YEAR_PLAN_MONTHS_PAID} months. </>
+          : <>Priced per group. Groups of {SMALL_GROUP_MAX_MEMBERS} members or fewer pay the small-group price. </>}
+        Groups that join in our first 12 months keep this founding price for as long as they stay subscribed.
         {sample.approved ? '' : ' Prices for this country are indicative until confirmed.'}
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px,1fr))', gap: 14 }}>
-        {PLAN_ORDER.map((tier) => {
+        {shownTiers.map((tier) => {
           const p = getPlan(tier);
           const on = selected === tier;
+          const oneGroupPlan = sample.perMember && tier === 'STARTER';
+          const features = oneGroupPlan ? PER_MEMBER_FEATURES : p.features;
           return (
             <button key={tier} onClick={() => setSelected(tier)} style={{ textAlign: 'left', background: 'var(--paper)', border: `2px solid ${on ? 'var(--forest)' : 'var(--line)'}`, borderRadius: 'var(--radius)', padding: 18, cursor: 'pointer', fontFamily: 'inherit', boxShadow: on ? 'var(--shadow)' : 'none' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--ink)' }}>{p.name}</span>
+                <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--ink)' }}>{oneGroupPlan ? 'Your group' : p.name}</span>
                 {on && <span style={{ color: 'var(--forest)', fontWeight: 700 }}>✓</span>}
               </div>
               <div className="mono" style={{ fontSize: 20, fontWeight: 600, color: 'var(--forest-deep)', marginTop: 6 }}>{priceLabel(tier)}</div>
               {p.trialDays > 0 && p.billing === 'PER_GROUP' ? <div style={{ fontSize: 11.5, color: 'var(--gold-deep)', fontWeight: 700, marginTop: 2 }}>First month free</div> : <div style={{ height: 16 }} />}
+              {oneGroupPlan && perMemberPrices && <div style={{ fontSize: 12.5, color: 'var(--ink-2)', marginTop: 4 }}>Meetings and minutes only: {perMemberLabel(perMemberPrices.meetingsOnly.perMemberCents)}</div>}
               <ul style={{ marginTop: 10, paddingLeft: 16, fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.6 }}>
-                {p.features.map((f) => <li key={f}>{f}</li>)}
+                {features.map((f) => <li key={f}>{f}</li>)}
               </ul>
             </button>
           );
@@ -215,15 +250,15 @@ export function SubscribeGate() {
             </label>
           )}
           <button onClick={() => void payLocally()} disabled={!accepted || busy || !groupId} style={{ padding: '14px 26px', borderRadius: 12, border: 'none', background: accepted && !busy ? 'var(--forest)' : 'var(--bone-2)', color: accepted && !busy ? 'var(--paper)' : 'var(--dim)', fontWeight: 700, fontSize: 15, cursor: accepted && !busy ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
-            {busy ? 'Starting the payment…' : `Pay by ${localMethod}`}
+            {busy ? 'Starting the payment…' : localPrice ? `Pay ${localPrice} by ${localMethod}` : `Pay by ${localMethod}`}
           </button>
-          <span style={{ fontSize: 12.5, color: 'var(--ink-2)' }}>You approve it yourself, on your own phone or your bank's page. Or pay by card below.</span>
+          <span style={{ fontSize: 12.5, color: 'var(--ink-2)' }}>You approve it yourself, on your own phone or your bank's page.{sample.perMember ? '' : ' Or pay by card below.'}</span>
         </div>
       )}
 
-      <button onClick={activate} disabled={!accepted || busy} style={{ marginTop: 18, padding: '14px 26px', borderRadius: 12, border: 'none', background: accepted && !busy ? 'var(--gold)' : 'var(--bone-2)', color: accepted && !busy ? 'var(--forest-deep)' : 'var(--dim)', fontWeight: 700, fontSize: 15, cursor: accepted && !busy ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
+      {!(sample.perMember && localGroups.length > 0) && <button onClick={activate} disabled={!accepted || busy} style={{ marginTop: 18, padding: '14px 26px', borderRadius: 12, border: 'none', background: accepted && !busy ? 'var(--gold)' : 'var(--bone-2)', color: accepted && !busy ? 'var(--forest-deep)' : 'var(--dim)', fontWeight: 700, fontSize: 15, cursor: accepted && !busy ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
         {busy ? 'Opening secure checkout…' : getPlan(selected).billing !== 'PER_GROUP' ? 'Contact sales' : localGroups.length > 0 ? 'Pay by card' : 'Start free month'}
-      </button>
+      </button>}
 
       {done && (
         <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 12, background: 'rgba(47,125,82,.08)', border: '1px solid var(--good)', color: 'var(--good)', fontWeight: 600, fontSize: 14 }}>

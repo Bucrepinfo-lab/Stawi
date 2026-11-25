@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { parseStkCallback, notifyPaymentConfirmed, formatMoney, callbackTokenMatches } from '@stawi/core';
-import { sendSms } from '@/lib/notify';
+import { parseStkCallback, notifyPaymentConfirmed, callbackTokenMatches } from '@stawi/core';
 import { dbEnabled } from '@/lib/data';
 
 export const runtime = 'nodejs';
@@ -50,15 +49,9 @@ export async function POST(req: Request) {
         await confirmContribution(prisma, result.checkoutRequestId, result.mpesaReceipt ?? '');
       }
 
-      // Acknowledge to the payer by SMS (best-effort, no-op without AT creds).
+      // No SMS from Stawi (owner 20/11/26): M-Pesa itself texts the payer its
+      // confirmation, and the receipt shows in the app.
       const note = notifyPaymentConfirmed('You', (result.amount ?? 0) * 100, result.mpesaReceipt);
-      if (result.phone) {
-        await sendSms(
-          result.phone,
-          `Stawi: payment of KES ${formatMoney((result.amount ?? 0) * 100)} received. Ref ${result.mpesaReceipt ?? '-'}. Asante!`,
-          'transactional',
-        );
-      }
       console.info('[mpesa] confirmed', result.checkoutRequestId, note.title);
     } else {
       console.warn('[mpesa] failed', result.checkoutRequestId, result.resultDesc);

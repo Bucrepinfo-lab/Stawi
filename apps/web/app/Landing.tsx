@@ -3,6 +3,11 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { FAILURE_GAPS } from '@stawi/core';
+import { ValueBanners } from '@/components/ValueBanners';
+import { ShareBar } from '@/components/ShareBar';
+import { OpenDoor } from '@/components/OpenDoor';
+import { CountdownBadge } from '@/components/CountdownBadge';
+import { track } from '@/components/track';
 
 type Lang = 'en' | 'sw' | 'fr' | 'es' | 'pt' | 'ar' | 'zh' | 'hi' | 'de' | 'ru';
 
@@ -302,7 +307,7 @@ function LogoMark() {
   );
 }
 
-export function Landing({ saccoPlus }: { saccoPlus: boolean }) {
+export function Landing({ saccoPlus, foundingDays = null }: { saccoPlus: boolean; foundingDays?: number | null }) {
   const [lang, setLang] = useState<Lang>('en');
   const [dark, setDark] = useState(false);
   const [valOpen, setValOpen] = useState<number | null>(null);
@@ -409,6 +414,15 @@ export function Landing({ saccoPlus }: { saccoPlus: boolean }) {
         </div>
       </section>
 
+      {/* Problems we solve: the pain, the proof, what Stawi does (owner 20/11/26) */}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span className="count-badge">🎁 {lang === 'sw' ? 'Mwezi wa kwanza ni bure' : 'First month free'}</span>
+        <CountdownBadge days={foundingDays} label={lang === 'sw' ? 'siku zimebaki kujiunga kwa bei ya waanzilishi' : 'days left to join at the founding price'} />
+      </div>
+      <ValueBanners pillars={[1, 2, 3, 4]} saccoPlus={saccoPlus} lang={lang} />
+      <OpenDoor lang={lang === 'sw' ? 'sw' : 'en'} savingsCredit={saccoPlus} />
+      <ShareBar lang={lang} />
+
       {/* Vision · Mission · Values */}
       <section style={{ padding: '20px 0', display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
         <div style={{ background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 16, padding: 20 }}>
@@ -456,7 +470,9 @@ export function Landing({ saccoPlus }: { saccoPlus: boolean }) {
         <p style={{ fontSize: 12, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700 }}>{t.nicheKicker}</p>
         <h2 className="display" style={{ fontWeight: 600, fontSize: 'clamp(24px,3.5vw,36px)', marginTop: 8, maxWidth: 720 }}>{t.nicheH}</h2>
         <p style={{ marginTop: 10, color: 'var(--ink-2)', maxWidth: 680, fontSize: 15 }}>{t.nicheP}</p>
-        <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', marginTop: 20 }}>
+        <details style={{ marginTop: 16 }} onToggle={(e) => { if ((e.currentTarget as HTMLDetailsElement).open) track('open', 'landing-failure-gaps'); }}>
+          <summary style={{ cursor: 'pointer', fontWeight: 800, color: 'var(--forest-deep)', minHeight: 44, display: 'flex', alignItems: 'center' }}>{lang === 'sw' ? 'Ona zote' : 'See all'} ({gaps.length}) ⌄</summary>
+        <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', marginTop: 12 }}>
           {gaps.map((g, i) => (
             <div key={g.id} style={{ background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 14, padding: 16 }}>
               <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--gold-deep)' }}>{String(i + 1).padStart(2, '0')}</span>
@@ -465,6 +481,7 @@ export function Landing({ saccoPlus }: { saccoPlus: boolean }) {
             </div>
           ))}
         </div>
+        </details>
         {saccoPlus && (
           <Link href="/sacco" style={{ display: 'inline-block', marginTop: 18, fontWeight: 800, color: 'var(--forest-deep)' }}>{t.seeEngine}</Link>
         )}
@@ -472,7 +489,7 @@ export function Landing({ saccoPlus }: { saccoPlus: boolean }) {
 
       <footer style={{ marginTop: 60, paddingTop: 24, borderTop: '1px solid var(--line)', color: 'var(--faint)', fontSize: 13, display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
         <span className="display" style={{ color: 'var(--forest-deep)', fontWeight: 600 }}>Stawi</span>
-        <span>Save · Grow · Thrive — multi-tenant SaaS</span>
+        <span>Save · Grow · Thrive — for every group and business</span>
         <Link href="/terms" style={{ color: 'var(--faint)' }}>Terms</Link>
         <Link href="/privacy" style={{ color: 'var(--faint)' }}>Privacy</Link>
         <Link href="/delete-account" style={{ color: 'var(--faint)' }}>Delete account</Link>

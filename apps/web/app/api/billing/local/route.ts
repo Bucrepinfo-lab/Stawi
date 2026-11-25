@@ -13,7 +13,7 @@ import {
   subscriptionRails,
   type PlanTier,
 } from '@stawi/core';
-import { getSupabaseUser, getUserId, getUserPhone } from '@/lib/auth';
+import { getLoginPhone, getSupabaseUser, getUserId, getUserPhone } from '@/lib/auth';
 import { groupRoleFor } from '@/lib/group-access';
 import { initiateStkPush, darajaConfig, MpesaConfigError } from '@/lib/mpesa';
 import { pawapayDeposit, pawapayOn, paystackInitialize, paystackOn } from '@/lib/local-providers';
@@ -70,10 +70,10 @@ export async function GET() {
   const key = phone ? phone.replace(/\D/g, '').slice(-9) : '';
   const rows = await prisma.membership.findMany({
     where: { OR: [{ clerkUserId: userId }, ...(key.length === 9 ? [{ phone: { endsWith: key } }] : [])] },
-    select: { group: { select: { id: true, name: true, countryCode: true, _count: { select: { members: true } } } } },
+    select: { group: { select: { id: true, name: true, countryCode: true, type: true, modules: true, _count: { select: { members: true } } } } },
   });
   const seen = new Set<string>();
-  const groups: Array<{ id: string; name: string; members: number; method: string }> = [];
+  const groups: Array<{ id: string; name: string; members: number; method: string; monthlyCents: number; currency: string; perMember: boolean }> = [];
   for (const { group } of rows) {
     if (seen.has(group.id)) continue;
     seen.add(group.id);
@@ -81,7 +81,10 @@ export async function GET() {
     if (!local) continue;
     const role = await groupRoleFor(group.id, { userId, phone });
     if (role && PLAN_PAYER_ROLES.has(role)) {
-      groups.push({ id: group.id, name: group.name, members: group._count.members, method: local.label });
+      const { resolveModules } = await import('@stawi/core');
+      const mods = resolveModules(group.modules, { groupType: group.type });
+      const q = quoteGroup({ country: group.countryCode, members: group._count.members, env: process.env, meetingsOnly: mods.meetings && !mods.money });
+      groups.push({ id: group.id, name: group.name, members: group._count.members, method: local.label, monthlyCents: q.monthlyCents, currency: q.currency, perMember: q.perMember });
     }
   }
   return NextResponse.json({ groups });
@@ -127,11 +130,15 @@ export async function POST(req: Request) {
   const { prisma, createPlanPayment } = await import('@stawi/db');
   const group = await prisma.group.findUnique({
     where: { id: groupId },
-    select: { countryCode: true, _count: { select: { members: true } } },
+    select: { countryCode: true, type: true, modules: true, _count: { select: { members: true } } },
   });
   if (!group) return NextResponse.json({ error: 'Group not found.' }, { status: 404 });
+  // A group using meetings and minutes only pays half where prices are per member (owner 20/11/26).
+  const { resolveModules } = await import('@stawi/core');
+  const mods = resolveModules(group.modules, { groupType: group.type });
+  const meetingsOnly = mods.meetings && !mods.money;
   const members = group._count.members;
-  if (tier === 'FREE' && members > SMALL_GROUP_MAX_MEMBERS) {
+  if (tier === 'FREE' && members > SMALL_GROUP_MAX_MEMBERS && !quoteGroup({ country: group.countryCode, members }).perMember) {
     return NextResponse.json(
       { error: `The small-group plan is for groups of ${SMALL_GROUP_MAX_MEMBERS} members or fewer.` },
       { status: 400 },
@@ -139,7 +146,7 @@ export async function POST(req: Request) {
   }
   const local = localRailFor(group.countryCode, members);
   if (!local) return NextResponse.json({ error: 'Pay by card for now; local payments for your country open soon.' }, { status: 400 });
-  const quote = quoteGroup({ country: group.countryCode, members, period, env: process.env });
+  const quote = quoteGroup({ country: group.countryCode, members, period, env: process.env, meetingsOnly });
   if (quote.currency !== local.currency || quote.amountCents < 100) {
     return NextResponse.json({ error: 'This price cannot be charged locally.' }, { status: 400 });
   }
@@ -147,9 +154,11 @@ export async function POST(req: Request) {
 
   try {
     if (local.rail === 'MPESA') {
-      if (!phone) return NextResponse.json({ error: 'Sign in with your M-Pesa phone number first.' }, { status: 400 });
+      // The prompt goes to the phone they sign in with; they approve it on that phone.
+      const payer = phone ?? (await getLoginPhone().catch(() => null));
+      if (!payer) return NextResponse.json({ error: 'Sign in with your M-Pesa phone number first.' }, { status: 400 });
       if (quote.amountCents % 100 !== 0) return NextResponse.json({ error: 'This price cannot be charged by M-Pesa.' }, { status: 400 });
-      const stk = await initiateStkPush({ amountCents: quote.amountCents, payerPhone: phone, accountReference: 'Stawi plan', description });
+      const stk = await initiateStkPush({ amountCents: quote.amountCents, payerPhone: payer, accountReference: 'Stawi plan', description });
       await createPlanPayment(prisma, {
         groupId, checkoutRequestId: stk.CheckoutRequestID, tier, period, amountCents: quote.amountCents,
         requestedByUserId: userId, provider: 'mpesa', currency: 'KES',
@@ -160,8 +169,9 @@ export async function POST(req: Request) {
     const reference = `stawi-${crypto.randomUUID()}`;
     const amount = quote.amountCents / 100;
     if (local.rail === 'MOBILE_MONEY') {
-      if (!phone) return NextResponse.json({ error: 'Sign in with your mobile money phone number first.' }, { status: 400 });
-      const res = await pawapayDeposit({ env: process.env, amount, currency: quote.currency, phone, message: 'Stawi plan', reference });
+      const payer = phone ?? (await getLoginPhone().catch(() => null));
+      if (!payer) return NextResponse.json({ error: 'Sign in with your mobile money phone number first.' }, { status: 400 });
+      const res = await pawapayDeposit({ env: process.env, amount, currency: quote.currency, phone: payer, message: 'Stawi plan', reference });
       if (!res.ok) {
         const reason = res.reason === 'no_wallet' ? 'That phone number has no mobile money wallet we can reach.' : 'Mobile money did not take the request. Try again in a minute.';
         return NextResponse.json({ error: reason }, { status: 502 });

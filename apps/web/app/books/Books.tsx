@@ -205,7 +205,7 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
         ))}
       </div>
 
-      <div style={card}>
+      <div className="s-card" style={card}>
         <h2 className="display" style={{ fontWeight: 600, fontSize: 20, textTransform: 'capitalize' }}>{period} profit &amp; loss</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px,1fr))', gap: 12, marginTop: 14 }}>
           <Stat label="Sales" value={pnl.salesCents} />
@@ -244,7 +244,7 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
       </div>
       )}
 
-      <div style={card}>
+      <div className="s-card" style={card}>
         <h2 className="display" style={{ fontWeight: 600, fontSize: 20 }}>Auto-calculated levies</h2>
         <p style={{ color: 'var(--dim)', fontSize: 13, marginTop: 4 }}>On {period} sales of KES {formatMoney(pnl.salesCents)}</p>
         {taxes.length === 0 ? (
@@ -266,7 +266,7 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
         )}
       </div>
 
-      <div style={card}>
+      <div className="s-card" style={card}>
         <h2 className="display" style={{ fontWeight: 600, fontSize: 20 }}>Stock movement</h2>
         <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, fontSize: 13.5 }}>
           <thead>
@@ -335,7 +335,7 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
         )}
       </div>
 
-      <div style={card}>
+      <div className="s-card" style={card}>
         <h2 className="display" style={{ fontWeight: 600, fontSize: 20 }}>Financial suggestions</h2>
         <ul style={{ marginTop: 10, paddingLeft: 18, color: 'var(--ink-2)', fontSize: 14, lineHeight: 1.7 }}>
           {tips.map((t, i) => <li key={i}>{t}</li>)}

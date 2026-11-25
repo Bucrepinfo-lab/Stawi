@@ -104,6 +104,8 @@ export async function recordContribution(
     confirmed?: boolean;
     recordedByClerkUserId?: string;
     checkoutRequestId?: string;
+    /** M-Pesa code or bank reference written in by hand. */
+    mpesaRef?: string;
     tenantId?: string;
   },
 ): Promise<{ id: string }> {
@@ -118,6 +120,7 @@ export async function recordContribution(
       status: input.confirmed ? 'CONFIRMED' : 'PENDING',
       recordedByClerkUserId: input.recordedByClerkUserId,
       checkoutRequestId: input.checkoutRequestId,
+      mpesaRef: input.mpesaRef,
     },
     select: { id: true },
   });
@@ -894,13 +897,58 @@ export async function getAuthPin(prisma: PrismaClient, userId: string) {
   return prisma.authPin.findUnique({ where: { userId } });
 }
 
-/** Set (or reset after a verified SMS code) the user's PIN hash; clears lockout. */
-export async function setAuthPin(prisma: PrismaClient, userId: string, pinHash: string) {
+/** Set (or reset after a joining code) the user's PIN hash; clears lockout. */
+export async function setAuthPin(prisma: PrismaClient, userId: string, pinHash: string, phone?: string | null) {
   return prisma.authPin.upsert({
     where: { userId },
-    create: { userId, pinHash },
-    update: { pinHash, failedCount: 0, lockedAt: null },
+    create: { userId, pinHash, phone: phone ?? null },
+    update: { pinHash, failedCount: 0, lockedAt: null, ...(phone ? { phone } : {}) },
   });
+}
+
+/** The PIN row for a sign-in phone (E.164), newest first if a number was reused. */
+export async function getAuthPinByPhone(prisma: PrismaClient, phone: string) {
+  return prisma.authPin.findFirst({ where: { phone }, orderBy: { updatedAt: 'desc' } });
+}
+
+/** Remember which phone an existing PIN signs in with (rows from before 20/11/26 have none). */
+export async function setAuthPinPhone(prisma: PrismaClient, userId: string, phone: string) {
+  await prisma.authPin.updateMany({ where: { userId }, data: { phone } });
+}
+
+// ───────────────────────── Joining codes (no SMS, 20/11/26) ─────────────────
+
+/** Is this phone (last 9 digits) on the group's member list? Returns the row. */
+export async function rosterRowForPhone(prisma: PrismaClient, groupId: string, key: string) {
+  if (key.length !== 9) return null;
+  return prisma.membership.findFirst({ where: { groupId, phone: { endsWith: key } }, select: { id: true, fullName: true, phone: true } });
+}
+
+/** Is this phone on ANY group's member list? */
+export async function phoneOnAnyRoster(prisma: PrismaClient, key: string): Promise<boolean> {
+  if (key.length !== 9) return false;
+  return (await prisma.membership.count({ where: { phone: { endsWith: key } } })) > 0;
+}
+
+/** Give a new code: any earlier unused code for the same group + phone stops working. */
+export async function createJoinCode(
+  prisma: PrismaClient,
+  input: { groupId: string; phoneKey: string; codeHash: string; expiresAt: Date; issuedBy: string },
+) {
+  await prisma.joinCode.updateMany({ where: { groupId: input.groupId, phoneKey: input.phoneKey, usedAt: null }, data: { usedAt: new Date() } });
+  return prisma.joinCode.create({ data: input });
+}
+
+export async function openJoinCodes(prisma: PrismaClient, phoneKey: string, now: Date) {
+  return prisma.joinCode.findMany({ where: { phoneKey, usedAt: null, expiresAt: { gt: now } } });
+}
+
+export async function addJoinCodeTry(prisma: PrismaClient, id: string) {
+  await prisma.joinCode.update({ where: { id }, data: { tries: { increment: 1 } } }).catch(() => undefined);
+}
+
+export async function useJoinCode(prisma: PrismaClient, id: string) {
+  await prisma.joinCode.update({ where: { id }, data: { usedAt: new Date() } });
 }
 
 export async function savePinAttempt(prisma: PrismaClient, userId: string, state: { failedCount: number; lockedAt: Date | null }) {

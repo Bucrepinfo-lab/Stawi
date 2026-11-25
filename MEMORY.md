@@ -1,5 +1,142 @@
 # Stawi — session memory / start-here
 
+## 25/11/26 — PRD v3 restructure merged (owner: "Two draft pull requests sitting idle fix them appropriately")
+- PR #28 is brought up to date with main and merged as the plan of record. Nothing new is built. The open decisions in `docs/PRD-V3-RESTRUCTURE.md` §7 and `docs/PRICING-PROPOSAL-2026-11.md` still need the owner's yes, and prices in code are unchanged.
+
+## 25/11/26 — Paper minutes read in English and Kiswahili, self-hosted (owner standing rule: best OCR and photo tools, all projects)
+- "Import written notes" (GroupCockpit) used Tesseract.js 5.1.0 from a third-party CDN, English only. It now uses Tesseract.js 7 with English + Kiswahili compact models, served from our own site (/ocr, copied at build by `apps/web/scripts/copy-ocr-assets.mjs`, git-ignored). The photo never leaves the phone; members check the words before "Use these notes". The middleware skips .gz/.wasm files.
+- Handwriting: Tesseract reads printed text well and neat handwriting fairly; messy handwriting still needs typing. The text box stays editable for that reason.
+
+## 24/11/26 — Drawn tab pictures replace emoji (owner: "go ahead and implement your recommendations"; standing rule 19)
+- `apps/web/components/TabPictures.tsx`: five of Stawi's own drawings on a light tile, brand palette only: My group (members round the pot, a coin inside), Ideas (seedling growing from a coin), Books (open exercise book and coins), Messages (speech bubble), Share (megaphone). `AppTabs.tsx` uses them; words stay underneath in English/Kiswahili. Same on every phone, offline, light and dark. Current tab: gold ring round the tile, bold label, gentle pop.
+- Why (researched 24/11/26): emoji are drawn differently per phone maker and Android version, and Android 11 and lower cannot update the emoji font (about 10% of Kenyan Android phones are on 11, StatCounter mid-2026); emoji are read differently by age and culture (PLOS One 2024); hand-drawn, semi-abstract pictures were best understood by people who read little (Medhi et al., Microsoft Research India); Material guidance pairs icons with labels.
+- New standing rule 19 in `docs/STANDING_RULES.md` (all products). Member test script: `docs/PICTURE-TEST.md`; picture sheet: `design/stawi-tab-pictures.svg`. Guard: `packages/core/test/tab-pictures.test.ts` (no emoji in the tab bar, every picture drawn, words kept, brand colours only).
+- Same day, owner: "Fix them also" (emoji inside pages). `apps/web/components/Pictures.tsx` is now the picture library: 34 drawings (the five tab pictures plus note, agenda, badge, moneybag, handshake, bank, eye, office, certificate, mic, compass, hourglass, basket, box, receipt, purse, lock, scales, folder, envelope, link, clipboard, page, chart, growth, cash, shop, phone, pencil). The shared data in `@stawi/core` still names pictures by emoji (the phone app reads it), so `pictureFor` maps emoji to drawing and `<Pic icon>` falls back to the emoji if one is not drawn yet. Used in: module switches, value banners, "open door" needs, new-group start cards, the Share bar, the group record tabs (Charter, Minutes, Documents, Month-End, SACCO+), the documents list and the collection tips. Sheet: `design/stawi-pictures.svg`. The guard test also checks every picture the shared data names has a drawing.
+- Left as they are: arrows and ticks (ordinary text characters every phone draws); country flags; the collection-way dropdown (a dropdown cannot hold a drawing); emoji typed inside sentences and messages; the phone app (apps/mobile) still shows the emoji from the shared data.
+- NOT done yet: the member test itself (owner or a field official runs it; a picture under two in three right is redrawn; watch the lock, which research found some people read as "not allowed"); hold-to-hear the tab name (needs a Kiswahili voice on the phone; second step).
+## 24/11/26 — Builds install exactly the lockfile (owner: "Yes, go ahead")
+- `.github/workflows/ci.yml` and the Dockerfile deps stage now run `npm ci` (was `npm install`). Every build gets the packages in `package-lock.json`; a package.json change without a lockfile update now fails CI instead of silently resolving new versions. After changing any package.json, run `npm install` (npm 10.9.8 via packageManager) and commit the lockfile in the same change.
+- Checked before the switch: the Dockerfile's deps layout (root + four workspace manifests + lockfile + .npmrc) installs with `npm ci` under npm 10.8.2, the npm that ships with CI's Node 20.
+
+## 24/11/26 — package-lock.json synced with package.json (owner: "fix all these appropriately")
+- Regenerated from a clean clone with the repo's npm 10.9.8 (`npm install --package-lock-only`): 144 packages out (the Clerk tree; package.json had already moved to Supabase), 25 in (Supabase, async-storage, url-polyfill and their deps), 18 transitive consolidations; async-storage pinned to 1.23.1 as apps/mobile asks (Expo 51). Next, React, Prisma, TypeScript, Expo and React Native versions unchanged. `npm ci` now works; lint and tests (core 444, db 13) pass.
+- Not changed (deploy config, protected): CI (`ci.yml`) and the Dockerfile use `npm install`, which re-resolves on every build; proposed to the owner to switch both to `npm ci`.
+
+## 24/11/26 — Tabs and touch feel (owner: tabs and icons responsive and attractive)
+- `apps/web/app/globals.css` closing block, CSS only: no grey tap flash anywhere; the gold keyboard ring on every control (it was only on some); buttons and "Go" links press in slightly; value-banner pills gain a hover (pillar border, lift) and smooth colour change; banner and section tab strips snap, never wrap a label, and the banner strip fades at the right edge on phones; "Go" links deepen on hover; the bottom-tab picture pops gently when its tab becomes current; on a computer the tab pictures warm to gold on hover. Reduced motion still switches everything off.
+- Judgement call: the bottom tabs keep their emoji pictures (owner 20/11/26: pictures and plain words, for people who do not read menus); only their motion changed.
+- Local check: package-lock.json on main does not match apps/mobile (async-storage and Supabase packages added without a lock update), so `npm ci` fails; flagged, not changed here.
+
+## 24/11/26 — Supabase keep-alive (owner yes 24/11/26)
+- Supabase emailed (23/11) that the free project `stawi` was about to be paused for inactivity, which would stop sign-in. The database is Neon, so the daily `/api/cron` and Fly health checks never reach Supabase.
+- Activity made by hand on 24/11 at the owner's request (read-only `select now();` in the SQL editor). New `.github/workflows/supabase-keepalive.yml`: every third day at 08:17 Nairobi, two read-only requests (Auth health and Auth settings; the REST root refuses the anon key with 401, seen on the first run 24/11) with the existing `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` GitHub variables. Writes nothing; a failed run emails the owner. If Supabase warns again despite green runs, the next step is a read-only RPC.
+
+## 20/11/26 (19:00) — Sign-in reopened: secret fallback and owner bootstrap (fix forward)
+- Production had no `AUTH_DEVICE_SECRET`, so after #40 sign-in said "not set up". The secret now falls back to one derived from `SUPABASE_SERVICE_ROLE_KEY`; a session password that no longer matches is set again after the PIN/code check.
+- Accounts from before PINs have none: `OWNER_PHONES` + `OWNER_BOOTSTRAP_CODE` (Fly secrets) let the owner redeem a fixed code once, set a PIN, then give joining codes to others.
+- `SUPABASE_SEND_SMS_HOOK_SECRET` deleted from Fly (staged until this deploy).
+
+## 20/11/26 (18:40) — Sign-in without SMS: phone + PIN, joining codes (owner approved; awaiting merge)
+- Owner: no paid SMS codes (Africa's Talking is not global); phone + own PIN; officials give a
+  joining code the first time; no alerts or codes from Africa's Talking — the app's Messages instead.
+- Sign-in: phone + 4-digit PIN on any device (`/api/auth/pin/sign-in`). First time / forgotten /
+  locked: joining code from an official (`/api/groups/[id]/join-code`, `/api/auth/join`), 6 digits,
+  one group + phone, once, 48 h, 5 tries, keyed hash in new `JoinCode` table (RLS). Founders open an
+  account with phone + PIN (`/api/auth/start`); their phone stays unproven (no roster match by phone).
+- Removed: `/api/auth/otp/*`, `/api/auth/send-sms`, `lib/sms.ts`, `lib/notify.ts`, `toSmsRecipient`,
+  the M-Pesa receipt SMS, the Clerk mobile screen. Daily alerts post in group Messages.
+- Play reviewer: `PLAY_REVIEW_PHONE` + `PLAY_REVIEW_PIN`. Subscriptions already Daraja STK.
+- Owner/Chrome after merge: Fly secret `PLAY_REVIEW_PIN`; unset `AT_*`, `SUPABASE_SEND_SMS_HOOK_SECRET`,
+  `PLAY_REVIEW_CODE`; turn off the Supabase Send SMS hook; update Play App access text.
+- Docs: `docs/SIGN-IN.md`.
+
+## 20/11/26 (18:10) — Buttons and wording checked, unused code removed (awaiting owner merge)
+- Removed code nothing used: `components/sign-out-button.tsx` (sign-out lives in Account → Security),
+  `lib/paystack.ts` and `lib/flutterwave.ts` (Paystack runs through `lib/local-providers.ts`),
+  core `automation.ts` (mock eTIMS invoice, never on a screen) and `rotation.ts`, with their tests.
+- Live check of the public pages (landing, /subscribe, /terms, /privacy, /sign-in, /delete-account):
+  every link opens; signed-in links send to sign-in; /sacco stays 404 while SACCO+ is off.
+- /subscribe in Kenya showed three size tiers all at "KES 10 a member" with member caps that are
+  not enforced: now one "Your group" card (price, meetings-only price, plain features) plus Enterprise.
+  Display only; the checkout amount is unchanged. Enterprise features in plain words.
+- Share bar: when a phone refuses the clipboard, the link shows in a box to copy by hand.
+- Landing footer says "for every group and business" instead of "multi-tenant SaaS".
+- Signed-in screens still need a walk-through once the owner signs in to Stawi in Chrome.
+
+## 20/11/26 (16:45) — Owner approved the researched prices (Kenya)
+- Owner 16:20: "yes confirm the prices, i approve". Kenya groups: KES 10 a member a month, at least 50, at most 299 (year = 10 months); meetings-only groups half (5 a member, 30–149); business books free for a small shop (≤100 sales a month, one person), else KES 99 a month / 30 a week / 5 a day / 990 a year; a subscribed group's first business included. Other countries keep per-group prices until their per-member table is approved.
+- Code: `PER_MEMBER_PRICES`, `perMemberMonthlyCents`, `quoteGroup({ meetingsOnly })`, `BOOKS_PRICES`, `quoteBooks` in `group-pricing.ts` (tests). `/api/billing/local` charges each group's exact price (meetings-only read from `Group.modules`). Subscribe page shows the per-member rule and "Pay KES … by M-Pesa" for the group.
+- **Card in Kenya is held back:** Paddle has fixed prices (149/299), which would not match. Kenya pays by M-Pesa from the group's row; the card returns once a per-member card price is set up in Paddle (owner, Paddle dashboard). Nothing is charged on a guessed amount.
+- Books billing is priced but not yet charged (no books checkout yet). Terms page updated.
+
+## 20/11/26 (16:20) — Owner chose each group's own Till; by hand meanwhile; researched prices (awaiting owner)
+- Owner 15:53: Till is right; for groups that hesitate, a role-assigned person updates the figures by hand; encourage Pochi la Biashara or a Till kindly (papers are hard for many). Owner 15:53: "merge them" (#29–#36) — #29 merged d958a87; the rest merge one by one at green heads (`merge-stack.sh`, no force-push; each branch's tree is checked unchanged after bringing main in).
+- `packages/core/src/collect-ways.ts` (tests): four ways money comes in (cash, M-Pesa to our Till or Pochi, M-Pesa to an official's phone, bank), M-Pesa code check (10 letters and numbers; asked for, not forced), duplicate-code refusal, three kind tips with Safaricom sources.
+- `recordContributionAction` (Treasurer only, unchanged) now takes `way` and `reference`; `recordContribution` stores `mpesaRef`. Channel CASH / MPESA_C2B / BANK. `CollectTips` under the Treasurer's form.
+- Prices: `docs/PRICING-PROPOSAL-2026-11.md` (PR #28) now has competitor prices and a recommendation: groups KES 10/member (50–299); meetings-only half; books free small-shop plan then KES 99/month, 30/week, 5/day. Awaiting the owner's yes.
+
+## 20/11/26 (17:50) — Messages inside the app (awaiting owner merge)
+- Owner order: built-in messaging so people ask and answer without calls. "go on build" 15:38.
+- `packages/core/src/messages.ts` (tests): two places — whole group, and "Ask the officials" (asker + officials only); `checkMessage` (500 letters, safety screen), `canSeeMessage`, `threadForNewMessage`, `summariseThreads` (unanswered first), 8 a minute.
+- **Database (additive):** `GroupMessage` (group, channel, threadMemberId, senderMembershipId, body, createdAt) — in `rls.sql`'s group list.
+- `apps/web/lib/messages.ts`, `GET/POST /api/groups/:id/messages`, `/messages` page (12-second refresh), "Messages" main tab, `messages` switch in `modules.ts`. Privacy page updated.
+- Not done: person-to-person, unread counts, notifications, photos or voice, removing a message, an unanswered-question watch, mobile. See `docs/MESSAGES.md`.
+
+## 20/11/26 (17:20) — Owner said yes: one shared papers list for savings and credit; daily alerts by SMS (awaiting owner merge)
+- Owner 15:36: "yes, go ahead and fix all" to: merge #29–#33 in order; savings and credit reads the shared papers list; and the standing items (level 4 reaches every member; table and schedule for daily alerts). **The merges were blocked by the session's safety check and are still open** — the owner must merge, or allow it.
+- `activationEvidence` (`packages/core/src/sacco-activation.ts`) now returns the document house's "start savings and credit" purpose (`buildHouseFromFacts` + `houseFactsFromStatements`). Same seven ids, same readiness for every existing test; needs 3 sittings and 3 months.
+- Daily alerts: `packages/core/src/attention-notices.ts` (planner, tests), `apps/web/lib/attention-notices.ts`, job 4 in `/api/cron` (the existing 03:00 UTC run). **Database (additive):** `AttentionNotice` (group, matter key, level, member row id, sentAt) — in `rls.sql`'s group list. Officials only by SMS; no member's name in an SMS; 150 a run; `ATTENTION_SMS=off` stops them. SMS purpose is `transactional` (an alert about the person's own duty).
+- Level 4 (every member sees it in the app) confirmed by the owner.
+- **Still the owner's:** which price option, and where group contributions settle — "yes" did not pick between the options.
+
+## 20/11/26 (16:50) — Use only what you need: section switches, three ways to start, books with no group (awaiting owner merge)
+- Owner order: modules a group switches on and off (officials' posts, agenda items, money, ideas, books, savings and credit); open to everyone; warm, honest welcome for people who want one part; a business needs no group.
+- `packages/core/src/modules.ts` (tests): seven switches, `resolveModules` (saved choice over the default; agenda needs meetings; savings and credit only where the platform flag is on), three ways to start, `watchAllowed`, `groupTabsFor`, `booksOnly`, four welcome notes.
+- **Database (additive):** `Group.modules Json?`. Null = the default for the group's type. Applied by the release `db push`; no RLS change (Group is already covered).
+- **Access change:** `/groups/new` no longer turns away accounts without a tenant; anyone signed in may start up to three (`MAX_SELF_STARTED`). A BUSINESS start creates its `Business` row so the books open at once.
+- Web: `ModuleSwitches` ("Choose what you use", officials only, `saveModulesAction`), `OpenDoor` on the landing and start pages, `TabsHint` so the main tabs follow the group on screen, home screen and books page follow the switches, minutes form drops agenda or money sections, posts removed on the server for ordinary members when switched off.
+- `docs/USE-ONLY-WHAT-YOU-NEED.md`, `docs/BOOKS-FOR-ANY-BUSINESS.md` (audit: what the books have, eleven gaps in build order).
+- Not done: mobile app and `/api/mobile/*` do not read the switches; books gaps 1–11.
+
+## 20/11/26 (16:20) — One money statement by day, week and month, checked (awaiting owner merge)
+- Owner order: wherever a financial statement is needed, show it by day, week and month, harmonised and reconciled into one clear summary.
+- `packages/core/src/money-summary.ts` (tests): group table money (posted meetings only) and business books on one calendar; buckets by day, week (Monday) and month; totals; two checks — day/week/month totals agree, and each meeting opens with what the last one closed with (a blank or 0 opening is "not written", never a gap).
+- `GET /api/groups/:id/money` (members only; totals, no names). `MoneySummary` card, folded until opened, on the group and books pages: By day / By week / By month, Together / Group / Business. The papers pack gains the together table and the check lines.
+- Read-only; no change to `accounting.ts`, `statement.ts` or any money path. No database change.
+- Not done: opening and closing balance per period for the business (the books hold no opening cash figure); the country's own currency label (KES shown).
+
+## 20/11/26 (16:00) — One house, four rooms: papers written once, used in every section (awaiting owner merge)
+- Owner order: a group moving from group records to savings and credit, or into business, must not be sent back for documents Stawi already holds.
+- `packages/core/src/document-house.ts` (tests): twelve papers (nine from group records, three from business books) with state, count and dates; five purposes (register, bank account, start a business, show records to a bank or fund, start savings and credit — the last only when SACCO+ is on); `checkPurpose` says what is ready and how many more are needed.
+- `apps/web/lib/house.ts` + `GET /api/groups/:id/papers` (members only; no personal details). `DocumentHouse` card on the group, ideas and books pages. `/groups/:id/papers?for=` is the printable pack (officials only; no phone numbers).
+- Honest limit stated on screen: an outside office may still ask for signatures or a stamp on the printed copy.
+- Not done: SACCO+ activation still has its own checklist (`activationEvidence`, protected area) — proposed to read the shared one; a record of who opened a pack (needs a table); Kiswahili on the printed pack. No database change.
+
+## 20/11/26 (15:30) — A member pays their own contribution (built, switched OFF; awaiting owner decision and merge)
+- Owner order: a member finds a place to pay, taps Pay, and the M-Pesa request arrives; local way first, card second.
+- `packages/core/src/contribution-pay.ts` (tests), `GET/POST /api/contributions/pay` (member of the group only, own membership only, 90-second double-tap guard, PENDING contribution confirmed by the existing callback), `PayContribution` card on the dashboard (quick amounts KES 20–1,000, or type one; smallest KES 10).
+- **Off by default: `MEMBER_PAY_ENABLED=true` switches it on.** The request goes to `MPESA_SHORTCODE`; if that is Telpen's Paybill, Telpen would hold group savings (regulated). `docs/MEMBER-PAY.md` sets out three ways to settle (each group's own Till recommended) for the owner to choose.
+- Card is not offered for contributions (Paddle may not collect savings). Other countries wait for pawaPay's live account.
+- No database change.
+
+## 20/11/26 (15:00) — Flow and escalation, Telpen Edu standing orders adopted, decorated cards and tabs (awaiting owner merge)
+- Owner order: analyse all of Stawi, apply the escalation where it fits, reuse the Telpen Edu standing orders; good nav tabs; decorated cards in every section.
+- `packages/core/src/escalation.ts` (pure, 16 tests): seven watches (officials_missing, rules_missing, meeting_overdue, minutes_not_posted, contributions_not_recorded, member_behind, member_absent). Ladder: responsible official → Chairperson → all officials → every member; empty posts fall through. Member-named matters stop at the officials. Days counted on the country's own clock.
+- `apps/web/lib/attention.ts` filters on the server (viewer matched to the member list by signed-in phone; super admin sees all; demo mode shows the Chairperson's view). `AttentionCard` shows "Needs attention" on the group page; officials with nothing waiting see "All in order".
+- `docs/FLOW-ESCALATION-AUDIT.md`: section → who acts first → watch, gaps, and which Telpen Edu orders were adopted. `docs/STANDING_RULES.md` gains rules 13–18.
+- Design: `.s-card` (bead band in the pillar colour, soft wash, rising sun) on value banners and the cards of group, ideas, books, savings and admin screens; main tabs restyled (medallion on phones, pill on computers, bead line); group record tabs are now `.s-tabs` (44 px, scroll on small phones, proper tab roles).
+- Privacy page now names the anonymous counts (on the value-banners PR).
+- **Not done / owner decisions:** daily alerts by SMS or push need a small table and a schedule (protected); watches for month-end statement, daily sales and tax dates; a ladder for Books; confirm that level 4 may tell every member. No database change in this PR.
+- Local note: `npm ci` could not reach the registry from the sandbox; core tests ran through the esbuild runner, web typecheck is proven by CI.
+
+## 20/11/26 (afternoon) — Value banners, main tabs, sharing, countdown badges and engagement counts (awaiting owner merge)
+- Owner brief: sell the value, not the app; every section shows a pain, the proof and the solution; verifiable, no flattery; easy for non-readers; fast tabs; sharing tools; countdown badges; count clicks, views and shares.
+- `packages/core/src/value-props.ts`: 15 banners across the four pillars in English and Kiswahili. Each has a fact with a named source link and a `status`: `live` only where the tool exists today, `coming` for planned tools (voice minutes, buyer check, separate business purse, loan folder). Pillar 4 banners show only when SACCO+ is on. Tests enforce a source on every banner and no "guaranteed/best" wording.
+- `packages/core/src/engagement.ts`: event whitelist (view, open, cta, share, tab, sort, source) with safe keys, share links (`?via=whatsapp`, never a person), share text, countdown maths.
+- Web: `ValueBanners` (collapsible, tabs per pillar), `ShareBar` (device share, WhatsApp, SMS, copy), `CountdownBadge`, `AppTabs` (My group · Ideas · Books · Share: bottom on phones, top on computers). On the home page, dashboard, match, books, sacco and subscribe. The home page's long "why others failed" grid is now collapsed.
+- Counting: public `POST /api/track` (whitelisted, rate-limited, 512-byte cap) → `EngagementCount` (day, event, key, count). **No user, phone, group, tenant or IP is stored.** Admin page shows the last 7 days. Protected areas touched at the owner's request: one additive table and one public route in the middleware list.
+- Not done here: the privacy page does not yet mention these anonymous counts; AI enhancement (owner asked 14:42) is planned as its own PR on the existing opt-in adapter pattern.
+
 ## 20/11/26 (afternoon) — PRD v3 restructure drafted (awaiting owner approval)
 - Owner brief: serve informal, non-literate table-banking groups first; members type a few points or **speak** (owner confirmed voice) and Stawi writes formal minutes; group goals; per-member contribution tracker; decision toolkit for business ideas; survival layer for businesses; loan-readiness pack so lenders' documents come out in one tap; fill every failure gap of groups, businesses and SACCOs and copy what strong SACCOs do.
 - Research, gap analysis, 15-point MVP and build order in `docs/PRD-V3-RESTRUCTURE.md`; nothing built yet. Open owner decisions listed in its §7.
@@ -244,9 +381,8 @@ Expo app's **Supabase session JWT** (HS256, `SUPABASE_JWT_SECRET`) instead of Cl
   (`subscribedPillars`), so any saver/trader/business subscribes to any pillar directly.
 - **Pillar 3 business suite:** `business-activation.ts` (pre-packed accounting pack + owner
   metrics + supplier links) wired into `/books`; `pos.ts` (item **EAN-13 barcodes**, printable
-  receipts, CSV exports, acknowledgeable stock alerts, **M-Pesa/cash/card payment prompts**);
-  `automation.ts` (auto-reorder POs, SMS/WhatsApp e-receipts, **KRA eTIMS** e-invoices,
-  close-of-day **Z-report**). All in `/books`.
+  receipts, CSV exports, acknowledgeable stock alerts, **M-Pesa/cash/card payment prompts**). All in `/books`. (`automation.ts` was never wired
+  in and was removed 20/11/26.)
 - **Brand:** `design/stawi-logo.svg` + `BRAND.md` (vision/mission/values, tagline *Save · Grow · Thrive*).
   Reflected in landing, receipts (demo + app).
 - **Theme + language:** dark mode (`html.dark` vars in globals.css) + EN/SW/FR selector on the

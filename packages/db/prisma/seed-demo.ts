@@ -3,8 +3,8 @@
  * Run (from repo root, with DATABASE_URL and PLAY_REVIEW_PHONE available):
  *   npx tsx packages/db/prisma/seed-demo.ts
  * Adds PLAY_REVIEW_PHONE as TREASURER of the demo group ONLY (so the reviewer
- * can exercise contribution recording there; no rights in any other group). With PLAY_REVIEW_CODE also set on the server, that number signs in
- * with the fixed code (no SMS). Nothing about the reviewer is hard-coded.
+ * can exercise contribution recording there; no rights in any other group). With PLAY_REVIEW_PIN also set on the server, that number signs in
+ * with that fixed PIN on the phone + PIN screen (no SMS). Nothing about the reviewer is hard-coded.
  */
 import { existsSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";

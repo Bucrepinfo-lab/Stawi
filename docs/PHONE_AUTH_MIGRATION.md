@@ -1,5 +1,8 @@
 # Stawi — Phone-OTP Login (Clerk → Supabase)
 
+> **Superseded 20/11/26:** sign-in no longer sends SMS codes. See `docs/SIGN-IN.md`
+> (phone + PIN, joining codes from group officials). Kept for history.
+
 Web auth moved from Clerk to **Supabase phone-OTP**, with **Africa's Talking**
 delivering the OTP SMS. M-Pesa was already built (Daraja STK at `/api/mpesa/stk` +
 callback), so this migration is auth-only. The phone you sign in with is the same

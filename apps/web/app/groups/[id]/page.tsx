@@ -5,6 +5,14 @@ import { getCockpit } from '@/lib/cockpit';
 import { getViewerRole, dbEnabled } from '@/lib/data';
 import { myGroupRole, RECORD_EDITOR_ROLES } from '@/lib/group-access';
 import { saccoPlusEnabled } from '@/lib/features';
+import { AttentionCard } from '@/components/AttentionCard';
+import { groupAttention } from '@/lib/attention';
+import { DocumentHouse } from '@/components/DocumentHouse';
+import { MoneySummary } from '@/components/MoneySummary';
+import { ModuleSwitches } from '@/components/ModuleSwitches';
+import { TabsHint } from '@/components/TabsHint';
+import { getGroupModules } from '@/lib/modules';
+import { booksOnly, offeredModules } from '@stawi/core';
 
 export default async function GroupWorkspacePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; month?: string }> }) {
   const { id } = await params;
@@ -17,21 +25,39 @@ export default async function GroupWorkspacePage({ params, searchParams }: { par
   const canEdit = dbEnabled()
     ? viewer === 'SUPER_ADMIN' || (!!groupRole && RECORD_EDITOR_ROLES.has(groupRole))
     : viewer === 'OFFICIAL' || viewer === 'SUPER_ADMIN';
+  // Flow & escalation: only this viewer's own duties and what has climbed to them (decided here, on the server).
+  // Which sections this group uses (owner 20/11/26). Applied here, on the server.
+  const modules = await getGroupModules(id);
+  const attention = await groupAttention(cockpit, viewer, modules);
+  // Posts switched off: ordinary members get the member list without posts.
+  const shown = modules.officials || canEdit
+    ? cockpit
+    : {
+        ...cockpit,
+        charter: { ...cockpit.charter, members: cockpit.charter.members.map((m) => ({ ...m, designation: 'Member' as const })) },
+        meetings: cockpit.meetings.map((mt) => ({ ...mt, attendance: mt.attendance.map((a) => ({ ...a, designation: undefined })) })),
+      };
   return (
-    <main style={{ maxWidth: 860, margin: '0 auto', padding: '28px 24px 90px' }}>
+    <main className="pillar-1" style={{ maxWidth: 860, margin: '0 auto', padding: '28px 24px 90px' }}>
       <LiveRefresh />
       <a href="/dashboard" className="no-print" style={{ fontSize: 13, color: 'var(--forest)', fontWeight: 600, textDecoration: 'none' }}>← Dashboard</a>
       <div style={{ marginTop: 10 }}>
-        <p style={{ fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700 }}>Group workspace · Pillar 1</p>
+        <p style={{ fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700 }}>{booksOnly(modules) ? 'My business' : 'Group records'}</p>
         <h1 className="display" style={{ fontWeight: 600, fontSize: 32, marginTop: 6 }}>{cockpit.groupName}</h1>
         <p style={{ color: 'var(--ink-2)', marginTop: 6, maxWidth: 620 }}>
-          Your group&rsquo;s point of record: capture your charter, minute every meeting, and Stawi turns it into
-          bank-ready documents and a month-end statement that feed the rest of the platform.
+          {booksOnly(modules)
+            ? 'Your business details. The books are under the Books tab. Open more sections any time below.'
+            : 'Your group’s point of record. Use the sections your group has chosen; open or close others any time below.'}
         </p>
       </div>
+      <AttentionCard groupId={cockpit.groupId} items={attention.items} isOfficial={attention.isOfficial} />
       <div style={{ marginTop: 22 }}>
-        <GroupCockpit cockpit={cockpit} canEdit={canEdit} saccoPlus={saccoPlusEnabled()} initialTab={tab} initialMonth={month} />
+        <GroupCockpit cockpit={shown} canEdit={canEdit} saccoPlus={saccoPlusEnabled() && modules.savings_credit} initialTab={tab} initialMonth={month} modules={modules} />
       </div>
+      {(modules.money || modules.books) && <MoneySummary groupId={cockpit.groupId} />}
+      {!booksOnly(modules) && <DocumentHouse groupId={cockpit.groupId} />}
+      {canEdit && <ModuleSwitches groupId={cockpit.groupId} modules={modules} offered={offeredModules({ savingsCredit: saccoPlusEnabled() }).map((m) => m.id)} />}
+      <TabsHint records={!booksOnly(modules)} ideas={modules.ideas} books={modules.books} messages={modules.messages} />
     </main>
   );
 }

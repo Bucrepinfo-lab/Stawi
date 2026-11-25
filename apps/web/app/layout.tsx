@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
+import { AppTabs } from '@/components/AppTabs';
 
 export const metadata: Metadata = {
   title: 'Stawi — Save · Grow · Thrive',
@@ -36,6 +37,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        {/* Before the page so it can stick to the top on computers; fixed to the bottom on phones. */}
+        <AppTabs />
         {children}
         <ServiceWorkerRegister />
       </body>

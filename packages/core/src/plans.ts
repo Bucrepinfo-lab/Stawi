@@ -2,9 +2,10 @@
  * Global subscription plans for the multi-tenant SaaS.
  *
  * A plan sets limits and features. The price is per group, in the country's
- * own currency, from `group-pricing.ts` (owner decision 18/11/26): KES 299 a
- * month per group, KES 149 for a group of 10 members or fewer, a year ahead =
- * 10 months, first month free, founding price locked. Enterprise is invoiced.
+ * own currency, from `group-pricing.ts`. Kenya (owner 20/11/26): KES 10 a
+ * member a month, at least KES 50, at most KES 299; meetings-only groups half.
+ * A year ahead = 10 months, first month free, founding price locked.
+ * Enterprise is invoiced.
  */
 
 export type PlanTier = 'FREE' | 'STARTER' | 'GROWTH' | 'ENTERPRISE';
@@ -38,7 +39,7 @@ export const PLANS: Record<PlanTier, Plan> = {
   },
   ENTERPRISE: {
     tier: 'ENTERPRISE', name: 'Enterprise', billing: 'CUSTOM', memberLimit: null, groupLimit: null, trialDays: 30,
-    features: ['Unlimited groups & members', 'Multi-tier admin hierarchy', 'SSO & audit logs', 'Dedicated support & SLA', 'Custom compliance packs'],
+    features: ['Unlimited groups & members', 'Head office sees every branch', 'Company sign-in & a record of who did what', 'Own support person & agreed response times', 'Custom compliance packs'],
   },
 };
 

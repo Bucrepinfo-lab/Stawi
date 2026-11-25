@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
  * POST /api/auth/devices/revoke { all?: true, deviceId?: string }
  * Signed-in user only, own devices only. `all` = sign out of all devices:
  * revokes every trusted device, rotates the server-held session secret and
- * ends every Supabase session. Next sign-in anywhere needs a new SMS code.
+ * ends every Supabase session. Next sign-in anywhere uses the phone number and PIN.
  */
 export async function POST(req: Request) {
   const userId = await getUserId();

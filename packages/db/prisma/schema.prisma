@@ -89,6 +89,9 @@ model Group {
   countryCode String     @default("KE")
   flagEmoji   String     @default("🇰🇪")
   formalizationStep Int  @default(0)
+  // Which sections this group or business uses (owner 20/11/26). Null = the default for its type.
+  // { meetings, agendas, officials, money, ideas, books, savings_credit } — see @stawi/core modules.ts
+  modules     Json?
 
   members       Membership[]
   contributions Contribution[]
@@ -99,6 +102,9 @@ model Group {
   meetings      Meeting[]
   statements    MonthlyStatement[]
   planPayments  PlanPayment[]
+  attentionNotices AttentionNotice[]
+  messages      GroupMessage[]
+  joinCodes     JoinCode[]
   salesRepId    String?
   salesRep      SalesAgent? @relation(fields: [salesRepId], references: [id])
 
@@ -538,6 +544,8 @@ model MonthlyStatement {
 
 model AuthPin {
   userId       String    @id
+  /// E.164 phone the account signs in with (phone + PIN on any device, owner 20/11/26).
+  phone        String?
   /// bcrypt hash of the 4-digit PIN — the PIN itself is never stored.
   pinHash      String
   failedCount  Int       @default(0)
@@ -546,6 +554,29 @@ model AuthPin {
   sessionEpoch Int       @default(0)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  @@index([phone])
+}
+
+/// A one-time joining code a group official gives a member (owner 20/11/26):
+/// replaces the SMS sign-in code. Tied to one group and one phone, works once,
+/// expires after 48 hours, burned after 5 wrong tries. Only a keyed hash is kept.
+model JoinCode {
+  id          String    @id @default(cuid())
+  group       Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId     String
+  /// Last 9 digits of the member's phone.
+  phoneKey    String
+  codeHash    String
+  expiresAt   DateTime
+  usedAt      DateTime?
+  tries       Int       @default(0)
+  /// Membership.id of the official who gave it.
+  issuedBy    String
+  createdAt   DateTime  @default(now())
+
+  @@index([phoneKey])
+  @@index([groupId])
 }
 
 model TrustedDevice {
@@ -561,4 +592,55 @@ model TrustedDevice {
   revokedAt  DateTime?
 
   @@index([userId])
+}
+
+// ───────────────────────── Engagement counts ──────────────────────────────
+
+/// Daily counts of what people view, open, tap and share (owner 20/11/26).
+/// Counts only: no user, phone, group, tenant or IP is stored, so this table
+/// is not tenant-owned and holds no personal data.
+model EngagementCount {
+  id    String @id @default(cuid())
+  day   String // UTC day, "2026-11-20"
+  event String // view | open | cta | share | tab | sort | source
+  key   String // e.g. "p1-minutes", "tab-books", "share-whatsapp"
+  count Int    @default(0)
+
+  @@unique([day, event, key])
+  @@index([day])
+}
+
+/// Daily alerts already sent for stalled work (owner approved 20/11/26), so
+/// nobody is told twice about the same matter at the same level. Holds the
+/// matter's key and the member's row id in the member list — no name, no
+/// phone, no message text. Group-owned (listed in rls.sql).
+model AttentionNotice {
+  id       String   @id @default(cuid())
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId  String
+  key      String // e.g. "minutes_not_posted:<meetingId>"
+  level    Int
+  memberId String // CharterMember.id
+  sentAt   DateTime @default(now())
+
+  @@unique([groupId, key, level, memberId])
+  @@index([groupId])
+}
+
+/// Messages inside the app (owner 20/11/26). channel ALL = the whole group;
+/// OFFICIALS = "ask the officials": seen by the member named in threadMemberId
+/// and by the officials only. Plain text, screened before it is stored.
+/// Group-owned (listed in rls.sql). No phone number is stored here.
+model GroupMessage {
+  id                 String   @id @default(cuid())
+  group              Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId            String
+  channel            String   @default("ALL") // ALL | OFFICIALS
+  threadMemberId     String? // Membership.id of the member whose question this is (OFFICIALS only)
+  senderMembershipId String
+  body               String
+  createdAt          DateTime @default(now())
+
+  @@index([groupId, channel, createdAt])
+  @@index([groupId, threadMemberId])
 }
