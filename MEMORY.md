@@ -1,5 +1,9 @@
 # Stawi — session memory / start-here
 
+## 25/11/26 — Paper minutes read in English and Kiswahili, self-hosted (owner standing rule: best OCR and photo tools, all projects)
+- "Import written notes" (GroupCockpit) used Tesseract.js 5.1.0 from a third-party CDN, English only. It now uses Tesseract.js 7 with English + Kiswahili compact models, served from our own site (/ocr, copied at build by `apps/web/scripts/copy-ocr-assets.mjs`, git-ignored). The photo never leaves the phone; members check the words before "Use these notes". The middleware skips .gz/.wasm files.
+- Handwriting: Tesseract reads printed text well and neat handwriting fairly; messy handwriting still needs typing. The text box stays editable for that reason.
+
 ## 24/11/26 — Drawn tab pictures replace emoji (owner: "go ahead and implement your recommendations"; standing rule 19)
 - `apps/web/components/TabPictures.tsx`: five of Stawi's own drawings on a light tile, brand palette only: My group (members round the pot, a coin inside), Ideas (seedling growing from a coin), Books (open exercise book and coins), Messages (speech bubble), Share (megaphone). `AppTabs.tsx` uses them; words stay underneath in English/Kiswahili. Same on every phone, offline, light and dark. Current tab: gold ring round the tile, bold label, gentle pop.
 - Why (researched 24/11/26): emoji are drawn differently per phone maker and Android version, and Android 11 and lower cannot update the emoji font (about 10% of Kenyan Android phones are on 11, StatCounter mid-2026); emoji are read differently by age and culture (PLOS One 2024); hand-drawn, semi-abstract pictures were best understood by people who read little (Medhi et al., Microsoft Research India); Material guidance pairs icons with labels.
