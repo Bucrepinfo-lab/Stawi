@@ -699,7 +699,7 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 .app-search:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 @media (max-width: 380px) { .app-search span { display: none; } .app-search { padding: 4px; } }
 @media (min-width: 900px) {
-  .app-search { position: static; margin-left: 10px; box-shadow: none; }
+  .app-search { top: 9px; right: 20px; z-index: 46; box-shadow: none; }
 }
 @media print { .app-search { display: none !important; } }
 /* Room for the Search button above the page on phones. */
