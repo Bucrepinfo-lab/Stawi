@@ -1,5 +1,10 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 — Homepage path for non-technical visitors; audit clean-up (owner 22:29)
+- Landing now: hero with "Open my group" and "How it works" → "What would you like to do?" (run my chama's money, speak our minutes, find a business to start, keep my shop's books) → How it works (sign in with phone + PIN → join or start your group → record, and everyone sees → grow together) → the existing value banners, vision and "why groups stall" → Help (email). Phones get a fixed dock with "Open my group". English and Kiswahili (`components/HomeFlow.tsx`).
+- Header: a "Sign in" button; the theme toggle is a drawn sun/moon with the word (was an emoji, standing rule 13).
+- Clean-up: removed the inert Clerk webhook `app/api/webhooks/clerk/route.ts` (Clerk is retired; the route was public and only waited for a secret), the mobile `lib/tokenCache.ts` and the unused `expo-secure-store` package.
+
 ## 26/11/26 — "A minimum, not a maximum" (owner: encourage members who can to put in more, so the group reaches its capital sooner)
 - Research: in the standard savings-group model (CARE VSLA) members buy one to five shares a meeting and the share price is set low enough that everyone can buy at least one; studies of peer savings groups (Chile, Kenya) found public goal setting and group monitoring raise savings. Balance noted: CARE Malawi saw disparities where some members bought up to 100 shares, so the card keeps "nobody is pushed, one member one vote".
 - Lit card under the capital on the home screen (`components/GrowCapitalCard.tsx`, English/Kiswahili by My language): the minimum keeps everyone in; anything above it is yours (raises your share of capital and profit); paying more shows trust in the plan and the members; nobody is pushed. "See how much sooner you get there": capital needed, agreed minimum, meetings a month, members who can add more and how much → months with the minimum only vs with some adding more, from the group's own total and member count (saved on the phone per group). "Send this to my group on WhatsApp". Sums and words in `@stawi/core` `grow-capital.ts` (+ tests).
