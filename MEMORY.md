@@ -1,5 +1,9 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 (12:10) — Sent to Google for closed-testing review
+- Owner set PLAY_REVIEW_PHONE + a 4-digit PLAY_REVIEW_PIN (6 digits is refused by `isReviewPinLogin`), signed in and made the demo group "Stawi Demo Chama" through the app; entered the phone + PIN in Play Console Sign in details (Claude filled the name and instructions). `ANDROID_CERT_FINGERPRINTS` live with both fingerprints (assetlinks checked).
+- Claude: target audience 18+, Data safety submitted, content rating redone (block + report + moderated chat), PR #50 merged, then Publishing overview → 14 changes sent for review (closed testing Alpha, Kenya, Telpen Closed Testers). Google's review usually takes up to 7 days; then 12 testers × 14 days before production.
+
 ## 26/11/26 — Seen by Google: robots.txt and sitemap.xml
 - Audit: getstawi.com (+ *.getstawi.com) and stawi.fly.dev serve Stawi with Issued certificates; health ok; assetlinks has both fingerprints. `/robots.txt` and `/sitemap.xml` redirected to sign-in (middleware), so Google saw a login page.
 - `app/robots.ts` replaces `public/robots.txt` (adds the sitemap line and keeps private areas out); `app/sitemap.ts` lists public pages; middleware lets both through. Canonical host: `NEXT_PUBLIC_APP_URL`, else getstawi.com.
