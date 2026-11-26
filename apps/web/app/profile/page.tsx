@@ -4,6 +4,7 @@ import { dbEnabled } from '@/lib/data';
 import { loadProfile } from '@/lib/profile';
 import { BackLink } from '@/components/BackLink';
 import { ProfileClient } from './ProfileClient';
+import { JoinChama } from './JoinChama';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +24,8 @@ export default async function ProfilePage() {
       <ProfileClient initial={{ name: profile.name, phone: profile.phone, photo: profile.photo }} />
 
       <section className="pf-card" aria-labelledby="pf-pay">
-        <h2 id="pf-pay">My payments</h2>
+        <h2 id="pf-pay">My chamas &amp; payments</h2>
+        <p className="mr-meta">One phone number and PIN open all of them. Switch between them with &ldquo;Switch chama&rdquo; on the home screen, or open one here.</p>
         {profile.groups.length === 0 ? (
           <p className="mr-empty">You are not in a group yet. <a href="/dashboard">Join the demo chama or start one</a>.</p>
         ) : (
@@ -35,6 +37,7 @@ export default async function ProfilePage() {
                   <span className="mr-meta">{g.role} · shown as {g.nameHere} · {g.payments} payment{g.payments === 1 ? '' : 's'}</span>
                 </div>
                 <span className="mono pf-total">KES {formatMoney(g.totalCents)}</span>
+                <a className="mr-btn go" href={`/dashboard?group=${encodeURIComponent(g.groupId)}`}>Open</a>
                 <a className="mr-btn" href={`/groups/${encodeURIComponent(g.groupId)}/history`}>History &amp; download</a>
               </li>
             ))}
@@ -42,6 +45,8 @@ export default async function ProfilePage() {
         )}
         <a className="mr-btn go pf-wide" href="/api/me/records" download>Download all my records (Excel / CSV)</a>
       </section>
+
+      <JoinChama />
 
       <section className="pf-card" aria-labelledby="pf-help">
         <h2 id="pf-help">Something not working?</h2>
