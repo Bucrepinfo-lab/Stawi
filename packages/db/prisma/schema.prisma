@@ -730,3 +730,19 @@ model CorrectionDecision {
   @@unique([correctionId, membershipId])
   @@index([groupId])
 }
+
+// ───────────────────────── Phone alerts (owner 26/11/26) ─────────────────
+// One row per phone/browser that said yes to Stawi alerts (Web Push). Owned by
+// a user, not a group: the server picks the group's members, then their rows.
+model PushSubscription {
+  id         String   @id @default(cuid())
+  userId     String
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
+  @@index([userId])
+}

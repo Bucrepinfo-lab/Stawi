@@ -114,6 +114,8 @@ export async function recordContributionAction(input: {
     return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Write failed' };
   }
   publishEvent({ type: 'contribution', channel: tenant ?? 'public' });
+  // Every other member gets a phone alert (owner 26/11/26); never blocks the write.
+  void (await import('@/lib/group-alerts')).alertNewContribution(contributionId, userId);
   // The receipt is opened by this id only (loaded from the database, never from URL values).
   return { ok: true, persisted: true, contributionId };
 }

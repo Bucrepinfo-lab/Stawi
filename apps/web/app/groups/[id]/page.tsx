@@ -10,6 +10,7 @@ import { groupAttention } from '@/lib/attention';
 import { DocumentHouse } from '@/components/DocumentHouse';
 import { MoneySummary } from '@/components/MoneySummary';
 import { MoneyTrustCard } from '@/components/MoneyTrustCard';
+import { AlertsCard } from '@/components/AlertsCard';
 import { MyNameCard } from '@/components/MyNameCard';
 import { isPlaceholderName } from '@stawi/core';
 import { ModuleSwitches } from '@/components/ModuleSwitches';
@@ -64,6 +65,7 @@ export default async function GroupWorkspacePage({ params, searchParams }: { par
       </div>
       {myName && <MyNameCard groupId={cockpit.groupId} name={myName} placeholder={isPlaceholderName(myName)} />}
       <AttentionCard groupId={cockpit.groupId} items={attention.items} isOfficial={attention.isOfficial} />
+      {dbEnabled() && <AlertsCard />}
       {dbEnabled() && modules.money && <MoneyTrustCard groupId={cockpit.groupId} alerts={moneyAlerts} />}
       <div style={{ marginTop: 22 }}>
         <GroupCockpit cockpit={shown} canEdit={canEdit} saccoPlus={saccoPlusEnabled() && modules.savings_credit} initialTab={tab} initialMonth={month} modules={modules} />

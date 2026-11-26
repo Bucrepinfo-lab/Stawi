@@ -46,7 +46,10 @@ export async function POST(req: Request) {
       // Mark the pending contribution confirmed (when a DB is configured).
       if (dbEnabled()) {
         const { prisma, confirmContribution } = await import('@stawi/db');
+        const waiting = await prisma.contribution.findFirst({ where: { checkoutRequestId: result.checkoutRequestId, status: 'PENDING' }, select: { id: true, recordedByClerkUserId: true } });
         await confirmContribution(prisma, result.checkoutRequestId, result.mpesaReceipt ?? '');
+        // Alert the group once, when the payment first confirms (owner 26/11/26).
+        if (waiting) void (await import('@/lib/group-alerts')).alertNewContribution(waiting.id, waiting.recordedByClerkUserId);
       }
 
       // No SMS from Stawi (owner 20/11/26): M-Pesa itself texts the payer its

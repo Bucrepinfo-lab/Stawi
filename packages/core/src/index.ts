@@ -62,4 +62,5 @@ export * from './share-targets';
 export * from './demo-chama';
 export * from './feedback';
 export * from './money-trust';
+export * from './alerts';
 export * from './display-name';
