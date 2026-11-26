@@ -14,6 +14,9 @@ const PUBLIC: RegExp[] = [
   /^\/\.well-known\//,
   /^\/api\/assetlinks/,
   /^\/offline\.html$/,
+  // Seen by Google (owner 26/11/26).
+  /^\/robots\.txt$/,
+  /^\/sitemap\.xml$/,
   /^\/api\/mpesa\/callback/,
   /^\/api\/billing\/webhook/,
   /^\/api\/webhooks\/clerk/,

@@ -1,5 +1,9 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 — Seen by Google: robots.txt and sitemap.xml
+- Audit: getstawi.com (+ *.getstawi.com) and stawi.fly.dev serve Stawi with Issued certificates; health ok; assetlinks has both fingerprints. `/robots.txt` and `/sitemap.xml` redirected to sign-in (middleware), so Google saw a login page.
+- `app/robots.ts` replaces `public/robots.txt` (adds the sitemap line and keeps private areas out); `app/sitemap.ts` lists public pages; middleware lets both through. Canonical host: `NEXT_PUBLIC_APP_URL`, else getstawi.com.
+
 ## 26/11/26 — Reviewer seed runs inside the live image
 - `seed-demo.ts` failed on Fly (`@stawi/core` is not in the standalone image): phone formatting is now inlined, and it no longer falls back to "the first group" (that could have made the reviewer treasurer of a real customer's group). It only uses the demo group `org_umoja` and stops otherwise.
 
