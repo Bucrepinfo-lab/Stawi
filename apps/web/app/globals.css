@@ -430,3 +430,19 @@ html.dark .vb-tab:not([aria-selected="true"]):hover { color: var(--ink); }
 @media (prefers-reduced-motion: reduce) {
   .welcome-card, .welcome-card:hover, .welcome-hero .house-go, .welcome-hero .house-go:hover, .share-btn, .share-btn:hover, .vb-card, .vb-card:hover { transition: none; transform: none; }
 }
+
+/* ── Highlighted feedback banner (owner 26/11/26: "contribution updated") ── */
+.fb-banner { display: flex; align-items: flex-start; gap: 12px; margin-top: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--fb, var(--good));
+  background: color-mix(in srgb, var(--fb, var(--good)) 12%, var(--paper)); box-shadow: inset 5px 0 0 var(--fb, var(--good)), 0 10px 24px -16px color-mix(in srgb, var(--fb, var(--good)) 70%, transparent);
+  animation: fb-in .28s ease-out; }
+.fb-success { --fb: var(--good); }
+.fb-error { --fb: var(--danger); }
+.fb-info { --fb: var(--sky); }
+.fb-mark { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; font-size: 16px; color: #fffdf8; background: var(--fb, var(--good)); }
+.fb-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.fb-text strong { font-size: 15.5px; color: var(--ink); }
+.fb-text span { font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+.fb-close { flex: none; border: 0; background: transparent; color: var(--dim); font-size: 16px; cursor: pointer; padding: 4px 6px; border-radius: 8px; }
+.fb-close:hover { background: color-mix(in srgb, var(--fb, var(--good)) 14%, transparent); color: var(--ink); }
+@keyframes fb-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .fb-banner { animation: none; } }

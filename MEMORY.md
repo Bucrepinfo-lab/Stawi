@@ -1,5 +1,9 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 — "Contribution recorded" banner for the treasurer (owner request)
+- After recording a contribution the treasurer sees a highlighted green banner: "Contribution recorded" — KES amount, member, how it was paid, the new group total, and that every share is updated. A failure shows a red "Contribution not recorded" with the reason (before, errors showed in the same small green line). The button shows "Recording…" and ignores a second tap until the first finishes.
+- `components/FeedbackBanner.tsx` (reusable: success / error / info, role=status or alert, closable, stays 7–9 s) + `.fb-*` CSS (brand tokens, dark mode, reduced motion); words from `@stawi/core` `feedback.ts` (+ test).
+
 ## 26/11/26 — One demo chama for every tester, and a welcome that sells the value (owner request)
 - Owner: all testers (and he, and the Play reviewer) in ONE registered group; people not yet in any group get a space that markets the value, without ever seeing another group's details.
 - "Join the demo chama" (`joinDemoGroupAction`, `components/DemoChamaCard.tsx`): anyone signed in joins the group set in `STAWI_DEMO_GROUP_ID` as an ordinary MEMBER with one tap, no joining code (sample money only). Shown as "Tester 482" (last three digits), phone stored empty, so testers never see each other's numbers. Never changes a role already held there. Officials stay the people the owner chose. Unset env = the card does not appear.

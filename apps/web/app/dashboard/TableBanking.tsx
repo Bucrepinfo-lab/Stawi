@@ -7,10 +7,11 @@ import {
   formatMoney,
   type MemberContribution,
 } from '@stawi/core';
-import { receiptPath } from '@stawi/core';
+import { receiptPath, contributionRecorded, contributionNotRecorded } from '@stawi/core';
 import { recordContributionAction } from '@/app/actions';
 import { COLLECT_WAYS, type CollectWay } from '@stawi/core';
 import { CollectTips } from '@/components/CollectTips';
+import { FeedbackBanner, type Feedback } from '@/components/FeedbackBanner';
 
 interface SeedMember extends MemberContribution {
   role: string;
@@ -41,6 +42,13 @@ export function TableBanking({
 }) {
   const [members, setMembers] = useState<SeedMember[]>(seed);
   const [flash, setFlash] = useState<string | null>(null);
+  // The highlighted "Contribution recorded" banner (owner 26/11/26).
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [saving, setSaving] = useState(false);
+  const show = (f: Feedback, ms: number) => {
+    setFeedback(f);
+    setTimeout(() => setFeedback((cur) => (cur === f ? null : cur)), ms);
+  };
   const [receipt, setReceipt] = useState<LastReceipt | null>(null);
   const [selected, setSelected] = useState(seed[0]?.memberId ?? '');
   const [amount, setAmount] = useState('5000');
@@ -54,12 +62,17 @@ export function TableBanking({
 
   async function record() {
     const cents = Math.round((parseFloat(amount) || 0) * 100);
-    if (cents <= 0) return;
+    if (cents <= 0) {
+      show({ tone: 'error', ...contributionNotRecorded('Enter an amount above zero.') }, 6000);
+      return;
+    }
+    if (saving) return; // one tap, one contribution
+    setSaving(true);
     const res = await recordContributionAction({ groupId, membershipId: selected, amountCents: cents, way, reference: ref }).catch(() => null);
+    setSaving(false);
     if (res?.ok) setRef('');
     if (!res?.ok) {
-      setFlash(res?.error ?? 'Could not record the contribution — try again.');
-      setTimeout(() => setFlash(null), 4000);
+      show({ tone: 'error', ...contributionNotRecorded(res?.error) }, 9000);
       return;
     }
     const next = applyContribution(members, selected, cents);
@@ -71,6 +84,8 @@ export function TableBanking({
     );
     const me = next.members.find((x) => x.memberId === selected);
     const who = me?.name ?? '';
+    const wayLabel = COLLECT_WAYS.find((w) => w.id === way)?.label.en ?? 'Cash at the meeting';
+    show({ tone: 'success', ...contributionRecorded({ name: who, amountCents: cents, way: wayLabel, totalCents: next.totalCents }) }, 7000);
     setFlash(`${who} +KES ${formatMoney(cents)} · ratios updated`);
     // A receipt exists only for a stored contribution (none in demo mode).
     setReceipt(res.contributionId ? { contributionId: res.contributionId, memberName: who } : null);
@@ -105,7 +120,8 @@ export function TableBanking({
       <div style={{ background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 'var(--radius)', padding: 22, boxShadow: 'var(--shadow)' }}>
         <div style={{ fontSize: 12, color: 'var(--dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em' }}>Total group capital</div>
         <div className="mono" style={{ fontSize: 34, fontWeight: 600, color: 'var(--forest-deep)', marginTop: 4 }}>KES {formatMoney(snapshot.totalCents)}</div>
-        {flash && <div style={{ marginTop: 8, color: 'var(--good)', fontWeight: 600, fontSize: 14 }}>▲ {flash}</div>}
+        <FeedbackBanner feedback={feedback} onClose={() => setFeedback(null)} />
+        {flash && !feedback && <div style={{ marginTop: 8, color: 'var(--good)', fontWeight: 600, fontSize: 14 }}>▲ {flash}</div>}
         {receipt && (
           <a href={receiptHref(receipt)} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: 10, fontSize: 13, fontWeight: 700, color: 'var(--forest-deep)', background: 'var(--bone-2)', padding: '7px 13px', borderRadius: 9, textDecoration: 'none' }}>
             ↓ Download receipt for {receipt.memberName}
@@ -142,7 +158,7 @@ export function TableBanking({
             <input value={ref} onChange={(e) => setRef(e.target.value.toUpperCase().slice(0, 30))} placeholder={way === 'BANK' ? 'FT-…' : 'SKL4AB12CD'} className="mono" style={inp} autoCapitalize="characters" />
           </label>
         )}
-        <button onClick={record} style={btnGold}>＋ Record contribution</button>
+        <button onClick={record} disabled={saving} style={{ ...btnGold, opacity: saving ? 0.7 : 1, cursor: saving ? 'default' : 'pointer' }}>{saving ? 'Recording…' : '＋ Record contribution'}</button>
       </div>
       <CollectTips />
 
