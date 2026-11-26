@@ -49,6 +49,8 @@ export async function recordContributionAction(input: {
   way?: string;
   /** M-Pesa code or bank reference, when there is one. */
   reference?: string;
+  /** Two members who saw cash / M-Pesa-to-a-phone handed over (owner 26/11/26). */
+  witnessIds?: string[];
 }): Promise<{ ok: boolean; persisted: boolean; contributionId?: string; error?: string }> {
   if (!Number.isInteger(input.amountCents) || input.amountCents <= 0) return { ok: false, persisted: false, error: 'Amount must be positive' };
   const { COLLECT_WAYS, collectWay, checkPaymentRef, isDuplicateRef } = await import('@stawi/core');
@@ -67,27 +69,51 @@ export async function recordContributionAction(input: {
   const userId = await getUserId();
   const member = await prisma.membership.findFirst({ where: { id: input.membershipId, groupId: input.groupId }, select: { id: true } });
   if (!member) return { ok: false, persisted: false, error: 'Member not found in this group.' };
+  // Cash and M-Pesa to an official's phone are recorded before two witnesses (owner 26/11/26).
+  const { needsWitnesses, witnessProblem } = await import('@stawi/core');
+  const witnessIds = needsWitnesses(way) ? [...new Set((input.witnessIds ?? []).filter(Boolean))] : [];
+  if (needsWitnesses(way)) {
+    const { myMembershipIds } = await import('@/lib/group-access');
+    const [recorderIds, all] = await Promise.all([
+      myMembershipIds(input.groupId),
+      prisma.membership.findMany({ where: { groupId: input.groupId }, select: { id: true } }),
+    ]);
+    const problem = witnessProblem({ way, witnessIds: input.witnessIds ?? [], recorderIds, contributorId: input.membershipId, memberIds: all.map((m) => m.id) });
+    if (problem) return { ok: false, persisted: false, error: problem };
+  }
   // The same M-Pesa code written twice is the same money.
   if (ref.ref) {
     const seen = await prisma.contribution.findMany({ where: { groupId: input.groupId, mpesaRef: ref.ref }, select: { mpesaRef: true }, take: 1 });
     if (isDuplicateRef(ref.ref, seen.map((x) => x.mpesaRef))) return { ok: false, persisted: false, error: 'This M-Pesa code is already written in. Each payment is written once.' };
   }
   let contributionId: string;
+  const tenant = await tenantId();
   try {
-    ({ id: contributionId } = await recordContribution(prisma, {
-      groupId: input.groupId,
-      membershipId: input.membershipId,
-      amountCents: input.amountCents,
-      channel,
-      confirmed: true,
-      mpesaRef: ref.ref ?? undefined,
-      recordedByClerkUserId: userId ?? undefined,
-      tenantId: await tenantId(),
-    }));
+    // One write: the entry and its witnesses together, or nothing.
+    const groupId = input.groupId;
+    contributionId = await prisma.$transaction(async (tx) => {
+      const { id } = await recordContribution(tx as unknown as typeof prisma, {
+        groupId,
+        membershipId: input.membershipId,
+        amountCents: input.amountCents,
+        channel,
+        confirmed: true,
+        mpesaRef: ref.ref ?? undefined,
+        recordedByClerkUserId: userId ?? undefined,
+        tenantId: tenant,
+      });
+      if (witnessIds.length) {
+        await tx.contributionWitness.createMany({
+          data: witnessIds.map((membershipId) => ({ groupId, contributionId: id, membershipId })),
+          skipDuplicates: true,
+        });
+      }
+      return id;
+    });
   } catch (e) {
     return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Write failed' };
   }
-  publishEvent({ type: 'contribution', channel: (await tenantId()) ?? 'public' });
+  publishEvent({ type: 'contribution', channel: tenant ?? 'public' });
   // The receipt is opened by this id only (loaded from the database, never from URL values).
   return { ok: true, persisted: true, contributionId };
 }

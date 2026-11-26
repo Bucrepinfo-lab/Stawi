@@ -105,6 +105,10 @@ model Group {
   attentionNotices AttentionNotice[]
   messages      GroupMessage[]
   joinCodes     JoinCode[]
+  contributionWitnesses ContributionWitness[]
+  contributionChecks    ContributionCheck[]
+  corrections           ContributionCorrection[]
+  correctionDecisions   CorrectionDecision[]
   salesRepId    String?
   salesRep      SalesAgent? @relation(fields: [salesRepId], references: [id])
 
@@ -175,7 +179,14 @@ model Contribution {
   checkoutRequestId String?
   recordedByClerkUserId String?
   receiptUrl   String?
+  // Set only on an adjustment entry created when a correction is approved by
+  // five people (owner 26/11/26). The original entry is never edited or deleted.
+  correctionOfId String?
   createdAt    DateTime       @default(now())
+
+  witnesses   ContributionWitness[]
+  check       ContributionCheck?
+  corrections ContributionCorrection[]
 
   @@index([groupId, status])
   @@index([membershipId])
@@ -643,4 +654,79 @@ model GroupMessage {
 
   @@index([groupId, channel, createdAt])
   @@index([groupId, threadMemberId])
+}
+
+// ───────────────────────── Trust in the money record (owner 26/11/26) ─────
+// A recorded contribution is never edited or deleted. Cash and M-Pesa to an
+// official's phone carry two witnesses; each member can confirm or dispute
+// money in their name; a correction is a new entry approved by five people.
+
+model ContributionWitness {
+  id             String       @id @default(cuid())
+  group          Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId        String
+  contribution   Contribution @relation(fields: [contributionId], references: [id], onDelete: Cascade)
+  contributionId String
+  membershipId   String // Membership.id of the witness
+  confirmedAt    DateTime?
+  disputedAt     DateTime?
+  note           String?
+  createdAt      DateTime     @default(now())
+
+  @@unique([contributionId, membershipId])
+  @@index([groupId, membershipId])
+}
+
+model ContributionCheck {
+  id             String       @id @default(cuid())
+  group          Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId        String
+  contribution   Contribution @relation(fields: [contributionId], references: [id], onDelete: Cascade)
+  contributionId String       @unique
+  membershipId   String // the member whose money it is
+  verdict        String // MINE | WRONG
+  note           String?
+  createdAt      DateTime     @default(now())
+
+  @@index([groupId, verdict])
+}
+
+model ContributionCorrection {
+  id                      String       @id @default(cuid())
+  group                   Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId                 String
+  contribution            Contribution @relation(fields: [contributionId], references: [id], onDelete: Cascade)
+  contributionId          String
+  membershipId            String // whose money it is
+  originalCents           Int
+  correctedCents          Int
+  reason                  String
+  requestedByMembershipId String
+  status                  String       @default("PENDING") // PENDING | APPROVED | REJECTED | EXPIRED
+  // [{ slot, membershipId, pickedAt }] — who must approve (see @stawi/core money-trust)
+  seats                   Json
+  adjustmentId            String? // the Contribution row created on approval
+  createdAt               DateTime     @default(now())
+  decidedAt               DateTime?
+
+  decisions CorrectionDecision[]
+
+  @@index([groupId, status])
+  @@index([contributionId])
+}
+
+model CorrectionDecision {
+  id           String                 @id @default(cuid())
+  group        Group                  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId      String
+  correction   ContributionCorrection @relation(fields: [correctionId], references: [id], onDelete: Cascade)
+  correctionId String
+  membershipId String
+  slot         String
+  approve      Boolean
+  note         String?
+  createdAt    DateTime               @default(now())
+
+  @@unique([correctionId, membershipId])
+  @@index([groupId])
 }

@@ -80,7 +80,8 @@ export async function getMemberGroups(
         name: mem.fullName,
         totalCents: total,
         role: titleRole(mem.role),
-        paid: mem.contributions.length > 0,
+        // An approved correction to zero cancels the payment (owner 26/11/26).
+        paid: total > 0,
       };
     });
     return {
@@ -885,7 +886,7 @@ export async function getGroupsByPhone(prisma: PrismaClient, phone: string, tena
       name: mem.fullName,
       totalCents: mem.contributions.reduce((s, c) => s + c.amountCents, 0),
       role: titleRole(mem.role),
-      paid: mem.contributions.length > 0,
+      paid: mem.contributions.reduce((s, c) => s + c.amountCents, 0) > 0,
     }));
     return { id: g.id, name: g.name, myRole: titleRole(m.role), flag: g.flagEmoji, type: mapKind(g.type), members };
   });

@@ -3,12 +3,13 @@ import { GroupCockpit } from './GroupCockpit';
 import { LiveRefresh } from '@/components/LiveRefresh';
 import { getCockpit } from '@/lib/cockpit';
 import { getViewerRole, dbEnabled } from '@/lib/data';
-import { myGroupRole, RECORD_EDITOR_ROLES } from '@/lib/group-access';
+import { myGroupRole, myMembershipIds, RECORD_EDITOR_ROLES } from '@/lib/group-access';
 import { saccoPlusEnabled } from '@/lib/features';
 import { AttentionCard } from '@/components/AttentionCard';
 import { groupAttention } from '@/lib/attention';
 import { DocumentHouse } from '@/components/DocumentHouse';
 import { MoneySummary } from '@/components/MoneySummary';
+import { MoneyTrustCard } from '@/components/MoneyTrustCard';
 import { ModuleSwitches } from '@/components/ModuleSwitches';
 import { TabsHint } from '@/components/TabsHint';
 import { getGroupModules } from '@/lib/modules';
@@ -29,6 +30,10 @@ export default async function GroupWorkspacePage({ params, searchParams }: { par
   // Which sections this group uses (owner 20/11/26). Applied here, on the server.
   const modules = await getGroupModules(id);
   const attention = await groupAttention(cockpit, viewer, modules);
+  // Money record alerts (owner 26/11/26): this member's tasks and overdue witnesses.
+  const moneyAlerts = dbEnabled() && modules.money
+    ? await (await import('@/lib/money-trust')).moneyAlerts(id, await myMembershipIds(id), canEdit).catch(() => null)
+    : null;
   // Posts switched off: ordinary members get the member list without posts.
   const shown = modules.officials || canEdit
     ? cockpit
@@ -51,6 +56,7 @@ export default async function GroupWorkspacePage({ params, searchParams }: { par
         </p>
       </div>
       <AttentionCard groupId={cockpit.groupId} items={attention.items} isOfficial={attention.isOfficial} />
+      {dbEnabled() && modules.money && <MoneyTrustCard groupId={cockpit.groupId} alerts={moneyAlerts} />}
       <div style={{ marginTop: 22 }}>
         <GroupCockpit cockpit={shown} canEdit={canEdit} saccoPlus={saccoPlusEnabled() && modules.savings_credit} initialTab={tab} initialMonth={month} modules={modules} />
       </div>
