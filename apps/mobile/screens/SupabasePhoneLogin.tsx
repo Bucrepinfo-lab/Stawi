@@ -59,7 +59,7 @@ export function SupabasePhoneLogin() {
       <TextInput style={s.input} value={pin} onChangeText={(t) => setPin(t.replace(/[^0-9]/g, '').slice(0, 4))} keyboardType="number-pad" secureTextEntry maxLength={4} placeholder="••••" placeholderTextColor={colors.faint} />
       <TouchableOpacity style={[s.cta, busy && s.disabled]} disabled={busy} onPress={signIn}><Text style={s.ctaTxt}>{busy ? 'Checking…' : 'Sign in →'}</Text></TouchableOpacity>
       <TouchableOpacity onPress={() => { if (BASE) void Linking.openURL(`${BASE}/sign-in?code=1`); }}>
-        <Text style={s.back}>First time, or forgot your PIN? Use your joining code</Text>
+        <Text style={s.back}>Your group added you, or forgot your PIN? Use the code your group official gave you</Text>
       </TouchableOpacity>
       {!!err && <Text style={s.err}>{err}</Text>}
     </ScrollView>

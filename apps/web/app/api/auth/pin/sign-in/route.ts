@@ -7,7 +7,7 @@ import { signInReviewer } from '@/lib/review-sign-in';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const NEED_CODE = 'Ask a group official for a joining code, then choose a new PIN.';
+const NEED_CODE = 'Ask a group official for your joining code (they give it in person or on WhatsApp; nothing is sent by SMS), then choose a new PIN. New to Stawi? Open an account instead.';
 
 /**
  * POST /api/auth/pin/sign-in { phone?, pin }

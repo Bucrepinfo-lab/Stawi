@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   if (!user?.id || !user.phone) return NextResponse.json({ error: 'Sign in first.' }, { status: 401 });
   // A PIN may only be set (or reset) right after a joining code in this browser.
   if (!(await pinSetupAllowed(user.id))) {
-    return NextResponse.json({ error: 'Enter a joining code from a group official first.', needCode: true }, { status: 401 });
+    return NextResponse.json({ error: 'Enter the joining code your group official gave you first (in person or on WhatsApp; nothing is sent by SMS).', needCode: true }, { status: 401 });
   }
   let body: { pin?: string };
   try {

@@ -12,8 +12,8 @@ export default function SignUpPage() {
       <div style={{ textAlign: 'center', maxWidth: 380, width: '100%' }}>
         <div className="display" style={{ fontSize: 30, fontWeight: 600, color: 'var(--forest-deep)' }}>Join Stawi</div>
         <p style={{ color: 'var(--ink-2)', marginTop: 8, marginBottom: 22, fontSize: 14.5 }}>
-          Sign up with your <b>phone number</b> and a PIN only you know — no email needed. If your group
-          already added you, use the joining code an official gave you.
+          Sign up with your <b>phone number</b> and a PIN only you know. No email, no SMS, no code. If your group
+          already added you, use the joining code an official handed you.
         </p>
         <Suspense>
           <PhoneAuth initialMode="start" />

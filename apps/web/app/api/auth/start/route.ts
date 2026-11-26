@@ -31,10 +31,10 @@ export async function POST(req: Request) {
 
   const { prisma, phoneOnAnyRoster, setAuthPin } = await import('@stawi/db');
   if (await findUserIdByPhone(phone)) {
-    return NextResponse.json({ error: 'This number already has a Stawi account. Sign in with your PIN, or ask a group official for a joining code.', exists: true }, { status: 409 });
+    return NextResponse.json({ error: 'This number already has a Stawi account. Sign in with your PIN, or ask a group official for your joining code (given in person, never by SMS).', exists: true }, { status: 409 });
   }
   if (await phoneOnAnyRoster(prisma, phoneKey(phone))) {
-    return NextResponse.json({ error: 'A group has already added this number. Ask one of its officials for a joining code.', needCode: true }, { status: 409 });
+    return NextResponse.json({ error: 'A group has already added this number. Ask one of its officials for your joining code. They give it in person or on WhatsApp; nothing is sent by SMS.', needCode: true }, { status: 409 });
   }
 
   const user = await ensurePhoneUser(phone, false);
