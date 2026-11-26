@@ -1,5 +1,10 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 — Signing in with phone + PIN on a new phone (owner: "taking too long to open … confirm and fix")
+- Found: a PIN sign-in on a phone Stawi had not seen before did not mark that phone as trusted, so the first app page sent the person to /pin/setup, which (no joining code just used) sent them back to sign-in asking for a code. On the owner's own phones it worked because they were already trusted. Fix: a correct phone + own PIN now trusts that phone (same as after choosing a PIN), in `app/api/auth/pin/sign-in/route.ts`.
+- Also: after a correct PIN the screen does one clean page load instead of two (was router.push + refresh) and the button reads "Opening your groups…" until the page shows, so nobody taps again thinking it froze.
+- Measured live from Chrome (Kenya → Frankfurt): health ~0.2 s, sign-in answer ~0.7 s, dashboard ~1 s server time, ~3.9 s full load.
+
 ## 26/11/26 — Phone alerts: new messages and new contributions (owner: "so that the app is not going to remain dormant")
 - Every member who turns alerts on gets a phone alert (Web Push, works in the Play app through the TWA and in the browser) when: a whole-group message is posted (sender + first 140 characters); a private member–officials message is posted (officials + that member only, and no words on the lock screen); a contribution is recorded by the treasurer, or an M-Pesa payment confirms (member, amount, way, new group total); a correction is approved by the five. The person who acted is never alerted about their own action. A tap opens the money record or the messages.
 - "Turn on alerts" card on the dashboard and the group page (asks only from a tap; blocked phones get the Settings path; once on, one quiet line). Existing permission is re-saved on each visit.

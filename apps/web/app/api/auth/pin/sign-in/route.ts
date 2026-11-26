@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { afterPinAttempt, isReviewPinLogin, pinLocked, toE164 } from '@stawi/core';
-import { currentDevice, pinFeatureEnabled, checkPin, findUserIdByPhone, openSession } from '@/lib/pin';
+import { currentDevice, pinFeatureEnabled, checkPin, findUserIdByPhone, openSession, trustThisDevice } from '@/lib/pin';
 import { throttles, clientIp } from '@/lib/auth-throttle';
 import { signInReviewer } from '@/lib/review-sign-in';
 
@@ -64,7 +64,11 @@ export async function POST(req: Request) {
   if (!pin.phone) await setAuthPinPhone(prisma, userId, phone);
   const session = await openSession(userId, phone);
   if (!session) return NextResponse.json({ error: 'Could not sign you in. Try again.' }, { status: 502 });
+  // Phone + own PIN proves the person, so this phone is trusted from now on.
+  // Without this, a tester signing in on a new phone was sent on to /pin/setup
+  // and from there back to sign-in for a joining code (seen 26/11/26).
   if (device && device.userId === userId) await touchTrustedDevice(prisma, device.id);
+  else await trustThisDevice(userId, phone, req.headers.get('user-agent'));
   // The mobile app keeps its own session: it asks for the tokens (app: true).
   return NextResponse.json(body.app === true ? { ok: true, session } : { ok: true });
 }
