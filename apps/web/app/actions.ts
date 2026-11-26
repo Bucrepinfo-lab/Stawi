@@ -376,6 +376,37 @@ export async function createGroupAction(input: {
   }
 }
 
+/**
+ * Join the Stawi Demo Chama (owner 26/11/26): anyone signed in becomes an
+ * ordinary MEMBER of the one shared demo group, with one tap and no joining
+ * code (it holds sample money only). Shown as "Tester 482" with no phone
+ * number, so testers never see each other's numbers. Never changes a role
+ * someone already has there.
+ */
+export async function joinDemoGroupAction(): Promise<{ ok: boolean; groupId?: string; error?: string }> {
+  const { demoGroupId } = await import('@/lib/demo-group');
+  const groupId = demoGroupId();
+  if (!groupId || !dbEnabled()) return { ok: false, error: 'The demo chama is not open yet.' };
+  try {
+    const { prisma } = await import('@stawi/db');
+    const { getUserId, getUserPhone } = await import('@/lib/auth');
+    const userId = await getUserId();
+    if (!userId) return { ok: false, error: 'Please open an account or sign in first.' };
+    const group = await prisma.group.findUnique({ where: { id: groupId }, select: { id: true } });
+    if (!group) return { ok: false, error: 'The demo chama is not open yet.' };
+    const existing = await prisma.membership.findUnique({ where: { groupId_clerkUserId: { groupId, clerkUserId: userId } }, select: { id: true } });
+    if (!existing) {
+      const { demoMemberName } = await import('@stawi/core');
+      const phone = await getUserPhone().catch(() => null);
+      await prisma.membership.create({ data: { groupId, clerkUserId: userId, fullName: demoMemberName(phone), phone: null, role: 'MEMBER' } });
+    }
+    publishEvent({ type: 'group', channel: (await tenantId()) ?? 'public' });
+    return { ok: true, groupId };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Could not join the demo chama.' };
+  }
+}
+
 /** The group's officials choose which sections the group uses (owner 20/11/26). */
 export async function saveModulesAction(input: {
   groupId: string;

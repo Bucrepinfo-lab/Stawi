@@ -1,5 +1,13 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 — One demo chama for every tester, and a welcome that sells the value (owner request)
+- Owner: all testers (and he, and the Play reviewer) in ONE registered group; people not yet in any group get a space that markets the value, without ever seeing another group's details.
+- "Join the demo chama" (`joinDemoGroupAction`, `components/DemoChamaCard.tsx`): anyone signed in joins the group set in `STAWI_DEMO_GROUP_ID` as an ordinary MEMBER with one tap, no joining code (sample money only). Shown as "Tester 482" (last three digits), phone stored empty, so testers never see each other's numbers. Never changes a role already held there. Officials stay the people the owner chose. Unset env = the card does not appear.
+- Judgement call: one tap instead of adding 47 phone numbers to the roster and handing out 47 joining codes (we hold testers' emails, not their numbers; roster rows would also show their numbers to other members).
+- No group yet: a colourful welcome (hero + four cards: Your group, Business matching, Simple business books, Savings and credit "Coming soon"), global wording (savings groups, chamas, stokvels), first month free and the starting price kept; all value banners below with the first one open. Only Stawi's own story: no other group's members, money or business.
+- CSS: `.welcome-*` cards with pillar colours, hover lift, dark mode via tokens, reduced-motion respected; share buttons lift on hover.
+- Owner steps: set `STAWI_DEMO_GROUP_ID` on Fly to the demo group's id (from its address /groups/<id>); make sure his own number is its chairperson.
+
 ## 26/11/26 — Joining code wording: clearly never an SMS code (owner: "Keep it for group members", "correct wording")
 - A tester elsewhere was asked for a "sent code"; the owner wants no app to suggest a code is sent. Stawi keeps the joining code for members a group already added and for a forgotten PIN (owner 26/11/26), because it stops a stranger typing a member's number and opening the group's money records. New people open an account with phone + PIN only.
 - Every screen and message now says the code is handed over in person or on WhatsApp and never sent by SMS; the sign-in links read "Your group added you, or forgot your PIN?" and "New to Stawi? Open an account (phone + PIN, no code)". Phone app: the same link text; the offline prototype no longer says "We'll text a one-time code". `docs/PLAY-LISTING.md` sign-in note updated (it still described the old SMS code).

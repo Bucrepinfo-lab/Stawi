@@ -8,20 +8,80 @@ import { setUrlParams } from '@/lib/url-state';
 import { PayContribution } from '@/components/PayContribution';
 import { TabsHint } from '@/components/TabsHint';
 import { booksOnly, type GroupModules } from '@stawi/core';
+import { DemoChamaCard } from '@/components/DemoChamaCard';
+import { Picture } from '@/components/Pictures';
 
-export function DashboardClient({ groups, initialId, modulesById = {} }: { groups: GroupAccount[]; initialId?: string; modulesById?: Record<string, GroupModules> }) {
+type Pillar = { n: 1 | 2 | 3 | 4; picture: 'moneybag' | 'handshake' | 'chart' | 'bank'; title: string; body: string; points: string[]; soon?: boolean };
+
+const PILLARS: Pillar[] = [
+  {
+    n: 1, picture: 'moneybag', title: 'Your group',
+    body: 'Savings groups, chamas, stokvels and table-banking circles, run in the open.',
+    points: ['Every contribution seen by every member, with each share worked out', 'Minutes written for you from a few rough points', 'A step-by-step path to a registered group'],
+  },
+  {
+    n: 2, picture: 'handshake', title: 'Business matching',
+    body: 'Turn your savings into a business that has been checked before you put money in.',
+    points: ['Ideas matched to your group’s money and skills', 'What it costs, what it earns, and the risks', 'Buyers and suppliers to talk to'],
+  },
+  {
+    n: 3, picture: 'chart', title: 'Simple business books',
+    body: 'Sales, stock and expenses on your phone, for a group business or your own shop.',
+    points: ['Know each day if you made money', 'See which goods sell and which sleep on the shelf', 'Keep business money apart from home money'],
+  },
+  {
+    n: 4, picture: 'bank', title: 'Savings and credit', soon: true,
+    body: 'When your group is ready: savings, fair loans and dividends, like a SACCO.',
+    points: ['Loans by clear rules, never by favour', 'Every member’s savings protected', 'Growing from group to cooperative'],
+  },
+];
+
+/**
+ * Not in any group yet (owner 26/11/26): the value of Stawi, in colourful
+ * cards, for anyone anywhere. Shows only Stawi's own story: never any other
+ * group's members, money or business.
+ */
+function Welcome({ demoAvailable }: { demoAvailable: boolean }) {
+  return (
+    <div style={{ marginTop: 28, display: 'grid', gap: 18 }}>
+      <section className="welcome-hero">
+        <p className="welcome-kicker">Save · Grow · Thrive</p>
+        <h1 className="display welcome-title">Your group, growing in the open</h1>
+        <p className="welcome-lead">
+          We studied why savings groups break up: money nobody can account for, minutes nobody can write, papers nobody
+          understands, loans given by favour. Stawi answers each one, on the phone every member already has, in your
+          language.
+        </p>
+        <div className="welcome-actions">
+          <a href="/groups/new" className="house-go">Start my group, first month free</a>
+          <span className="welcome-note">Groups that join now keep their starting price for as long as they stay.</span>
+        </div>
+      </section>
+      <div className="welcome-grid">
+        {PILLARS.map((p) => (
+          <article key={p.title} className={`welcome-card pillar-${p.n}`}>
+            <div className="welcome-card-head">
+              <span className="welcome-pic" aria-hidden><Picture name={p.picture} size={30} /></span>
+              <strong>{p.title}</strong>
+              {p.soon && <span className="welcome-soon">Coming soon</span>}
+            </div>
+            <p>{p.body}</p>
+            <ul>
+              {p.points.map((x) => <li key={x}>{x}</li>)}
+            </ul>
+          </article>
+        ))}
+      </div>
+      {demoAvailable && <DemoChamaCard />}
+    </div>
+  );
+}
+
+export function DashboardClient({ groups, initialId, modulesById = {}, demoAvailable = false, inDemo = false }: { groups: GroupAccount[]; initialId?: string; modulesById?: Record<string, GroupModules>; demoAvailable?: boolean; inDemo?: boolean }) {
   const [activeId, setActiveIdState] = useState(initialId || groups[0]?.id || '');
   const setActiveId = (id: string) => { setActiveIdState(id); setUrlParams({ group: id }); };
   const active = groups.find((g) => g.id === activeId) ?? groups[0];
-  if (!active) {
-    return (
-      <div className="s-card" style={{ marginTop: 28, background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 'var(--radius)', padding: 22, boxShadow: 'var(--shadow)' }}>
-        <h1 className="display" style={{ fontWeight: 600, fontSize: 26 }}>Welcome to Stawi</h1>
-        <p style={{ color: 'var(--ink-2)', marginTop: 6 }}>You are not in a group yet. Start a group, or open the books for your own business. Use only what you need.</p>
-        <a href="/groups/new" className="house-go" style={{ marginTop: 14 }}>Start with what you need</a>
-      </div>
-    );
-  }
+  if (!active) return <Welcome demoAvailable={demoAvailable} />;
   // Only the sections this group has switched on.
   const mods = modulesById[active.id];
   const showMoney = mods?.money ?? true;
@@ -40,6 +100,7 @@ export function DashboardClient({ groups, initialId, modulesById = {} }: { group
         </div>
       </div>
 
+      {demoAvailable && !inDemo && <DemoChamaCard compact />}
       {mods && <TabsHint records={!onlyBooks} ideas={mods.ideas} books={mods.books} messages={mods.messages} />}
       {showMoney ? (
         <>
