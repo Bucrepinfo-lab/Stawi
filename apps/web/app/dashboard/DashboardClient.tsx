@@ -11,6 +11,7 @@ import { TabsHint } from '@/components/TabsHint';
 import { booksOnly, type GroupModules } from '@stawi/core';
 import { DemoChamaCard } from '@/components/DemoChamaCard';
 import { Picture } from '@/components/Pictures';
+import { WriteForMeLink } from '@/components/WriteForMeLink';
 
 type Pillar = { n: 1 | 2 | 3 | 4; picture: 'moneybag' | 'handshake' | 'chart' | 'bank'; title: string; body: string; points: string[]; soon?: boolean };
 
@@ -115,6 +116,7 @@ export function DashboardClient({ groups, initialId, modulesById = {}, demoAvail
         <a href="/formalize" style={{ color: 'var(--forest)', fontWeight: 600 }}>Formalize this group →</a>{' '}
         <a href={`/groups/${active.id}`} style={{ color: 'var(--forest)', fontWeight: 600 }}>Open group workspace &rarr;</a>
       </p>
+      <WriteForMeLink groupId={active.id} />
       {/* Officials add members from the home screen (owner 26/11/26: "there is nowhere like add new member"). */}
       {['Chairman', 'Secretary', 'Treasurer'].includes(active.myRole) && (
         <div className="add-member">

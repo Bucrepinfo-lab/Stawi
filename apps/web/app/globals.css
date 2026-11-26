@@ -622,3 +622,37 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 .sw-foot a { padding: 10px; border-radius: 10px; color: var(--forest-deep); font-weight: 700; font-size: 13.5px; text-decoration: none; }
 .sw-foot a:hover { background: var(--bone-2); }
 @media (max-width: 520px) { .sw, .sw-btn { width: 100%; } .sw-menu { left: 0; right: auto; } }
+
+/* ── Write it for me (owner 26/11/26) ──────────────────────────────────── */
+.wr-kinds { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+.wr-kind { display: grid; gap: 2px; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bone); color: var(--ink); font: inherit; cursor: pointer; }
+.wr-kind small { color: var(--dim); font-size: 12.5px; }
+.wr-kind:hover { border-color: var(--gold); }
+.wr-kind.on { border: 2px solid var(--forest-deep); background: color-mix(in srgb, var(--gold) 14%, var(--paper)); }
+.wr-kind:focus-visible, .wr-photo:focus-within { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wr-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.wr-photo { display: inline-flex; align-items: center; gap: 12px; min-height: 64px; padding: 0 22px; border-radius: 16px; background: var(--forest-deep); color: var(--bone); font-weight: 800; font-size: 17px; cursor: pointer; box-shadow: var(--shadow); }
+.wr-photo:hover { background: var(--forest); }
+.wr-photo.busy { opacity: .7; cursor: default; }
+.wr-pick { color: var(--forest-deep); font-weight: 700; text-decoration: underline; cursor: pointer; }
+.wr-type summary { cursor: pointer; font-weight: 700; color: var(--ink-2); padding: 6px 0; }
+.wr-type[open] { display: grid; gap: 8px; }
+.wr-status { display: flex; align-items: center; gap: 10px; margin: 0; font-weight: 700; color: var(--forest-deep); }
+.wr-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--gold); animation: wr-pulse 1s ease-in-out infinite; }
+@keyframes wr-pulse { 50% { transform: scale(.55); opacity: .5; } }
+.wr-doc { font-family: var(--font-body); font-size: 15px; line-height: 1.55; white-space: pre-wrap; }
+.wr-print { display: none; }
+@media print {
+  .wr-print { display: block !important; white-space: pre-wrap; font-family: Georgia, serif; font-size: 12pt; line-height: 1.5; margin: 0; }
+  .pf-card { border: 0 !important; box-shadow: none !important; padding: 0 !important; }
+  .hist-kicker, h1.display, main > p, .back-link { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) { .wr-dot { animation: none; } }
+.wfm { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 12px 16px; border-radius: var(--radius-sm); background: var(--paper); border: 1px solid var(--line); border-left: 5px solid var(--forest); color: var(--ink); text-decoration: none; box-shadow: var(--shadow); }
+.wfm:hover { border-color: var(--gold); }
+.wfm:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wfm-ico { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--forest) 14%, transparent); color: var(--forest-deep); }
+.wfm-text { display: grid; gap: 2px; }
+.wfm-text small { color: var(--ink-2); font-size: 13px; }
+.wfm-compact { display: inline-flex; margin-top: 8px; padding: 6px 12px 6px 6px; border-left-width: 1px; }
+.wfm-compact .wfm-ico { width: 32px; height: 32px; }

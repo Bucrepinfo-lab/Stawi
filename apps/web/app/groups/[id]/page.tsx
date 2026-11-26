@@ -17,6 +17,7 @@ import { ModuleSwitches } from '@/components/ModuleSwitches';
 import { TabsHint } from '@/components/TabsHint';
 import { getGroupModules } from '@/lib/modules';
 import { booksOnly, offeredModules } from '@stawi/core';
+import { WriteForMeLink } from '@/components/WriteForMeLink';
 
 export default async function GroupWorkspacePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; month?: string }> }) {
   const { id } = await params;
@@ -66,6 +67,7 @@ export default async function GroupWorkspacePage({ params, searchParams }: { par
       {myName && <MyNameCard groupId={cockpit.groupId} name={myName} placeholder={isPlaceholderName(myName)} />}
       <AttentionCard groupId={cockpit.groupId} items={attention.items} isOfficial={attention.isOfficial} />
       {dbEnabled() && <AlertsCard />}
+      <WriteForMeLink groupId={cockpit.groupId} />
       {dbEnabled() && modules.money && <MoneyTrustCard groupId={cockpit.groupId} alerts={moneyAlerts} />}
       <div style={{ marginTop: 22 }}>
         <GroupCockpit cockpit={shown} canEdit={canEdit} saccoPlus={saccoPlusEnabled() && modules.savings_credit} initialTab={tab} initialMonth={month} modules={modules} />
