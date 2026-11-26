@@ -34,6 +34,7 @@ export function MyNameCard({ groupId, name, placeholder }: { groupId: string; na
         <div className="mr-row" style={{ justifyContent: 'flex-start' }}>
           <span className="mr-meta">You appear in this group as <strong style={{ color: 'var(--ink)' }}>{name}</strong>.</span>
           <button type="button" className="mr-btn" style={{ minHeight: 32 }} onClick={() => { setValue(name); setOpen(true); }}>Change</button>
+          <a href="/profile" className="mr-meta" style={{ textDecoration: 'underline' }}>My profile: photo, phone, PIN, records</a>
         </div>
       ) : (
         <form onSubmit={save} style={{ display: 'grid', gap: 8 }}>

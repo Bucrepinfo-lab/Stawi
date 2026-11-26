@@ -96,7 +96,7 @@ export function DashboardClient({ groups, initialId, modulesById = {}, demoAvail
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <GroupSwitcher groups={groups} activeId={activeId} onSwitch={setActiveId} />
-          <a href="/account/security" style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--paper)', color: 'var(--ink-2)', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>Account</a>
+          <a href="/profile" className="top-me" aria-label="My profile: name, photo, phone, PIN and my records"><i aria-hidden><svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="8.5" r="4" fill="currentColor" /><path d="M4 20.5c1.2-4 4.4-6 8-6s6.8 2 8 6" fill="currentColor" /></svg></i>My profile</a>
           <a href="/groups/new" style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--paper)', color: 'var(--forest-deep)', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>＋ New group</a>
         </div>
       </div>

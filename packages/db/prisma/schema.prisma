@@ -746,3 +746,14 @@ model PushSubscription {
 
   @@index([userId])
 }
+
+// ───────────────────────── My profile (owner 26/11/26) ───────────────────
+// A member's own photo, kept out of Membership so reading a roster never pulls
+// image bytes (Telpen Edu moved 346 GB that way). Membership.photoUrl holds
+// only the short /api/photo/<userId>?v=<version> link. Per user, like AuthPin.
+model ProfilePhoto {
+  userId    String   @id
+  dataUrl   String
+  version   String
+  updatedAt DateTime @updatedAt
+}
