@@ -62,7 +62,8 @@ pure note-taking app, which Stawi is not.)
 - Violence, sexuality, language, controlled substances, gambling: **none**.
 - Users can interact or exchange content: **Yes** (since 20/11/26) — group messages and "Ask the officials",
   only between members of the same private group; every message passes the safety screen, and
-  members can Report any message (a pre-filled email to telpeninfo@gmail.com). No block button yet. No public profiles, no strangers.
+  members can Report any message (a pre-filled email to telpeninfo@gmail.com) and Block a member
+  on their own phone (hides that member's messages in "Whole group"; kept on the device only). No public profiles, no strangers.
 - Shares user location: **No**. Digital purchases: **No** (no in-app purchases in v1).
 - Expected rating: Everyone / PEGI 3 equivalent; audience is still set to adults below.
 

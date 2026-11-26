@@ -5,7 +5,8 @@
 - `docs/PLAY-LISTING.md` brought up to date: phone + PIN sign-in (no SMS), in-app messages (content rating "users interact: Yes", Data safety "Other in-app messages"), Africa's Talking gone, live host, status and owner-only steps.
 - Landing: the last two emoji (door, gift) replaced by a drawn picture / plain words (standing rule 19).
 - Play Console filled and closed-testing release 1 saved as a draft (details and owner-only steps: `docs/PLAY-LISTING.md` → Status 26/11/26). Screenshots are of public pages only; retake from a signed-in phone later.
-- Messages: every message from someone else has a Report link (pre-filled email to telpeninfo@gmail.com) — Play's user-generated-content policy needs an in-app way to report. Tab emoji there replaced by drawn pictures. No block button yet (proposal).
+- Messages: every message from someone else has a Report link (pre-filled email to telpeninfo@gmail.com) — Play's user-generated-content policy needs an in-app way to report. Tab emoji there replaced by drawn pictures.
+- Block (owner 26/11/26 "fix it"): each message from another member in "Whole group" has Block; it hides that member's messages on this phone only (`@stawi/core` `message-blocks.ts`, localStorage per group, tests). Nothing on the server, the member is not told, "Ask the officials" stays readable. A server-side block that follows the person to every phone needs a new table (database = protected area): owner decision. After this is live, update the content rating answer "ability to block" to Yes.
 
 ## 25/11/26 — PRD v3 restructure merged (owner: "Two draft pull requests sitting idle fix them appropriately")
 - PR #28 is brought up to date with main and merged as the plan of record. Nothing new is built. The open decisions in `docs/PRD-V3-RESTRUCTURE.md` §7 and `docs/PRICING-PROPOSAL-2026-11.md` still need the owner's yes, and prices in code are unchanged.

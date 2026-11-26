@@ -55,5 +55,6 @@ export * from './money-summary';
 export * from './modules';
 export * from './attention-notices';
 export * from './messages';
+export * from './message-blocks';
 export * from './collect-ways';
 export * from './join-code';

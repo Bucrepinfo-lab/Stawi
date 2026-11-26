@@ -17,6 +17,8 @@ export interface MessageView {
   body: string;
   at: string;
   mine: boolean;
+  /** Sender's membership id in this group (lets a member block them on their own phone). */
+  from: string;
   name: string;
   official: boolean;
 }
@@ -119,6 +121,7 @@ export async function readMessages(groupId: string, channel: MessageChannel, thr
         body: r.body,
         at: r.createdAt.toISOString(),
         mine: r.senderMembershipId === ctx.me.id,
+        from: r.senderMembershipId,
         name: name(r.senderMembershipId),
         official: isOfficial(r.senderMembershipId),
       })),
