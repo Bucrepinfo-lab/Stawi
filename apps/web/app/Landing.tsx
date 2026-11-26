@@ -8,6 +8,7 @@ import { ShareBar } from '@/components/ShareBar';
 import { OpenDoor } from '@/components/OpenDoor';
 import { CountdownBadge } from '@/components/CountdownBadge';
 import { track } from '@/components/track';
+import { Picture } from '@/components/Pictures';
 
 type Lang = 'en' | 'sw' | 'fr' | 'es' | 'pt' | 'ar' | 'zh' | 'hi' | 'de' | 'ru';
 
@@ -397,7 +398,7 @@ export function Landing({ saccoPlus, foundingDays = null }: { saccoPlus: boolean
         <p style={{ marginTop: 18, fontSize: 18, color: 'var(--ink-2)' }}>{t.sub}</p>
 
         <div style={{ marginTop: 20, background: 'var(--paper)', border: '1px solid var(--gold)', borderRadius: 14, padding: '12px 16px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <span aria-hidden style={{ fontSize: 18 }}>🚪</span>
+          <Picture name="handshake" size={26} />
           <p style={{ fontSize: 14.5, color: 'var(--ink)', fontWeight: 600, margin: 0 }}>{t.open}</p>
         </div>
 
@@ -416,7 +417,7 @@ export function Landing({ saccoPlus, foundingDays = null }: { saccoPlus: boolean
 
       {/* Problems we solve: the pain, the proof, what Stawi does (owner 20/11/26) */}
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-        <span className="count-badge">🎁 {lang === 'sw' ? 'Mwezi wa kwanza ni bure' : 'First month free'}</span>
+        <span className="count-badge">{lang === 'sw' ? 'Mwezi wa kwanza ni bure' : 'First month free'}</span>
         <CountdownBadge days={foundingDays} label={lang === 'sw' ? 'siku zimebaki kujiunga kwa bei ya waanzilishi' : 'days left to join at the founding price'} />
       </div>
       <ValueBanners pillars={[1, 2, 3, 4]} saccoPlus={saccoPlus} lang={lang} />
