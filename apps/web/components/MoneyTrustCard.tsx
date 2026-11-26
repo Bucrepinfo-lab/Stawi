@@ -17,7 +17,7 @@ export function MoneyTrustCard({ groupId, alerts }: {
   return (
     <a href={`/groups/${encodeURIComponent(groupId)}/money`} className="mr-task" style={{ display: 'grid', marginTop: 18, textDecoration: 'none', color: 'inherit' }}>
       <strong>Money record — open to every member</strong>
-      <span className="mr-meta">Every contribution, its witnesses, members&rsquo; confirmations and every correction with who approved it.</span>
+      <span className="mr-meta">Every contribution, its witnesses, members&rsquo; confirmations and every correction with who approved it. Your own payment history is there to print or download.</span>
       {lines.length > 0 ? (
         <span className="mr-badges">{lines.map((l) => <span key={l.text} className={`mr-badge ${l.tone}`}>{l.text}</span>)}</span>
       ) : (

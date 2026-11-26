@@ -37,6 +37,7 @@ export default async function MoneyRecordPage({ params }: { params: Promise<{ id
       <p style={{ color: 'var(--ink-2)', marginTop: 6, maxWidth: 620 }}>
         Every shilling written in, who saw it handed over, and every correction with the names of those who approved it.
       </p>
+      <a href={`/groups/${encodeURIComponent(id)}/history`} className="mr-btn go" style={{ display: 'inline-flex', alignItems: 'center', marginTop: 12, textDecoration: 'none' }}>My payment history — print or download</a>
       <MoneyRecord
         groupId={id}
         myIds={mine}

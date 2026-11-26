@@ -1,5 +1,10 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 — My payment history: print, save as PDF, download (owner request)
+- Every member has their own page `/groups/<id>/history`: every contribution in their name (date dd/mm/yy, way, reference, witnessed n of 2, amount, running total, total and number of payments); corrections show as their own line. "Save as PDF / Print" (print layout hides the app bars) and "Download for Excel (CSV)" (`/groups/<id>/history/csv`, UTF-8 with BOM, text cells guarded against spreadsheet formulas).
+- Who sees what: a member sees only their own; the Chairperson, Secretary and Treasurer can pick any member of the group (server-checked in `history/access.ts`).
+- Links: under the group total on the home screen ("My payment history (download)"), on the Money record page, and mentioned on the group page card. Rules in `@stawi/core` `member-history.ts` (+ tests).
+
 ## 26/11/26 — Testers can open an account from "Sign in"; Add a member; Back on every page (owner request)
 - Testers (e.g. Akina, Benedict) typed their own phone and a PIN on the Sign in screen and were refused: they had no account yet, and the screen only said "phone and PIN do not match … ask for a joining code". Now a number Stawi has never seen, that no group has added, gets "Welcome! This number is new to Stawi. Type the same PIN again" on the same screen and the account opens (the agreed "no PIN yet → choose one"). A number a group added still needs that group's joining code; an existing account with a wrong PIN is unchanged (5-try lock). Judgement call: this tells a caller that a number is new to Stawi; the per-IP and per-phone limits stay.
 - After opening an account the person lands on the home screen (welcome + "Join the demo chama"), no longer straight on "Start a group".

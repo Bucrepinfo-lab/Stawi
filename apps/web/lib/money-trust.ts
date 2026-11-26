@@ -191,3 +191,27 @@ export async function moneyAlerts(groupId: string, myIds: string[], isOfficial: 
   const overdueWitness = witnessed.filter((c) => witnessStatus(c.witnesses, c.createdAt, now).overdue || c.witnesses.some((w) => w.disputedAt)).length;
   return { approvals, witnessTasks, checkTasks, overdueWitness, disputes };
 }
+
+/**
+ * One member's payment history in a group (owner 26/11/26). The caller decides
+ * whose: their own, or — for an official — any member of the group.
+ */
+export async function loadMemberHistory(groupId: string, membershipIds: string[]) {
+  const { prisma } = await import('@stawi/db');
+  const { memberHistory } = await import('@stawi/core');
+  const [group, members, rows] = await Promise.all([
+    prisma.group.findUnique({ where: { id: groupId }, select: { name: true } }),
+    prisma.membership.findMany({ where: { id: { in: membershipIds }, groupId }, select: { id: true, fullName: true, role: true } }),
+    prisma.contribution.findMany({ where: { groupId, membershipId: { in: membershipIds }, status: 'CONFIRMED' }, include: { witnesses: true }, orderBy: { createdAt: 'asc' } }),
+  ]);
+  const history = memberHistory(rows.map((r) => ({
+    id: r.id,
+    at: r.createdAt.toISOString(),
+    amountCents: r.amountCents,
+    channel: r.channel,
+    ref: r.mpesaRef,
+    isCorrection: !!r.correctionOfId,
+    witnessed: r.witnesses.length ? `${r.witnesses.filter((w) => w.confirmedAt && !w.disputedAt).length} of ${r.witnesses.length}` : null,
+  })));
+  return { groupName: group?.name ?? 'Group', memberName: members[0]?.fullName ?? 'Member', ...history };
+}
