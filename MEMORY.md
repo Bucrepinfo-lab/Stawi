@@ -1,5 +1,11 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 — My profile: one place for everything that is mine (owner request)
+- Owner could not find the name edit (it was only on each group page) and asked for one personal place: name, photo, phone number, "what is not working", payment history and a download of all personal records.
+- `/profile` ("My profile" button at the top of the home screen, drawn person icon; the old "Account" button): photo (picked photo shrunk on the phone to a 256 px JPEG, stored in new table `ProfilePhoto`, never in the roster — the lesson from Telpen Edu's 346 GB; served by `/api/photo/<userId>` only to the person and people who share a group with them; `Membership.photoUrl` holds the short link); one name for every group; change phone number (current PIN required; refused when the number has another Stawi account or a group has it for someone else; updates the Supabase login, the PIN row, my roster rows and my devices); change PIN (current PIN, new twice, sign-in lock rules); my payments in every group with links to each history; "Download all my records" (`/api/me/records`, CSV: name, phone, groups and roles, every payment, total); "Something not working?" (email shown as text plus a mail button); sign-in devices and delete account.
+- Judgement calls: changing the number cannot be proven without an SMS, so it needs the current PIN and is refused for numbers another member or account holds; no emoji in the new button (drawn icon, words kept).
+- Rules in `@stawi/core` `profile.ts` (+ tests).
+
 ## 26/11/26 — My payment history: print, save as PDF, download (owner request)
 - Every member has their own page `/groups/<id>/history`: every contribution in their name (date dd/mm/yy, way, reference, witnessed n of 2, amount, running total, total and number of payments); corrections show as their own line. "Save as PDF / Print" (print layout hides the app bars) and "Download for Excel (CSV)" (`/groups/<id>/history/csv`, UTF-8 with BOM, text cells guarded against spreadsheet formulas).
 - Who sees what: a member sees only their own; the Chairperson, Secretary and Treasurer can pick any member of the group (server-checked in `history/access.ts`).
