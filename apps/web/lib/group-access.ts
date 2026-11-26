@@ -43,3 +43,22 @@ export async function groupRoleFor(groupId: string, who: { userId: string; phone
   const order: GroupRole[] = ['CHAIRMAN', 'TREASURER', 'SECRETARY', 'SIGNATORY', 'MEMBER'];
   return order.find((r) => rows.some((x) => x.role === r)) ?? 'MEMBER';
 }
+
+/**
+ * The caller's own Membership ids in `groupId` (by login, or by verified phone
+ * for a roster row not yet linked). Used to decide which money tasks are theirs
+ * (witness, "that's mine", approving a correction). Empty = not a member.
+ */
+export async function myMembershipIds(groupId: string): Promise<string[]> {
+  if (!process.env.DATABASE_URL || !groupId) return [];
+  const userId = await getUserId();
+  if (!userId) return [];
+  const phone = await getUserPhone().catch(() => null);
+  const key = phone ? last9(phone) : '';
+  const { prisma } = await import('@stawi/db');
+  const rows = await prisma.membership.findMany({
+    where: { groupId, OR: [{ clerkUserId: userId }, ...(key.length === 9 ? [{ phone: { endsWith: key } }] : [])] },
+    select: { id: true },
+  });
+  return rows.map((r) => r.id);
+}
