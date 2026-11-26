@@ -1,0 +1,47 @@
+name: Phone alert keys (one-off)
+
+# Creates the Web Push (VAPID) key pair for Stawi's phone alerts and stores it
+# as Fly secrets (owner 26/11/26). Nobody sees or copies the private key: it is
+# generated here, masked in the log, and handed straight to Fly. Safe to re-run:
+# it does nothing when the app already has keys, unless "replace" is ticked
+# (replacing them turns every phone's alerts off until each person taps
+# "Turn on alerts" again).
+on:
+  workflow_dispatch:
+    inputs:
+      replace:
+        description: Replace existing keys (phones must turn alerts on again)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  keys:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    steps:
+      - name: Need the Fly token
+        run: |
+          if [ -z "$FLY_API_TOKEN" ]; then echo "::error::FLY_API_TOKEN is not set"; exit 1; fi
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Skip when keys already exist
+        id: have
+        run: |
+          if flyctl secrets list -a stawi | grep -q '^VAPID_PRIVATE_KEY'; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
+      - name: Generate and store the key pair
+        if: steps.have.outputs.exists == 'false' || inputs.replace
+        run: |
+          set -euo pipefail
+          KEYS=$(npx --yes web-push@3.6.7 generate-vapid-keys --json)
+          PUB=$(echo "$KEYS" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).publicKey))')
+          PRIV=$(echo "$KEYS" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).privateKey))')
+          echo "::add-mask::$PRIV"
+          flyctl secrets set -a stawi VAPID_PUBLIC_KEY="$PUB" VAPID_PRIVATE_KEY="$PRIV" VAPID_SUBJECT="mailto:telpeninfo@gmail.com"
+          echo "Keys stored on Fly; the app restarts with alerts ready."
+      - name: Already set
+        if: steps.have.outputs.exists == 'true' && !inputs.replace
+        run: echo "::notice::Stawi already has phone alert keys; nothing changed."

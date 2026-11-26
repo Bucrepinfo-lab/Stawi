@@ -153,5 +153,8 @@ export async function sendMessage(groupId: string, input: { channel: MessageChan
   await prisma.groupMessage.create({
     data: { groupId, channel: input.channel, threadMemberId: thread.threadMemberId, senderMembershipId: ctx.me.id, body: checked.body },
   });
+  // Every member with the app hears about it (owner 26/11/26); never blocks the send.
+  const { alertNewMessage } = await import('./group-alerts');
+  void alertNewMessage({ groupId, senderMembershipId: ctx.me.id, body: checked.body, channel: input.channel, threadMemberId: thread.threadMemberId });
   return { ok: true };
 }

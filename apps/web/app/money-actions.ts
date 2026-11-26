@@ -160,5 +160,8 @@ export async function decideCorrectionAction(input: { groupId: string; correctio
     return state;
   });
   publishEvent({ type: 'contribution', channel: 'public' });
+  if (outcome === 'APPROVED') {
+    void (await import('@/lib/group-alerts')).alertCorrectionApproved({ groupId: c.groupId, membershipId: c.membershipId, fromCents: c.originalCents, toCents: c.correctedCents });
+  }
   return { ok: true, outcome };
 }

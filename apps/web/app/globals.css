@@ -448,7 +448,7 @@ html.dark .vb-tab:not([aria-selected="true"]):hover { color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { .fb-banner { animation: none; } }
 
 /* ── Check before you record (owner 26/11/26) ─────────────────────────── */
-.cf-sheet { border: 0; padding: 0; border-radius: 20px; background: var(--paper); color: var(--ink); width: min(440px, calc(100vw - 32px)); box-shadow: 0 24px 60px -20px rgba(22, 38, 31, .55); }
+.cf-sheet { margin: auto; inset: 0; max-height: calc(100dvh - 32px); overflow: auto; border: 0; padding: 0; border-radius: 20px; background: var(--paper); color: var(--ink); width: min(440px, calc(100vw - 32px)); box-shadow: 0 24px 60px -20px rgba(22, 38, 31, .55); }
 .cf-sheet::backdrop { background: rgba(15, 22, 19, .55); backdrop-filter: blur(2px); }
 .cf-sheet[open] { animation: cf-in .18s ease-out; }
 @keyframes cf-in { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -509,3 +509,17 @@ html.dark .vb-tab:not([aria-selected="true"]):hover { color: var(--ink); }
 .mr-seats { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 13.5px; }
 .mr-seats li { display: flex; justify-content: space-between; gap: 10px; }
 .mr-empty { color: var(--dim); font-size: 14px; }
+
+/* ── Phone alerts (owner 26/11/26) ─────────────────────────────────────── */
+.al-card { margin-top: 18px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; padding: 16px 18px; border-radius: var(--radius); background: var(--paper); border: 1px solid var(--line); border-left: 5px solid var(--gold); box-shadow: var(--shadow); }
+.al-bell { flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: var(--forest-deep); background: color-mix(in srgb, var(--gold) 28%, transparent); }
+.al-text { flex: 1 1 240px; min-width: 0; }
+.al-text h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--ink); }
+.al-text p { margin: 4px 0 0; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+.al-btn { min-height: 46px; padding: 0 20px; border-radius: 12px; border: 0; background: var(--forest-deep); color: var(--bone); font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; }
+.al-btn:hover { background: var(--forest); }
+.al-btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.al-btn:disabled { opacity: .7; cursor: default; }
+.al-on { margin: 14px 2px 0; font-size: 13px; color: var(--dim); }
+.al-on span { color: var(--good); margin-right: 4px; }
+@media (max-width: 480px) { .al-btn { flex: 1 1 100%; } }
