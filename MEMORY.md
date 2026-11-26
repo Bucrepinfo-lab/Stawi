@@ -3,6 +3,10 @@
 ## 26/11/26 — A way back after printing or saving a PDF (owner: screenshot of Save as PDF on the group papers)
 - After the phone's print / Save-as-PDF screen the person was left deep on the paper with the only Back link at the top. `components/ReturnBar.tsx`: a "Back to <group / My profile>" bar fixed at the bottom of the screen on the papers pack, payment history and receipts (never printed; sits above the tab bar), and when the print screen closes (`afterprint`) it lights up with "Saved or printed. Your paper is in your phone's Downloads." `PrintReturn` (in the root layout) gives the same lit Back on every other page that prints (minutes, books).
 - The receipt link under the group total no longer opens a new tab: in the Play app a new tab has no way back.
+## 26/11/26 — One phone number, many chamas: "Switch chama" (owner request)
+- Already true underneath: one phone + PIN is one account, and every chama whose roster carries that (proven) number shows on the home screen. What was missing: the switcher only appeared with 2+ groups and was easy to miss, and someone already signed in had no way to add a second chama that added their number (the joining-code screen is only on sign-in and would make them choose a new PIN).
+- `GroupSwitcher` is now always a clear "Switch chama" / "My chamas" button (name, your role, how many chamas), with each chama one tap away plus "＋ Join another chama (joining code)" and "＋ Start a new group"; Esc closes; full width on phones.
+- New `/api/auth/join-more` (signed in, sign-in area): type the new chama's joining code; same checks as sign-in codes (this phone, once, 48 h, 5 tries, throttled); links the roster rows carrying the number to this account and marks the phone proven; session and PIN unchanged. "Join another chama" card in My profile (`/profile#join`); My profile lists every chama with "Open".
 
 ## 26/11/26 — My profile: one place for everything that is mine (owner request)
 - Owner could not find the name edit (it was only on each group page) and asked for one personal place: name, photo, phone number, "what is not working", payment history and a download of all personal records.

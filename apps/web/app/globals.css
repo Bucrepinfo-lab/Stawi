@@ -598,3 +598,27 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 .return-x { border: 0; background: transparent; color: var(--dim); font-size: 16px; padding: 6px 8px; border-radius: 8px; cursor: pointer; }
 @media print { .return-bar { display: none !important; } }
 @media (prefers-reduced-motion: reduce) { .return-bar.lit { animation: none; } }
+/* ── Switch chama (owner 26/11/26) ─────────────────────────────────────── */
+.sw { position: relative; display: inline-block; }
+.sw-btn { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 8px 6px 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--paper); box-shadow: var(--shadow); cursor: pointer; font: inherit; color: var(--ink); text-align: left; }
+.sw-btn:hover { border-color: var(--gold); }
+.sw-btn:focus-visible, .sw-item:focus-visible, .sw-foot a:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.sw-flag { font-size: 18px; }
+.sw-now { display: grid; line-height: 1.2; min-width: 0; }
+.sw-now strong { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+.sw-now small { font-size: 11.5px; color: var(--dim); }
+.sw-cta { margin-left: 6px; padding: 7px 10px; border-radius: 10px; background: var(--forest-deep); color: var(--bone); font-weight: 700; font-size: 12.5px; white-space: nowrap; }
+.sw-cta span { display: inline-block; transition: transform .15s; }
+.sw-cta span.up { transform: rotate(180deg); }
+.sw-menu { position: absolute; top: calc(100% + 8px); right: 0; z-index: 50; width: min(340px, calc(100vw - 32px)); background: var(--paper); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 18px 40px -18px rgba(22, 38, 31, .45); padding: 6px; }
+.sw-head { margin: 0; padding: 8px 10px 6px; font-size: 12px; font-weight: 700; color: var(--dim); }
+.sw-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; border: 0; border-radius: 12px; background: transparent; cursor: pointer; font: inherit; color: var(--ink); text-align: left; }
+.sw-item:hover { background: var(--bone-2); }
+.sw-item.on { background: color-mix(in srgb, var(--gold) 14%, transparent); }
+.sw-item .sw-now { flex: 1; }
+.sw-tick { font-size: 12px; font-weight: 700; color: var(--forest); }
+.sw-go { font-size: 12px; font-weight: 700; color: var(--forest-deep); padding: 4px 10px; border-radius: 8px; border: 1px solid var(--line); }
+.sw-foot { display: grid; gap: 2px; margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--line); }
+.sw-foot a { padding: 10px; border-radius: 10px; color: var(--forest-deep); font-weight: 700; font-size: 13.5px; text-decoration: none; }
+.sw-foot a:hover { background: var(--bone-2); }
+@media (max-width: 520px) { .sw, .sw-btn { width: 100%; } .sw-menu { left: 0; right: auto; } }
