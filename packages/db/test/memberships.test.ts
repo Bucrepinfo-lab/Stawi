@@ -95,3 +95,22 @@ describe('findDuplicateMemberships — read-only report', () => {
     ])).toEqual([]);
   });
 });
+
+describe('linking roster rows to a login (audit 26/11/26)', () => {
+  it('claims only unclaimed rows; a row another login holds stays theirs', async () => {
+    const { linkMembershipsByPhone } = await import('../src/repo');
+    const rows = [
+      { id: 'a', groupId: 'g1', clerkUserId: 'pending:712345678', phone: '+254712345678' },
+      { id: 'b', groupId: 'g2', clerkUserId: 'user-other', phone: '0712345678' },
+    ];
+    const updated: string[] = [];
+    const membership = {
+      findMany: async ({ where }: any) => rows.filter((r) => r.phone.endsWith(where.phone.endsWith) && (!where.clerkUserId?.startsWith || r.clerkUserId.startsWith(where.clerkUserId.startsWith))),
+      update: async ({ where, data }: any) => { updated.push(where.id); Object.assign(rows.find((r) => r.id === where.id)!, data); },
+    };
+    const out = await linkMembershipsByPhone({ membership } as never, 'user-me', ['+254712345678']);
+    expect(out.linked).toBe(1);
+    expect(updated).toEqual(['a']);
+    expect(rows.find((r) => r.id === 'b')!.clerkUserId).toBe('user-other');
+  });
+});

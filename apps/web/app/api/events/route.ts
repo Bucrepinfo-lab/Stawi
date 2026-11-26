@@ -4,7 +4,9 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/events?channel=<tenantId|public> — Server-Sent Events stream.
+ * GET /api/events?channel=g:<groupId>[,g:<groupId>…] — Server-Sent Events stream.
+ * Events say only that something changed in a group (no names or amounts), so a
+ * page refreshes itself; the refreshed page re-checks who may see what.
  * Browsers subscribe via EventSource; server actions publish after writes,
  * and every member's dashboard refreshes within a second of a payment.
  * Heartbeat every 25s keeps proxies from closing the connection.
