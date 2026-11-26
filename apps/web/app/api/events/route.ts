@@ -4,14 +4,17 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/events?channel=<tenantId|public> — Server-Sent Events stream.
+ * GET /api/events?channel=g:<groupId>[,g:<groupId>…] — Server-Sent Events stream.
+ * Events say only that something changed in a group (no names or amounts), so a
+ * page refreshes itself; the refreshed page re-checks who may see what.
  * Browsers subscribe via EventSource; server actions publish after writes,
  * and every member's dashboard refreshes within a second of a payment.
  * Heartbeat every 25s keeps proxies from closing the connection.
  */
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const channel = url.searchParams.get('channel') ?? 'public';
+  // One or more channels, comma-separated (e.g. g:<groupId>); 'public' is the seed/demo channel.
+  const channels = new Set((url.searchParams.get('channel') ?? 'public').split(',').map((c) => c.trim()).filter(Boolean).slice(0, 20));
   const encoder = new TextEncoder();
 
   let cleanup = () => {};
@@ -21,7 +24,7 @@ export async function GET(req: Request) {
       send(`retry: 3000\n\n`);
 
       const unsub = subscribe((e: StawiEvent) => {
-        if (e.channel === channel || e.channel === 'public') {
+        if (channels.has(e.channel) || e.channel === 'public') {
           send(`event: stawi\ndata: ${JSON.stringify(e)}\n\n`);
         }
       });

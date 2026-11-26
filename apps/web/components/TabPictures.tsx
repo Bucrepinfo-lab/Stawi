@@ -10,7 +10,7 @@
  * and filled, in the hand-drawn spirit research found works best for people
  * who read little (Medhi et al., Microsoft Research India).
  */
-export type TabPictureName = 'group' | 'ideas' | 'books' | 'messages' | 'share';
+export type TabPictureName = 'group' | 'ideas' | 'books' | 'messages' | 'share' | 'me' | 'search';
 
 export const INK = '#16261f';
 export const FOREST = '#1f4d3a';
@@ -93,7 +93,31 @@ export function Share() {
   );
 }
 
-const DRAWINGS: Record<TabPictureName, () => JSX.Element> = { group: Group, ideas: Ideas, books: Books, messages: Messages, share: Share };
+export function Me() {
+  // One person with their own card: my name, my photo, my records (owner 26/11/26).
+  return (
+    <>
+      <rect x='4.5' y='7' width='23' height='18' rx='3' fill={PAGE} {...outline} />
+      <circle cx='12' cy='14' r='3.2' fill={GOLD} {...outline} />
+      <path d='M6.8 22.6c0-3 2.3-4.7 5.2-4.7s5.2 1.7 5.2 4.7z' fill={FOREST} {...outline} />
+      <path d='M19 13h5.4M19 16.4h5.4M19 19.8h3.6' stroke={SKY} strokeWidth='1.7' strokeLinecap='round' />
+    </>
+  );
+}
+
+export function Search() {
+  // A magnifying glass over the group's book: find a name, a payment, a meeting.
+  return (
+    <>
+      <path d='M6 6.5h11.5a2 2 0 0 1 2 2v17H8a2 2 0 0 1-2-2z' fill={PAGE} {...outline} />
+      <path d='M9 11h7.5M9 14.2h5' stroke={SKY} strokeWidth='1.6' strokeLinecap='round' />
+      <circle cx='19' cy='19' r='5' fill={GOLD} fillOpacity='0.35' stroke={FOREST} strokeWidth='2.2' />
+      <path d='M22.6 22.6l4 4' stroke={FOREST} strokeWidth='2.6' strokeLinecap='round' />
+    </>
+  );
+}
+
+const DRAWINGS: Record<TabPictureName, () => JSX.Element> = { group: Group, ideas: Ideas, books: Books, messages: Messages, share: Share, me: Me, search: Search };
 
 export const TAB_PICTURE_NAMES = Object.keys(DRAWINGS) as TabPictureName[];
 

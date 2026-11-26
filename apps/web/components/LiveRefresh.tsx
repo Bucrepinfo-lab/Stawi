@@ -9,6 +9,7 @@
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
+/** `channel`: the group's channel (`g:<groupId>`), so only that group's writes refresh this page. */
 export function LiveRefresh({ channel = 'public' }: { channel?: string }) {
   const router = useRouter();
   const last = useRef(0);

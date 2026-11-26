@@ -861,9 +861,12 @@ export async function linkMembershipsByPhone(
   for (const p of phones) {
     const key = phoneKey(p);
     if (!key) continue;
-    const rows = await prisma.membership.findMany({ where: { phone: { endsWith: key } } });
+    // Only roster rows nobody has claimed yet ("pending:<key>"). A row already
+    // linked to another login stays theirs: one number can be shared (a family
+    // phone, a director who also teaches) and must never move someone's
+    // membership, money record or role to another account (audit 26/11/26).
+    const rows = await prisma.membership.findMany({ where: { phone: { endsWith: key }, clerkUserId: { startsWith: 'pending:' } } });
     for (const row of rows) {
-      if (row.clerkUserId === clerkUserId) continue;
       await prisma.membership.update({ where: { id: row.id }, data: { clerkUserId } }).catch(() => {});
       linked++;
     }

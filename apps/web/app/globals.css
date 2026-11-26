@@ -692,3 +692,22 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 .dc-live { display: flex; gap: 8px; align-items: center; margin: 0; font-weight: 700; color: var(--forest-deep); }
 .dc-text { font-size: 15px; line-height: 1.55; }
 @media (prefers-reduced-motion: reduce) { .dc-mic.live { animation: none; } }
+
+/* ── Search on every tabbed screen (owner 26/11/26) ────────────────────── */
+.app-search { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); z-index: 45; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 4px 12px 4px 6px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); color: var(--ink); text-decoration: none; font-weight: 800; font-size: 13px; }
+.app-search[aria-current="page"] { border-color: var(--forest-deep); box-shadow: 0 0 0 2px var(--gold); }
+.app-search:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+@media (max-width: 380px) { .app-search span { display: none; } .app-search { padding: 4px; } }
+@media (min-width: 900px) {
+  .app-search { position: static; margin-left: 10px; box-shadow: none; }
+}
+@media print { .app-search { display: none !important; } }
+/* Room for the Search button above the page on phones. */
+@media (max-width: 899px) { body.has-app-tabs { padding-top: calc(52px + env(safe-area-inset-top, 0px)); } }
+.sr-form { display: grid; gap: 6px; margin-top: 6px; }
+.sr-row { display: flex; gap: 8px; }
+.sr-input { flex: 1; min-height: 50px; font-size: 16px; }
+.sr-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.sr-list a { display: block; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--paper); border: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+.sr-list a:hover { border-color: var(--gold); }
+.sr-list a:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }

@@ -3,8 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { shareLink, shareMessage, type ValueLang } from '@stawi/core';
-import { ShareBar } from './ShareBar';
+import type { ValueLang } from '@stawi/core';
 import { storedLang, track } from './track';
 import { TABS_HINT_EVENT, readTabsHint, type TabsHintValue } from './TabsHint';
 import { TabPicture, type TabPictureName } from './TabPictures';
@@ -24,14 +23,14 @@ const TABS: { href: string; match: RegExp; picture: TabPictureName; key: string;
   { href: '/messages', match: /^\/messages(\/|$)/, picture: 'messages', key: 'tab-messages', needs: 'messages', label: { en: 'Messages', sw: 'Ujumbe' } },
 ];
 
-const SHOW_ON = /^\/(dashboard|groups|formalize|match|books|messages|sacco|community)(\/|$)/;
-const SHARE_LABEL: Record<ValueLang, string> = { en: 'Share', sw: 'Shiriki' };
+const SHOW_ON = /^\/(dashboard|groups|formalize|match|books|messages|sacco|community|profile|search|write|proposal)(\/|$)/;
+const ME_LABEL: Record<ValueLang, string> = { en: 'Me', sw: 'Mimi' };
+const SEARCH_LABEL: Record<ValueLang, string> = { en: 'Search', sw: 'Tafuta' };
 
 export function AppTabs() {
   const pathname = usePathname() ?? '/';
   const visible = SHOW_ON.test(pathname);
   const [lang, setLang] = useState<ValueLang>('en');
-  const [panel, setPanel] = useState(false);
   useEffect(() => { setLang(storedLang()); }, []);
   // Show only the tabs for the sections the group on screen uses (see TabsHint).
   const [hint, setHint] = useState<TabsHintValue | null>(null);
@@ -47,22 +46,6 @@ export function AppTabs() {
   }, [visible]);
   if (!visible) return null;
 
-  async function share() {
-    track('share', 'share-tab');
-    // On a phone: the phone's own share sheet (WhatsApp, Facebook, TikTok…).
-    // On a computer: our own panel, never the computer's OneNote/Outlook box.
-    const touch = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
-    if (touch && typeof navigator.share === 'function') {
-      try {
-        await navigator.share({ title: 'Stawi', text: shareMessage(lang, shareLink(window.location.origin, 'device')) });
-      } catch {
-        // Closed the share sheet.
-      }
-      return;
-    }
-    setPanel(true);
-  }
-
   return (
     <nav className="app-tabs" aria-label="Main">
       {TABS.filter((t) => !hint || hint[t.needs] || t.match.test(pathname)).map((t) => (
@@ -71,18 +54,16 @@ export function AppTabs() {
           <span>{t.label[lang]}</span>
         </Link>
       ))}
-      <button type="button" className="app-tab" onClick={share}>
-        <span className="i pic" aria-hidden><TabPicture name="share" /></span>
-        <span>{SHARE_LABEL[lang]}</span>
-      </button>
-      {panel && (
-        <div role="dialog" aria-label={SHARE_LABEL[lang]} onClick={() => setPanel(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.35)', display: 'grid', placeItems: 'end center', zIndex: 50 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--paper)', borderRadius: '16px 16px 0 0', padding: 16, width: 'min(560px, 100%)', boxShadow: 'var(--shadow)' }}>
-            <ShareBar lang={lang} />
-            <button type="button" className="share-btn" onClick={() => setPanel(false)} style={{ marginTop: 10 }}>✕</button>
-          </div>
-        </div>
-      )}
+      {/* Five tabs at most (Material navigation bar: three to five destinations). "Me" holds
+          profile, language, alerts, sign-in and Share; Search sits above the tabs on every screen. */}
+      <Link href="/profile" className="app-tab" aria-current={/^\/profile(\/|$)/.test(pathname) ? 'page' : undefined} onClick={() => track('tab', 'tab-me')}>
+        <span className="i pic" aria-hidden><TabPicture name="me" /></span>
+        <span>{ME_LABEL[lang]}</span>
+      </Link>
+      <Link href="/search" className="app-search" aria-label={SEARCH_LABEL[lang]} aria-current={/^\/search(\/|$)/.test(pathname) ? 'page' : undefined} onClick={() => track('tab', 'tab-search')}>
+        <TabPicture name="search" size={28} />
+        <span>{SEARCH_LABEL[lang]}</span>
+      </Link>
     </nav>
   );
 }

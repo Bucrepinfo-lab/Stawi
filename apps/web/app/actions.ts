@@ -30,7 +30,7 @@ async function requireGroupRole(groupId: string | undefined, allowed: 'money' | 
   }
   return null;
 }
-import { publishEvent } from '@/lib/events';
+import { groupChannel, publishEvent } from '@/lib/events';
 
 async function tenantId(): Promise<string | undefined> {
   const { prisma, getTenantContext } = await import('@stawi/db');
@@ -113,7 +113,7 @@ export async function recordContributionAction(input: {
   } catch (e) {
     return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Write failed' };
   }
-  publishEvent({ type: 'contribution', channel: tenant ?? 'public' });
+  publishEvent({ type: 'contribution', channel: groupChannel(input.groupId!) });
   // Every other member gets a phone alert (owner 26/11/26); never blocks the write.
   void (await import('@/lib/group-alerts')).alertNewContribution(contributionId, userId);
   // The receipt is opened by this id only (loaded from the database, never from URL values).
@@ -400,7 +400,7 @@ export async function createGroupAction(input: {
       const known = await prisma.membership.findMany({ where: { clerkUserId: userId }, select: { fullName: true }, orderBy: { joinedAt: 'desc' }, take: 10 });
       await prisma.membership.create({ data: { groupId: g.id, clerkUserId: userId, fullName: founderName(known.map((k) => k.fullName)), phone, role: 'CHAIRMAN' } }).catch(() => {});
     }
-    publishEvent({ type: 'group', channel: tid ?? 'public' });
+    publishEvent({ type: 'group', channel: groupChannel(g.id) });
     return { ok: true, persisted: true, groupId: g.id, booksOnly: isBooksOnly };
   } catch (e) {
     return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Create failed' };
@@ -431,7 +431,7 @@ export async function joinDemoGroupAction(): Promise<{ ok: boolean; groupId?: st
       const phone = await getUserPhone().catch(() => null);
       await prisma.membership.create({ data: { groupId, clerkUserId: userId, fullName: demoMemberName(phone), phone: null, role: 'MEMBER' } });
     }
-    publishEvent({ type: 'group', channel: (await tenantId()) ?? 'public' });
+    publishEvent({ type: 'group', channel: groupChannel(groupId) });
     return { ok: true, groupId };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Could not join the demo chama.' };
@@ -455,7 +455,7 @@ export async function saveModulesAction(input: {
   try {
     const { prisma } = await import('@stawi/db');
     await prisma.group.update({ where: { id: input.groupId }, data: { modules: chosen } });
-    publishEvent({ type: 'group', channel: (await tenantId()) ?? 'public' });
+    publishEvent({ type: 'group', channel: groupChannel(input.groupId) });
     return { ok: true, persisted: true };
   } catch (e) {
     return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Save failed' };
@@ -512,7 +512,7 @@ export async function saveCharterAction(input: {
         .map((m: any) => ({ fullName: m.fullName, phone: m.phone, designation: m.designation }));
       if (roster.length) await provisionRosterMemberships(prisma, { groupId: input.groupId, tenantId: await tenantId(), roster });
     } catch { /* non-fatal */ }
-    publishEvent({ type: 'charter', channel: (await tenantId()) ?? 'public' });
+    publishEvent({ type: 'charter', channel: groupChannel(input.groupId) });
     return { ok: true, persisted: true };
   } catch (e) {
     return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Save failed' };
@@ -537,7 +537,7 @@ export async function saveMeetingAction(input: {
   try {
     const { prisma, upsertMeeting } = await import('@stawi/db');
     await upsertMeeting(prisma, { groupId: input.groupId, tenantId: await tenantId(), ...m });
-    publishEvent({ type: 'meeting', channel: (await tenantId()) ?? 'public' });
+    publishEvent({ type: 'meeting', channel: groupChannel(input.groupId) });
     return { ok: true, persisted: true };
   } catch (e) {
     return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Save failed' };
@@ -562,7 +562,7 @@ export async function postMeetingAction(input: {
   try {
     const { prisma, postMeeting } = await import('@stawi/db');
     await postMeeting(prisma, { groupId: input.groupId, meetingNo: input.meetingNo, generatedDoc: input.generatedDoc, tenantId: await tenantId() });
-    publishEvent({ type: 'meeting', channel: (await tenantId()) ?? 'public' });
+    publishEvent({ type: 'meeting', channel: groupChannel(input.groupId) });
     return { ok: true, persisted: true };
   } catch (e) {
     return { ok: false, persisted: false, error: e instanceof Error ? e.message : 'Post failed' };
@@ -703,6 +703,6 @@ export async function updateMyNameAction(input: { groupId: string; name: string 
     data: { fullName: checked.name },
   });
   if (done.count === 0) return { ok: false, error: 'You are not a member of this group.' };
-  publishEvent({ type: 'group', channel: (await tenantId()) ?? 'public' });
+  publishEvent({ type: 'group', channel: groupChannel(input.groupId) });
   return { ok: true, name: checked.name };
 }
