@@ -35,6 +35,9 @@ export default async function MatchPage({ searchParams }: { searchParams: Promis
         before the group decides.
       </p>
       <BusinessMatch />
+      <p className="mr-meta" style={{ marginTop: 10 }}>
+        Chosen your business and need more money than your savings? Tap <strong>Write the funding proposal</strong> on it in your shortlist, or <a href={`/proposal${groupId ? `?group=${encodeURIComponent(groupId)}` : ''}`}>write one for any business</a>.
+      </p>
       {groupId && <DocumentHouse groupId={groupId} focus="start_business" />}
       <ValueBanners pillars={[2]} startCollapsed />
     </main>
