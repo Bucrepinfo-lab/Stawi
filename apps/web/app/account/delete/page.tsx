@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { deleteMyAccount } from "@/lib/delete-account";
+import { BackLink } from "@/components/BackLink";
 
 /**
  * In-app account deletion (Google Play User Data policy). At /account/delete — use
@@ -35,6 +36,7 @@ export default function DeleteAccountPage() {
           padding: 24,
         }}
       >
+        <BackLink fallback="/account/security" />
         <h1 style={{ fontSize: 20, fontWeight: 700, color: "#b3261e", margin: 0 }}>Delete your account</h1>
         <p style={{ fontSize: 14, color: "var(--ink-2)", margin: 0, lineHeight: 1.5 }}>
           This removes your Stawi login and your personal details (name, phone, photo).

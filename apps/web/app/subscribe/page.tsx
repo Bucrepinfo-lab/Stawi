@@ -5,7 +5,8 @@ import { ValueBanners } from '@/components/ValueBanners';
 import { ShareBar } from '@/components/ShareBar';
 import { CountdownBadge } from '@/components/CountdownBadge';
 import { daysLeft, foundingUntil } from '@stawi/core';
-import { saccoPlusEnabled } from '@/lib/features';
+import { saccoPlusEnabled } from '@/lib/features';
+import { BackLink } from '@/components/BackLink';
 
 // Flags and the founding-price date are read per request, never baked in at build.
 export const dynamic = 'force-dynamic';
@@ -16,6 +17,7 @@ export default async function SubscribePage() {
   const allowed = planPurchasesAllowed({ cookie: jar.get(PLAY_APP_COOKIE)?.value ?? null, referrer: h.get('referer') });
   return (
     <main style={{ maxWidth: 980, margin: '0 auto', padding: '28px 24px 80px' }}>
+      <BackLink fallback="/" />
       <p style={{ fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700 }}>Pricing</p>
       <h1 className="display" style={{ fontWeight: 600, fontSize: 34, marginTop: 6 }}>Choose your plan</h1>
       <p style={{ color: 'var(--ink-2)', marginTop: 6, maxWidth: 620 }}>

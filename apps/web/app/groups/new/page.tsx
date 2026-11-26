@@ -13,7 +13,7 @@ export default async function NewGroupPage({ searchParams }: { searchParams: Pro
   const { start } = await searchParams;
   return (
     <main className="pillar-1" style={{ maxWidth: 720, margin: '0 auto', padding: '32px 20px 90px' }}>
-      <a href="/dashboard" style={{ fontSize: 13, color: 'var(--forest)', fontWeight: 600, textDecoration: 'none' }}>← Back</a>
+      <a href="/dashboard" className="back-link no-print">← Back</a>
       <h1 className="display" style={{ fontWeight: 600, fontSize: 30, marginTop: 14 }}>Start with what you need</h1>
       <p style={{ color: 'var(--ink-2)', marginTop: 6 }}>A group, or a business on its own. The first month is free.</p>
       <NewGroupForm initialStart={start} />

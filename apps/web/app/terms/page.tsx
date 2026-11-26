@@ -1,3 +1,5 @@
+import { BackLink } from '@/components/BackLink';
+
 const SECTIONS: { h: string; b: string }[] = [
   { h: '1. Software, not a bank', b: 'Stawi is a software service — not a bank, SACCO, money-services business, investment/tax adviser, or law firm. Calculations, venture matches, tax/levy estimates and formalization guidance are informational only and are not financial, legal, or tax advice.' },
   { h: '2. Subscriptions & first month free', b: 'Plans: Small group, Group, Growth, Enterprise. In Kenya a group pays KES 10 a member a month, at least KES 50 and at most KES 299 a group (a year paid ahead costs 10 months); a group that uses meetings and minutes only pays half (KES 5 a member, KES 30 to KES 149). The business books are free for a small shop (up to 100 sales a month, one person), otherwise KES 99 a month, KES 30 a week or KES 5 a day; a subscribed group’s first business is included. Outside Kenya prices are per group. Every plan starts with a free first month, then auto-renews until cancelled. Groups that join in our first 12 months keep that founding price for as long as they stay subscribed; cancelling ends it. Prices show in your local currency (outside Kenya they are indicative until confirmed) and exclude taxes unless stated. Cancel anytime, effective end of period; fees are non-refundable except where local consumer law requires otherwise.' },
@@ -11,6 +13,7 @@ const SECTIONS: { h: string; b: string }[] = [
 export default function TermsPage() {
   return (
     <main style={{ maxWidth: 760, margin: '0 auto', padding: '28px 24px 80px' }}>
+      <BackLink fallback="/" />
       <p style={{ fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700 }}>Legal</p>
       <h1 className="display" style={{ fontWeight: 600, fontSize: 34, marginTop: 6 }}>Subscription Terms &amp; Conditions</h1>
       <p style={{ color: 'var(--ink-2)', marginTop: 6 }}>

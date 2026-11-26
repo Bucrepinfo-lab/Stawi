@@ -28,6 +28,8 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [opening, setOpening] = useState(false);
+  // Came from "Sign in" with a number Stawi has not seen: open the account here.
+  const [newHere, setNewHere] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // A trusted device remembers which number signs in here (shown masked).
@@ -44,6 +46,7 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
 
   function switchTo(m: Mode) {
     setMode(m);
+    setNewHere(false);
     setError(null);
     setPin("");
     setPin2("");
@@ -82,6 +85,15 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
       window.location.replace(next);
       return;
     }
+    if (data.noAccount) {
+      // New to Stawi: keep the number and the PIN they chose; ask for it once more.
+      setMode("start");
+      setPin(body.pin ?? "");
+      setPin2("");
+      setNewHere(true);
+      setError(null);
+      return;
+    }
     setError(data.error ?? "Could not sign in. Try again.");
     if (data.locked) switchTo("code");
   }
@@ -107,8 +119,9 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
       if (data.needCode) switchTo("code");
       return;
     }
-    router.push(next === "/dashboard" ? "/groups/new" : next);
-    router.refresh();
+    // Home first: a new person sees the welcome and "Join the demo chama".
+    setOpening(true);
+    window.location.replace(next);
   }
 
   const inputStyle: React.CSSProperties = {
@@ -184,9 +197,15 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
   if (mode === "start") {
     return (
       <form onSubmit={start} style={{ display: "grid", gap: 12, textAlign: "left" }}>
-        <p style={{ fontSize: 13.5, color: "var(--ink-2)", margin: 0 }}>
-          New to Stawi? Starting a group, trying it out, or keeping your own business books? Open your account with just your phone number and a PIN only you know. No code needed.
-        </p>
+        {newHere ? (
+          <p role="status" style={{ fontSize: 14.5, color: "var(--forest-deep)", margin: 0, fontWeight: 600 }}>
+            Welcome! This number is new to Stawi. Type the same PIN again below to open your account. Then you can join the demo chama or start your own group.
+          </p>
+        ) : (
+          <p style={{ fontSize: 13.5, color: "var(--ink-2)", margin: 0 }}>
+            New to Stawi? Starting a group, trying it out, or keeping your own business books? Open your account with just your phone number and a PIN only you know. No code needed.
+          </p>
+        )}
         {phoneField}
         <label style={{ fontSize: 13, color: "var(--ink-2)" }}>
           Choose a 4-digit PIN
@@ -198,7 +217,7 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
         </label>
         {errorLine}
         <button type="submit" disabled={loading || pin.length < 4 || pin2.length < 4} style={{ ...btnStyle, opacity: loading || pin.length < 4 || pin2.length < 4 ? 0.6 : 1 }}>
-          {loading ? "Opening…" : "Open my account"}
+          {opening ? "Opening your account…" : loading ? "Opening…" : "Open my account"}
         </button>
         <button type="button" onClick={() => switchTo("code")} style={linkStyle}>My group added me — I have a joining code</button>
         <button type="button" onClick={() => switchTo("pin")} style={linkStyle}>I already have a PIN</button>

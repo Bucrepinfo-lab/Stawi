@@ -49,8 +49,20 @@ export async function POST(req: Request) {
   const { prisma, getAuthPin, savePinAttempt, setAuthPinPhone, touchTrustedDevice } = await import('@stawi/db');
   const userId = device && device.phone === phone ? device.userId : await findUserIdByPhone(phone);
   const pin = userId ? await getAuthPin(prisma, userId) : null;
-  // Same answer for "no account" and "wrong PIN" so numbers cannot be checked.
-  if (!userId || !pin) return NextResponse.json({ error: `That phone number and PIN do not match. ${NEED_CODE}`, needCode: true }, { status: 401 });
+  // A number Stawi has never seen, that no group has added: this person is new
+  // (owner 26/11/26: testers typed their phone and a PIN on the sign-in screen
+  // and were refused). Offer to open the account with that PIN — the agreed
+  // "no PIN yet → choose one". Numbers a group added still need its code.
+  if (!userId) {
+    const { phoneOnAnyRoster } = await import('@stawi/db');
+    const { phoneKey } = await import('@stawi/core');
+    if (!(await phoneOnAnyRoster(prisma, phoneKey(phone)))) {
+      return NextResponse.json({ error: 'This number is new to Stawi. Type the same PIN again to open your account.', noAccount: true }, { status: 404 });
+    }
+    return NextResponse.json({ error: `A group has added this number but it has no PIN yet. ${NEED_CODE}`, needCode: true }, { status: 401 });
+  }
+  // Same answer for "no PIN" and "wrong PIN" on an existing account.
+  if (!pin) return NextResponse.json({ error: `That phone number and PIN do not match. ${NEED_CODE}`, needCode: true }, { status: 401 });
   if (pinLocked(pin)) return NextResponse.json({ error: `Too many wrong PINs. ${NEED_CODE}`, needCode: true, locked: true }, { status: 423 });
 
   const correct = typed !== '' && (await checkPin(typed, pin.pinHash));

@@ -1,6 +1,7 @@
 import { formatMoney, notifyPaymentConfirmed, notifySubscriptionDue, notificationsForStock, classifyStock } from '@stawi/core';
 import { NotificationBell } from '@/components/NotificationBell';
-import { engagementSummary } from '@/lib/engagement';
+import { engagementSummary } from '@/lib/engagement';
+import { BackLink } from '@/components/BackLink';
 
 // Engagement counts are read per request.
 export const dynamic = 'force-dynamic';
@@ -49,6 +50,7 @@ export default async function AdminPage() {
 
   return (
     <main style={{ maxWidth: 960, margin: '0 auto', padding: '28px 24px 80px' }}>
+      <BackLink fallback="/dashboard" />
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <div>
           <p style={{ fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700 }}>Pillar 3 · Super-Admin</p>

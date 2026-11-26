@@ -115,6 +115,13 @@ export function DashboardClient({ groups, initialId, modulesById = {}, demoAvail
         <a href="/formalize" style={{ color: 'var(--forest)', fontWeight: 600 }}>Formalize this group →</a>{' '}
         <a href={`/groups/${active.id}`} style={{ color: 'var(--forest)', fontWeight: 600 }}>Open group workspace &rarr;</a>
       </p>
+      {/* Officials add members from the home screen (owner 26/11/26: "there is nowhere like add new member"). */}
+      {['Chairman', 'Secretary', 'Treasurer'].includes(active.myRole) && (
+        <div className="add-member">
+          <a href={`/groups/${encodeURIComponent(active.id)}?tab=charter#members`} className="add-member-btn">＋ Add a member</a>
+          <span>Write their name and phone, save, then give them their joining code in person or on WhatsApp.</span>
+        </div>
+      )}
 
       <PayContribution groupId={active.id} />
 

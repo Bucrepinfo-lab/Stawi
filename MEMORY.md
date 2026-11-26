@@ -1,5 +1,11 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 — Testers can open an account from "Sign in"; Add a member; Back on every page (owner request)
+- Testers (e.g. Akina, Benedict) typed their own phone and a PIN on the Sign in screen and were refused: they had no account yet, and the screen only said "phone and PIN do not match … ask for a joining code". Now a number Stawi has never seen, that no group has added, gets "Welcome! This number is new to Stawi. Type the same PIN again" on the same screen and the account opens (the agreed "no PIN yet → choose one"). A number a group added still needs that group's joining code; an existing account with a wrong PIN is unchanged (5-try lock). Judgement call: this tells a caller that a number is new to Stawi; the per-IP and per-phone limits stay.
+- After opening an account the person lands on the home screen (welcome + "Join the demo chama"), no longer straight on "Start a group".
+- "＋ Add a member" on the home screen for the Chairperson, Secretary and Treasurer → the group's charter roster (`/groups/<id>?tab=charter#members`, scrolls there), with the hint to save and hand over the joining code.
+- Back on every page: `components/BackLink.tsx` (goes back inside Stawi, else to a safe page; never leaves the app) on formalize, books, community, match (Ideas), messages, sacco, admin, subscribe, terms, the legal pages, receipts and account deletion; existing back links share the same `.back-link` look (40 px tap target).
+
 ## 26/11/26 — Signing in with phone + PIN on a new phone (owner: "taking too long to open … confirm and fix")
 - Found: a PIN sign-in on a phone Stawi had not seen before did not mark that phone as trusted, so the first app page sent the person to /pin/setup, which (no joining code just used) sent them back to sign-in asking for a code. On the owner's own phones it worked because they were already trusted. Fix: a correct phone + own PIN now trusts that phone (same as after choosing a PIN), in `app/api/auth/pin/sign-in/route.ts`.
 - Also: after a correct PIN the screen does one clean page load instead of two (was router.push + refresh) and the button reads "Opening your groups…" until the page shows, so nobody taps again thinking it froze.

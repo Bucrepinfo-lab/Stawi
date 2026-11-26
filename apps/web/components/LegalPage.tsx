@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { BackLink } from './BackLink';
 
 /** Shared shell for the public legal pages (no sign-in needed). */
 export function LegalPage({ kicker, title, updated, children }: { kicker: string; title: string; updated: string; children: ReactNode }) {
   return (
     <main style={{ maxWidth: 760, margin: '0 auto', padding: '28px 20px 80px', lineHeight: 1.6 }}>
-      <Link href="/" style={{ fontSize: 13, color: 'var(--forest)', fontWeight: 600, textDecoration: 'none' }}>← Stawi</Link>
+      <BackLink fallback="/" />
       <p style={{ fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700, marginTop: 14 }}>{kicker}</p>
       <h1 className="display" style={{ fontWeight: 600, fontSize: 32, marginTop: 6 }}>{title}</h1>
       <p style={{ color: 'var(--dim)', marginTop: 4, fontSize: 13 }}>Last updated {updated}</p>

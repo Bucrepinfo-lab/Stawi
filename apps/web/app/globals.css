@@ -523,3 +523,15 @@ html.dark .vb-tab:not([aria-selected="true"]):hover { color: var(--ink); }
 .al-on { margin: 14px 2px 0; font-size: 13px; color: var(--dim); }
 .al-on span { color: var(--good); margin-right: 4px; }
 @media (max-width: 480px) { .al-btn { flex: 1 1 100%; } }
+
+/* ── Add a member + Back (owner 26/11/26) ──────────────────────────────── */
+.add-member { margin-top: 14px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.add-member span { flex: 1 1 260px; font-size: 13.5px; color: var(--ink-2); }
+.add-member-btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 12px; background: var(--gold); color: var(--forest-deep); font-weight: 800; font-size: 15px; text-decoration: none; box-shadow: var(--shadow); }
+.add-member-btn:hover { background: var(--gold-deep); color: #fffdf8; }
+.add-member-btn:focus-visible { outline: 3px solid var(--forest); outline-offset: 2px; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px 0 8px; margin: 0 0 6px -8px; border-radius: 10px; border: 0; background: transparent; color: var(--forest); font: inherit; font-weight: 700; font-size: 14px; text-decoration: none; cursor: pointer; }
+.back-link:hover { background: var(--bone-2); color: var(--forest-deep); }
+.back-link:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.back-link svg { flex: none; }
+@media print { .back-link { display: none !important; } }
