@@ -1,5 +1,8 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 — Reviewer seed runs inside the live image
+- `seed-demo.ts` failed on Fly (`@stawi/core` is not in the standalone image): phone formatting is now inlined, and it no longer falls back to "the first group" (that could have made the reviewer treasurer of a real customer's group). It only uses the demo group `org_umoja` and stops otherwise.
+
 ## 26/11/26 — Closed-testing audit (owner: "streamline everything for the Stawi project … submit to closed testing")
 - Live checked: `/api/health` ok; privacy, terms, delete-account and manifest load. `assetlinks.json` is `[]` until the Android build.
 - `docs/PLAY-LISTING.md` brought up to date: phone + PIN sign-in (no SMS), in-app messages (content rating "users interact: Yes", Data safety "Other in-app messages"), Africa's Talking gone, live host, status and owner-only steps.

@@ -8,7 +8,6 @@
  */
 import { existsSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
-import { toE164 } from "@stawi/core";
 
 // Load DATABASE_URL from a .env if it isn't already in the environment (Node 20.12+).
 if (!process.env.DATABASE_URL && typeof process.loadEnvFile === "function") {
@@ -26,6 +25,16 @@ if (!process.env.DATABASE_URL && typeof process.loadEnvFile === "function") {
 
 const prisma = new PrismaClient();
 
+/** Kenyan-default E.164, inlined so this runs inside the production image (no @stawi/core there). */
+function toE164(raw: string): string | null {
+  let d = raw.replace(/[^\d+]/g, "");
+  if (d.startsWith("+")) d = d.slice(1);
+  else if (d.startsWith("00")) d = d.slice(2);
+  else if (d.startsWith("0")) d = "254" + d.slice(1);
+  else if (!d.startsWith("254")) d = "254" + d;
+  return /^[1-9]\d{7,14}$/.test(d) ? "+" + d : null;
+}
+
 async function main() {
   const reviewPhone = toE164(process.env.PLAY_REVIEW_PHONE ?? "");
   if (!reviewPhone) {
@@ -33,11 +42,10 @@ async function main() {
     process.exit(1);
   }
 
-  const group =
-    (await prisma.group.findUnique({ where: { clerkOrgId: "org_umoja" } })) ??
-    (await prisma.group.findFirst());
+  // Only ever the demo group: never fall back to a real customer's group.
+  const group = await prisma.group.findUnique({ where: { clerkOrgId: "org_umoja" } });
   if (!group) {
-    console.error("No group found — run the main seed first (npm run db:seed).");
+    console.error("No demo group (org_umoja) found. Nothing was changed.");
     process.exit(1);
   }
 
