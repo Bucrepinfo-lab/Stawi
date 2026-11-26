@@ -1,5 +1,10 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 — Your name in the group (owner: "yes, fix it")
+- The founder of a new group showed as "Group founder" with no way to change it. Now every member can change the name they show in a group ("Your name in this group" on the group page; it opens by itself while the name is still "Group founder"). `updateMyNameAction` changes only the caller's own membership rows in that group (login or verified phone), never role or money; text is moderated; rules in `@stawi/core` `display-name.ts` (+ tests).
+- A new group now starts with the founder's name from another group they belong to, falling back to "Group founder".
+- Judgement call: the name in the charter roster (written by the officials) is a separate record and is not changed by this; officials edit it in the charter as before.
+
 ## 26/11/26 — Trust in the money record + check before you record (owner request; money + database = protected, owner merges)
 - Owner: "make it very difficult for somebody to edit the figure which has already been entered"; corrections need the Chairperson, Secretary, Treasurer, a neutral member and the member whose money it is; collection in front of witnesses. Choices: neutral picked at random by Stawi (re-picked after 3 days with no answer); witnessed cash counts at once, clearly marked, flagged after 7 days.
 - Rules in `@stawi/core` `money-trust.ts` (+ 14 tests): witnesses (2 different members, not the recorder, not the payer) for `CASH` and `MPESA_PHONE`; approval seats (each official once, the member, a random neutral; a missing official or an official who is the member is replaced by one more neutral; at least 3 different people who can sign in); one "no" stops it; 14-day expiry.

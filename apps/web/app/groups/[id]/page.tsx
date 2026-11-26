@@ -10,6 +10,8 @@ import { groupAttention } from '@/lib/attention';
 import { DocumentHouse } from '@/components/DocumentHouse';
 import { MoneySummary } from '@/components/MoneySummary';
 import { MoneyTrustCard } from '@/components/MoneyTrustCard';
+import { MyNameCard } from '@/components/MyNameCard';
+import { isPlaceholderName } from '@stawi/core';
 import { ModuleSwitches } from '@/components/ModuleSwitches';
 import { TabsHint } from '@/components/TabsHint';
 import { getGroupModules } from '@/lib/modules';
@@ -30,9 +32,14 @@ export default async function GroupWorkspacePage({ params, searchParams }: { par
   // Which sections this group uses (owner 20/11/26). Applied here, on the server.
   const modules = await getGroupModules(id);
   const attention = await groupAttention(cockpit, viewer, modules);
+  // The name this member shows in the group (owner 26/11/26), editable by them.
+  const myIds = dbEnabled() ? await myMembershipIds(id) : [];
+  const myName = myIds.length
+    ? (await (await import('@stawi/db')).prisma.membership.findFirst({ where: { id: { in: myIds } }, select: { fullName: true } }))?.fullName ?? null
+    : null;
   // Money record alerts (owner 26/11/26): this member's tasks and overdue witnesses.
   const moneyAlerts = dbEnabled() && modules.money
-    ? await (await import('@/lib/money-trust')).moneyAlerts(id, await myMembershipIds(id), canEdit).catch(() => null)
+    ? await (await import('@/lib/money-trust')).moneyAlerts(id, myIds, canEdit).catch(() => null)
     : null;
   // Posts switched off: ordinary members get the member list without posts.
   const shown = modules.officials || canEdit
@@ -55,6 +62,7 @@ export default async function GroupWorkspacePage({ params, searchParams }: { par
             : 'Your group’s point of record. Use the sections your group has chosen; open or close others any time below.'}
         </p>
       </div>
+      {myName && <MyNameCard groupId={cockpit.groupId} name={myName} placeholder={isPlaceholderName(myName)} />}
       <AttentionCard groupId={cockpit.groupId} items={attention.items} isOfficial={attention.isOfficial} />
       {dbEnabled() && modules.money && <MoneyTrustCard groupId={cockpit.groupId} alerts={moneyAlerts} />}
       <div style={{ marginTop: 22 }}>
