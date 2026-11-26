@@ -6,6 +6,7 @@ import {
 import { loadGroupHouse } from '@/lib/house';
 import { saccoPlusEnabled } from '@/lib/features';
 import { PrintButton } from '@/components/PrintButton';
+import { ReturnBar } from '@/components/ReturnBar';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Stawi' };
@@ -74,6 +75,7 @@ export default async function PapersPage({ params, searchParams }: { params: Pro
     <main className={`pillar-${purpose.pillar}`} style={{ maxWidth: 860, margin: '0 auto', padding: '28px 24px 90px' }}>
       <style>{`@media print { .no-print, .app-tabs { display: none !important; } body { background: #fff !important; padding: 0 !important; } .print-doc { box-shadow: none !important; border: none !important; padding: 0 !important; break-inside: auto; } .page-break { break-before: page; } }`}</style>
       <a href={`/groups/${encodeURIComponent(id)}`} className="back-link no-print">← {house.groupName}</a>
+      <ReturnBar href={`/groups/${encodeURIComponent(id)}`} label={house.groupName} />
 
       <section className="print-doc s-card" style={sheet}>
         <p style={{ fontSize: 12, letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 800, color: 'var(--gold-deep)' }}>{purpose.icon} {purpose.name.en}</p>

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { formatMoney } from '@stawi/core';
 import { dbEnabled } from '@/lib/data';
 import { BackLink } from '@/components/BackLink';
+import { ReturnBar } from '@/components/ReturnBar';
 import { PrintButton } from './PrintButton';
 import { historyFor } from './access';
 
@@ -32,6 +33,7 @@ export default async function HistoryPage({ params, searchParams }: { params: Pr
   return (
     <main className="pillar-1 hist" style={{ maxWidth: 820, margin: '0 auto', padding: '28px 24px 90px' }}>
       <BackLink fallback={`/groups/${id}`} />
+      <ReturnBar href="/profile" label="My profile" />
       <p className="hist-kicker">{h.groupName} · Payment history</p>
       <h1 className="display" style={{ fontWeight: 600, fontSize: 32, marginTop: 6 }}>{h.memberName}</h1>
       <p style={{ color: 'var(--ink-2)', marginTop: 6 }}>
