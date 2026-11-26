@@ -393,7 +393,10 @@ export async function createGroupAction(input: {
     if (userId) {
       const { getUserPhone } = await import('@/lib/auth');
       const phone = await getUserPhone().catch(() => null);
-      await prisma.membership.create({ data: { groupId: g.id, clerkUserId: userId, fullName: 'Group founder', phone, role: 'CHAIRMAN' } }).catch(() => {});
+      // The founder's own name from another group, if they have one (owner 26/11/26).
+      const { founderName } = await import('@stawi/core');
+      const known = await prisma.membership.findMany({ where: { clerkUserId: userId }, select: { fullName: true }, orderBy: { joinedAt: 'desc' }, take: 10 });
+      await prisma.membership.create({ data: { groupId: g.id, clerkUserId: userId, fullName: founderName(known.map((k) => k.fullName)), phone, role: 'CHAIRMAN' } }).catch(() => {});
     }
     publishEvent({ type: 'group', channel: tid ?? 'public' });
     return { ok: true, persisted: true, groupId: g.id, booksOnly: isBooksOnly };
@@ -673,4 +676,31 @@ export async function explainMemberStatementAction(input: {
   } catch {
     return { ok: false, error: 'Could not prepare the explanation' };
   }
+}
+
+/**
+ * Change the name you show in one group (owner 26/11/26). Only your own
+ * membership rows in that group: matched by your login, or by your verified
+ * phone for a roster row not yet linked. Role and money are untouched.
+ */
+export async function updateMyNameAction(input: { groupId: string; name: string }): Promise<{ ok: boolean; name?: string; error?: string }> {
+  const { cleanDisplayName } = await import('@stawi/core');
+  const checked = cleanDisplayName(input.name);
+  if (!checked.ok) return { ok: false, error: checked.error };
+  const clean = await assertCleanSafe(checked.name);
+  if (!clean.ok) return { ok: false, error: clean.error };
+  if (!dbEnabled()) return { ok: true, name: checked.name };
+  const { getUserId, getUserPhone } = await import('@/lib/auth');
+  const userId = await getUserId();
+  if (!userId || !input.groupId) return { ok: false, error: 'Please sign in again.' };
+  const phone = await getUserPhone().catch(() => null);
+  const key = phone ? phone.replace(/\D/g, '').replace(/^0+/, '').slice(-9) : '';
+  const { prisma } = await import('@stawi/db');
+  const done = await prisma.membership.updateMany({
+    where: { groupId: input.groupId, OR: [{ clerkUserId: userId }, ...(key.length === 9 ? [{ phone: { endsWith: key } }] : [])] },
+    data: { fullName: checked.name },
+  });
+  if (done.count === 0) return { ok: false, error: 'You are not a member of this group.' };
+  publishEvent({ type: 'group', channel: (await tenantId()) ?? 'public' });
+  return { ok: true, name: checked.name };
 }
