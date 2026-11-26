@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FORMAL_KINDS, type FormalKind } from '@stawi/core';
 import { FeedbackBanner, type Feedback } from '@/components/FeedbackBanner';
 import { ReturnBar } from '@/components/ReturnBar';
+import { DictateBox } from '@/components/DictateBox';
 
 /** Shrink a photo to at most 1600 px on its long side (JPEG), so it uploads fast on any phone. */
 async function shrink(file: File): Promise<string> {
@@ -135,9 +136,9 @@ export function WriteClient({ groups, groupId, initialKind, aiOn }: { groups: { 
             <input type="file" accept="image/*" hidden disabled={step === 'working'} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; void fromPhoto(f); }} />
           </label>
         </div>
-        <details className="wr-type" open={!!notes}>
-          <summary>Or type a few words (your phone&rsquo;s microphone key also works)</summary>
-          <textarea className="mr-input" rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. meeting saturday 2pm chief camp, everybody bring 500, we discuss buying tents" />
+        <details className="wr-type" open>
+          <summary>Or speak it, or type it (Kiswahili or English)</summary>
+          <DictateBox value={notes} onChange={setNotes} rows={5} placeholder="e.g. meeting saturday 2pm chief camp, everybody bring 500, we discuss buying tents" />
           <button type="button" className="mr-btn go" disabled={step === 'working' || notes.trim().length < 3} onClick={() => void fromWords()}>Write it for me</button>
         </details>
         {step === 'working' && <p className="wr-status" role="status"><span className="wr-dot" aria-hidden />{status}</p>}

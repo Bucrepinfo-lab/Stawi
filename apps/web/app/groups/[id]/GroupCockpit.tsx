@@ -53,6 +53,8 @@ import {
 } from '@/app/actions';
 import type { Cockpit } from '@/lib/cockpit';
 import { setUrlParams } from '@/lib/url-state';
+import { DictateBox } from '@/components/DictateBox';
+import { minutesFromSpeechAction } from './speech-actions';
 import { JoiningCodes } from './JoiningCodes';
 import { Pic } from '@/components/Pictures';
 
@@ -736,7 +738,7 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
         <button style={btnGhost} onClick={onCancel}>← All meetings</button>
       </div>
 
-      <NotesImport onApply={applyParsed} />
+      <NotesImport onApply={applyParsed} groupId={groupId} />
 
       <div className="s-card" style={card}>
         <SectionTitle n={1} title="Meeting details" />
@@ -944,8 +946,11 @@ async function readPhotoText(file: File): Promise<string> {
   }
 }
 
-function NotesImport({ onApply }: { onApply: (p: ReturnType<typeof parseImportedNotes>) => void }) {
+function NotesImport({ onApply, groupId }: { onApply: (p: ReturnType<typeof parseImportedNotes>) => void; groupId: string }) {
   const [open, setOpen] = useState(false);
+  // Speak instead of write (owner 26/11/26): dictate in Kiswahili or English.
+  const [speak, setSpeak] = useState(false);
+  const [shaping, setShaping] = useState(false);
   const [text, setText] = useState('');
   const [fileName, setFileName] = useState<string>();
   const [busy, setBusy] = useState(false);
@@ -970,18 +975,40 @@ function NotesImport({ onApply }: { onApply: (p: ReturnType<typeof parseImported
 
   if (!open) {
     return (
-      <button className="no-print" style={{ ...btnGhost, textAlign: 'left' }} onClick={() => setOpen(true)}>
-        📷 Import written notes (photo or file)
-      </button>
+      <div className="no-print" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <button style={{ ...btnGold, textAlign: 'left' }} onClick={() => { setOpen(true); setSpeak(true); }}>
+          🎙 Speak the minutes (Kiswahili or English)
+        </button>
+        <button style={{ ...btnGhost, textAlign: 'left' }} onClick={() => { setOpen(true); setSpeak(false); }}>
+          📷 Import written notes (photo or file)
+        </button>
+      </div>
     );
   }
 
   return (
     <div className="no-print s-card" style={card}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <strong style={{ fontSize: 15 }}>Import written notes</strong>
+        <strong style={{ fontSize: 15 }}>{speak ? 'Speak the minutes' : 'Import written notes'}</strong>
         <button style={{ ...btnGhost, padding: '4px 10px', fontSize: 12 }} onClick={() => setOpen(false)}>Close</button>
       </div>
+      {speak ? (
+        <div style={{ display: 'grid', gap: 10 }}>
+          <p style={{ color: 'var(--ink-2)', fontSize: 13.5, margin: 0 }}>Say it in your own words: when the meeting started, who came, what you discussed, how much was collected, and what the group plans to buy or invest in. Then check the words and tap <b>Turn into minutes</b>; you can correct everything before posting.</p>
+          <DictateBox value={text} onChange={setText} rows={8} placeholder="e.g. Tulianza mkutano saa nane, tulikuwa kumi. Tulikusanya shilingi elfu tano. Tunapanga kununua viti ishirini…" />
+          {msg && <p style={{ fontSize: 12.5, color: 'var(--dim)', margin: 0 }}>{msg}</p>}
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button style={{ ...btnGold, opacity: shaping ? 0.7 : 1 }} disabled={shaping || text.trim().length < 10} onClick={async () => {
+              setShaping(true); setMsg(undefined);
+              const r = await minutesFromSpeechAction({ groupId, transcript: text }).catch(() => ({ ok: false as const, error: 'No connection. Try again.' }));
+              setShaping(false);
+              if (!r.ok) { setMsg(r.error); return; }
+              onApply(r.parsed); setOpen(false);
+            }}>{shaping ? 'Writing the minutes…' : 'Turn into minutes →'}</button>
+            <button style={btnGhost} onClick={() => setSpeak(false)}>Use a photo or file instead</button>
+          </div>
+        </div>
+      ) : (<>
       <p style={{ color: 'var(--dim)', fontSize: 13, marginBottom: 12 }}>Snap a photo of your paper minutes or upload a file. Stawi reads them and pre-fills the form below — you review, then generate.</p>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <label style={{ ...btn, cursor: 'pointer' }}>📷 Photo
@@ -999,6 +1026,7 @@ function NotesImport({ onApply }: { onApply: (p: ReturnType<typeof parseImported
       <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
         <button style={btnGold} onClick={() => { onApply(parseImportedNotes(text)); setOpen(false); }}>Use these notes →</button>
       </div>
+      </>)}
     </div>
   );
 }
