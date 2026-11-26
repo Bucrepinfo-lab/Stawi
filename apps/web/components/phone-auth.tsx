@@ -27,6 +27,7 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
   const [pin2, setPin2] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [opening, setOpening] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // A trusted device remembers which number signs in here (shown masked).
@@ -54,7 +55,8 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
     setLoading(true);
     const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).catch(() => null);
     const data = res ? await res.json().catch(() => ({})) : {};
-    setLoading(false);
+    // On success the button keeps saying "Opening…" until the next page shows.
+    if (!res?.ok) setLoading(false);
     return { ok: !!res?.ok, data };
   }
 
@@ -75,8 +77,9 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
     const { ok, data } = await post("/api/auth/pin/sign-in", body);
     setPin("");
     if (ok) {
-      router.push(next);
-      router.refresh();
+      // One clean page load with the new session (was push + refresh: two loads).
+      setOpening(true);
+      window.location.replace(next);
       return;
     }
     setError(data.error ?? "Could not sign in. Try again.");
@@ -225,7 +228,7 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
       </p>
       {errorLine}
       <button type="submit" disabled={loading || pin.length < 4} style={{ ...btnStyle, opacity: loading || pin.length < 4 ? 0.6 : 1 }}>
-        {loading ? "Checking…" : "Sign in"}
+        {opening ? "Opening your groups…" : loading ? "Checking…" : "Sign in"}
       </button>
       <button type="button" onClick={() => switchTo("code")} style={linkStyle}>Your group added you, or forgot your PIN? Use the code your group official gave you</button>
       <button type="button" onClick={() => switchTo("start")} style={linkStyle}>New to Stawi? Open an account (phone + PIN, no code)</button>

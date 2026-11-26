@@ -1,5 +1,10 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 — Signing in with phone + PIN on a new phone (owner: "taking too long to open … confirm and fix")
+- Found: a PIN sign-in on a phone Stawi had not seen before did not mark that phone as trusted, so the first app page sent the person to /pin/setup, which (no joining code just used) sent them back to sign-in asking for a code. On the owner's own phones it worked because they were already trusted. Fix: a correct phone + own PIN now trusts that phone (same as after choosing a PIN), in `app/api/auth/pin/sign-in/route.ts`.
+- Also: after a correct PIN the screen does one clean page load instead of two (was router.push + refresh) and the button reads "Opening your groups…" until the page shows, so nobody taps again thinking it froze.
+- Measured live from Chrome (Kenya → Frankfurt): health ~0.2 s, sign-in answer ~0.7 s, dashboard ~1 s server time, ~3.9 s full load.
+
 ## 26/11/26 — Your name in the group (owner: "yes, fix it")
 - The founder of a new group showed as "Group founder" with no way to change it. Now every member can change the name they show in a group ("Your name in this group" on the group page; it opens by itself while the name is still "Group founder"). `updateMyNameAction` changes only the caller's own membership rows in that group (login or verified phone), never role or money; text is moderated; rules in `@stawi/core` `display-name.ts` (+ tests).
 - A new group now starts with the founder's name from another group they belong to, falling back to "Group founder".
