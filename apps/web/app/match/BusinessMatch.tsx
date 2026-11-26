@@ -270,6 +270,14 @@ export function BusinessMatch() {
                     <span className="mono" style={{ fontSize: 13, color: 'var(--ink-2)' }}>
                       KES {formatMoney(v.startupCents)}
                     </span>
+                    {/* The group chose this one: write the funding proposal from it (owner 26/11/26). */}
+                    <a
+                      className="mr-btn go"
+                      style={{ minHeight: 34, fontSize: 12.5, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
+                      href={`/proposal?${new URLSearchParams({ title: v.title, industry: v.industry, startup: String(v.startupCents), margin: String(v.marginPct), risk: v.risk, desc: v.description })}`}
+                    >
+                      Write the funding proposal
+                    </a>
                     <button
                       onClick={() => toggleSave(v)}
                       aria-label="Remove"

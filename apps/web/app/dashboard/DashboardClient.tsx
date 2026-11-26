@@ -122,6 +122,7 @@ export function DashboardClient({ groups, initialId, modulesById = {}, demoAvail
         <div className="add-member">
           <a href={`/groups/${encodeURIComponent(active.id)}?tab=charter#members`} className="add-member-btn">＋ Add a member</a>
           <span>Write their name and phone, save, then give them their joining code in person or on WhatsApp.</span>
+          <a href={`/proposal?group=${encodeURIComponent(active.id)}`} className="add-member-btn" style={{ background: 'var(--forest-deep)', color: 'var(--bone)' }}>Write the funding proposal for me</a>
         </div>
       )}
 

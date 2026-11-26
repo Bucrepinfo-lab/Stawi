@@ -656,3 +656,26 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 .wfm-text small { color: var(--ink-2); font-size: 13px; }
 .wfm-compact { display: inline-flex; margin-top: 8px; padding: 6px 12px 6px 6px; border-left-width: 1px; }
 .wfm-compact .wfm-ico { width: 32px; height: 32px; }
+
+/* ── Write the proposal for me (owner 26/11/26) ────────────────────────── */
+.pp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.pp-field { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.pp-sum { margin: 0; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--gold) 14%, transparent); font-size: 14px; }
+.pp-check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--ink); }
+.pp-check input { width: 22px; height: 22px; flex: none; margin-top: 1px; accent-color: var(--forest-deep); }
+.pp-go { min-height: 56px; border-radius: 14px; border: 0; background: var(--gold); color: var(--forest-deep); font: inherit; font-weight: 800; font-size: 17px; cursor: pointer; box-shadow: var(--shadow); }
+.pp-go:hover { background: var(--gold-deep); color: #fffdf8; }
+.pp-go:disabled { opacity: .7; cursor: default; }
+.pp-go:focus-visible { outline: 3px solid var(--forest); outline-offset: 2px; }
+.pp-doc { margin-top: 16px; background: #fffdf8; color: #16261f; border: 1px solid var(--line); border-radius: var(--radius); padding: 28px 26px; box-shadow: var(--shadow); font-family: Georgia, 'Fraunces', serif; line-height: 1.6; }
+.pp-letterhead { display: grid; gap: 2px; padding-bottom: 12px; border-bottom: 3px solid #e0a32e; font-family: var(--font-body); font-size: 13px; }
+.pp-letterhead strong { font-size: 16px; letter-spacing: .04em; }
+.pp-doc h1 { font-size: 22px; margin: 18px 0 6px; }
+.pp-doc h2 { font-size: 16px; margin: 18px 0 6px; color: #16382a; }
+.pp-doc p { margin: 0 0 8px; font-size: 14.5px; }
+.pp-sign { margin-top: 22px; padding-top: 10px; border-top: 1px solid #dcd3c2; }
+@media print {
+  .pp-doc { border: 0 !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
+  .pp-doc section { break-inside: avoid; }
+  main > .back-link { display: none !important; }
+}
