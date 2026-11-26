@@ -1,5 +1,9 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 — "A minimum, not a maximum" (owner: encourage members who can to put in more, so the group reaches its capital sooner)
+- Research: in the standard savings-group model (CARE VSLA) members buy one to five shares a meeting and the share price is set low enough that everyone can buy at least one; studies of peer savings groups (Chile, Kenya) found public goal setting and group monitoring raise savings. Balance noted: CARE Malawi saw disparities where some members bought up to 100 shares, so the card keeps "nobody is pushed, one member one vote".
+- Lit card under the capital on the home screen (`components/GrowCapitalCard.tsx`, English/Kiswahili by My language): the minimum keeps everyone in; anything above it is yours (raises your share of capital and profit); paying more shows trust in the plan and the members; nobody is pushed. "See how much sooner you get there": capital needed, agreed minimum, meetings a month, members who can add more and how much → months with the minimum only vs with some adding more, from the group's own total and member count (saved on the phone per group). "Send this to my group on WhatsApp". Sums and words in `@stawi/core` `grow-capital.ts` (+ tests).
+
 ## 26/11/26 — Record feedback always visible (owner: "the feedback message is not popping up when you record")
 - Confirmed live: the "Contribution recorded / not recorded" banner was drawn inside the group-total card ABOVE the form, so after tapping Record it appeared off the top of the phone screen (on a computer it sat under the top tab bar). Now the treasurer form's banner floats pinned above the tab bar (`FeedbackBanner float`, `.fb-float`), so it shows wherever the page is scrolled.
 - The "Record this contribution?" check now opens on older phone browsers too (no `showModal`: opened as a pinned box with a dark backdrop).

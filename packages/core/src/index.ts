@@ -70,3 +70,4 @@ export * from './formal-writer';
 export * from './funding-proposal';
 export * from './dictation';
 export * from './search';
+export * from './grow-capital';

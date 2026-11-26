@@ -720,3 +720,22 @@ body.has-app-tabs .fb-banner.fb-float { bottom: calc(86px + env(safe-area-inset-
 @keyframes fb-float-in { from { transform: translate(-50%, 12px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .fb-banner.fb-float { animation: none; } }
 .cf-sheet.cf-fallback { position: fixed; inset: 0; z-index: 100; box-shadow: 0 0 0 100vmax rgba(15, 22, 19, .55), 0 24px 60px -20px rgba(22, 38, 31, .55); }
+
+/* ── A minimum, not a maximum (owner 26/11/26) ─────────────────────────── */
+.gc { margin-top: 18px; padding: 18px; border-radius: var(--radius); border: 2px solid var(--gold); background: linear-gradient(135deg, color-mix(in srgb, var(--gold) 18%, var(--paper)), var(--paper) 60%); box-shadow: 0 0 0 4px color-mix(in srgb, var(--gold) 14%, transparent), var(--shadow); display: grid; gap: 10px; }
+.gc-head { display: flex; gap: 12px; align-items: flex-start; }
+.gc-ico { flex: none; width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: #fbf3e2; border: 1px solid #e8dcc4; }
+.gc h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 21px; color: var(--forest-deep); }
+.gc-head p { margin: 4px 0 0; color: var(--ink); font-weight: 600; line-height: 1.45; }
+.gc-points { margin: 0; padding-left: 20px; display: grid; gap: 6px; color: var(--ink-2); font-size: 14.5px; line-height: 1.5; }
+.gc-calc summary { cursor: pointer; font-weight: 800; color: var(--forest-deep); padding: 8px 0; }
+.gc-calc[open] { display: grid; gap: 10px; }
+.gc-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.gc-compare > div { padding: 12px; border-radius: 12px; display: grid; gap: 2px; }
+.gc-compare span { font-size: 12.5px; font-weight: 700; }
+.gc-compare strong { font-size: 18px; }
+.gc-compare .slow { background: color-mix(in srgb, var(--danger) 10%, var(--paper)); border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent); }
+.gc-compare .fast { background: color-mix(in srgb, var(--good) 12%, var(--paper)); border: 1px solid color-mix(in srgb, var(--good) 45%, transparent); }
+.gc-compare p { grid-column: 1 / -1; margin: 0; }
+@media (max-width: 420px) { .gc-compare { grid-template-columns: 1fr; } }
+.gc-share { justify-self: start; display: inline-flex; align-items: center; text-decoration: none; }

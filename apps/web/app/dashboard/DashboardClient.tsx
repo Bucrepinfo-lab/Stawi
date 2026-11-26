@@ -13,6 +13,7 @@ import { booksOnly, type GroupModules } from '@stawi/core';
 import { DemoChamaCard } from '@/components/DemoChamaCard';
 import { Picture } from '@/components/Pictures';
 import { WriteForMeLink } from '@/components/WriteForMeLink';
+import { GrowCapitalCard } from '@/components/GrowCapitalCard';
 
 type Pillar = { n: 1 | 2 | 3 | 4; picture: 'moneybag' | 'handshake' | 'chart' | 'bank'; title: string; body: string; points: string[]; soon?: boolean };
 
@@ -131,6 +132,7 @@ export function DashboardClient({ groups, initialId, modulesById = {}, demoAvail
       <PayContribution groupId={active.id} />
 
       <TableBanking key={active.id} groupId={active.id} groupName={active.name} seed={active.members} canRecord={active.myRole === 'Treasurer'} />
+      <GrowCapitalCard groupId={active.id} members={active.members.length} totalCents={active.members.reduce((t, m) => t + m.totalCents, 0)} />
         </>
       ) : (
         <div className="s-card" style={{ marginTop: 18, background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 'var(--radius)', padding: 22, boxShadow: 'var(--shadow)' }}>
