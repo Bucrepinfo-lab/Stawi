@@ -1,5 +1,9 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 — Record feedback always visible (owner: "the feedback message is not popping up when you record")
+- Confirmed live: the "Contribution recorded / not recorded" banner was drawn inside the group-total card ABOVE the form, so after tapping Record it appeared off the top of the phone screen (on a computer it sat under the top tab bar). Now the treasurer form's banner floats pinned above the tab bar (`FeedbackBanner float`, `.fb-float`), so it shows wherever the page is scrolled.
+- The "Record this contribution?" check now opens on older phone browsers too (no `showModal`: opened as a pinned box with a dark backdrop).
+
 ## 26/11/26 — Audit, live refresh per group, "Me" tab and Search (owner: "complete audit … dashboard, settings, search tab")
 - Audit: typecheck, core and db tests, and web build all green; every web component, lib and core module is used (checked by imports); removed the unused `jsonwebtoken` and `@types/jsonwebtoken`. (A package-based dead-code scanner was blocked from running here; the check was done by hand.)
 - Bug fixed: live refresh. Every write was published to the shared "public" channel, so ONE contribution refreshed every open page of every user in every group (each refresh re-reads the database). Now writes publish to `g:<groupId>` (`groupChannel` in `lib/events.ts`) and the home screen, group page and money record listen only to their own group; `/api/events` accepts several channels. Writes that used a tenant channel no longer miss pages listening on "public".

@@ -13,8 +13,16 @@ export function ConfirmSheet({ confirm, busy, onYes, onNo }: { confirm: Contribu
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
-    if (confirm && !d.open) d.showModal?.();
-    if (!confirm && d.open) d.close();
+    // Older phones' browsers have no showModal: open it as a plain pinned box instead,
+    // so the "Record this contribution?" check always appears (owner 26/11/26).
+    if (confirm && !d.open) {
+      if (typeof d.showModal === 'function') d.showModal();
+      else { d.setAttribute('open', ''); d.classList.add('cf-fallback'); }
+    }
+    if (!confirm && d.open) {
+      if (typeof d.close === 'function') d.close(); else d.removeAttribute('open');
+      d.classList.remove('cf-fallback');
+    }
   }, [confirm]);
   return (
     <dialog ref={ref} className="cf-sheet" aria-labelledby="cf-title" onCancel={(e) => { e.preventDefault(); if (!busy) onNo(); }}>
