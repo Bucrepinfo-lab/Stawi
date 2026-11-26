@@ -11,7 +11,7 @@
  *    whose money it is) approve with their own PIN. One "no" stops it.
  */
 import { dbEnabled } from '@/lib/data';
-import { publishEvent } from '@/lib/events';
+import { groupChannel, publishEvent } from '@/lib/events';
 
 type Result = { ok: boolean; error?: string };
 
@@ -44,7 +44,7 @@ export async function confirmWitnessAction(input: { groupId: string; contributio
     data: input.saw ? { confirmedAt: now, note } : { disputedAt: now, note },
   });
   if (done.count === 0) return { ok: false, error: 'You are not a witness for this entry, or you have already answered.' };
-  publishEvent({ type: 'contribution', channel: 'public' });
+  publishEvent({ type: 'contribution', channel: groupChannel(input.groupId) });
   return { ok: true };
 }
 
@@ -63,7 +63,7 @@ export async function checkMyContributionAction(input: { groupId: string; contri
     create: { groupId: input.groupId, contributionId: row.id, membershipId: row.membershipId, verdict: input.verdict, note },
     update: { verdict: input.verdict, note },
   });
-  publishEvent({ type: 'contribution', channel: 'public' });
+  publishEvent({ type: 'contribution', channel: groupChannel(input.groupId) });
   return { ok: true };
 }
 
@@ -110,7 +110,7 @@ export async function requestCorrectionAction(input: { groupId: string; contribu
     const own = seats.find((s) => s.membershipId === requester);
     if (own) await tx.correctionDecision.create({ data: { groupId: input.groupId, correctionId: c.id, membershipId: requester, slot: own.slot, approve: true } });
   });
-  publishEvent({ type: 'contribution', channel: 'public' });
+  publishEvent({ type: 'contribution', channel: groupChannel(input.groupId) });
   return { ok: true };
 }
 
@@ -159,7 +159,7 @@ export async function decideCorrectionAction(input: { groupId: string; correctio
     }
     return state;
   });
-  publishEvent({ type: 'contribution', channel: 'public' });
+  publishEvent({ type: 'contribution', channel: groupChannel(input.groupId) });
   if (outcome === 'APPROVED') {
     void (await import('@/lib/group-alerts')).alertCorrectionApproved({ groupId: c.groupId, membershipId: c.membershipId, fromCents: c.originalCents, toCents: c.correctedCents });
   }

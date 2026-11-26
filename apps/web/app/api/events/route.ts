@@ -11,7 +11,8 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const channel = url.searchParams.get('channel') ?? 'public';
+  // One or more channels, comma-separated (e.g. g:<groupId>); 'public' is the seed/demo channel.
+  const channels = new Set((url.searchParams.get('channel') ?? 'public').split(',').map((c) => c.trim()).filter(Boolean).slice(0, 20));
   const encoder = new TextEncoder();
 
   let cleanup = () => {};
@@ -21,7 +22,7 @@ export async function GET(req: Request) {
       send(`retry: 3000\n\n`);
 
       const unsub = subscribe((e: StawiEvent) => {
-        if (e.channel === channel || e.channel === 'public') {
+        if (channels.has(e.channel) || e.channel === 'public') {
           send(`event: stawi\ndata: ${JSON.stringify(e)}\n\n`);
         }
       });

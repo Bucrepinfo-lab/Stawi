@@ -6,6 +6,7 @@ import { BackLink } from '@/components/BackLink';
 import { ProfileClient } from './ProfileClient';
 import { JoinChama } from './JoinChama';
 import { LanguagePicker } from './LanguagePicker';
+import { ShareBar } from '@/components/ShareBar';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,6 +59,11 @@ export default async function ProfilePage() {
           <a className="mr-btn" href="mailto:telpeninfo@gmail.com?subject=Stawi%20problem">Write an email</a>
         </p>
         <p className="mr-meta">Find writing hard? <a href="/write?kind=complaint">Photo your note and Stawi writes the report for you</a>.</p>
+      </section>
+
+      <section className="pf-card" aria-labelledby="pf-share">
+        <h2 id="pf-share">Tell others about Stawi</h2>
+        <ShareBar />
       </section>
 
       <section className="pf-card" aria-labelledby="pf-acc">

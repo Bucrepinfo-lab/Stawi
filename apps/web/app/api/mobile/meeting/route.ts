@@ -1,5 +1,5 @@
 import { dbEnabled } from '@/lib/data';
-import { publishEvent } from '@/lib/events';
+import { groupChannel, publishEvent } from '@/lib/events';
 import { ok, bad, authorize, requireMobileGroupRole, preflight, seedAllowed, dbRequired } from '@/lib/mobileApi';
 
 export const runtime = 'nodejs';
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   try {
     const { prisma, upsertMeeting } = await import('@stawi/db');
     await upsertMeeting(prisma, { groupId, ...meeting });
-    publishEvent({ type: 'meeting', channel: 'public' });
+    publishEvent({ type: 'meeting', channel: groupChannel(groupId) });
     return ok({ ok: true, persisted: true });
   } catch (e) { return bad(e instanceof Error ? e.message : 'Save failed', 500); }
 }

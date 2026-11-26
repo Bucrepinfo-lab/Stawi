@@ -9,7 +9,7 @@
 
 export interface StawiEvent {
   type: 'contribution' | 'sacco_txn' | 'loan' | 'ledger' | 'group' | 'charter' | 'meeting';
-  channel: string; // tenant id or 'public' in seed mode
+  channel: string; // 'g:<groupId>' for a group's own pages, a tenant id, or 'public' in seed mode
   at: number;
 }
 
@@ -33,4 +33,13 @@ export function publishEvent(e: Omit<StawiEvent, 'at'>): void {
 export function subscribe(listener: Listener): () => void {
   bus.add(listener);
   return () => bus.delete(listener);
+}
+
+/**
+ * One group's channel (audit 26/11/26): a write in a group refreshes only the
+ * pages open on THAT group, not every open page in the app — fewer re-renders
+ * and fewer database reads as the number of groups grows.
+ */
+export function groupChannel(groupId: string): string {
+  return `g:${groupId}`;
 }

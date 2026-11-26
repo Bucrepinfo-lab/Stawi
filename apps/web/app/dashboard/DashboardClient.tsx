@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { AlertsCard } from '@/components/AlertsCard';
+import { LiveRefresh } from '@/components/LiveRefresh';
 import { GroupSwitcher } from '@/components/GroupSwitcher';
 import { TableBanking } from './TableBanking';
 import type { GroupAccount } from '@/lib/groups';
@@ -102,6 +103,7 @@ export function DashboardClient({ groups, initialId, modulesById = {}, demoAvail
         </div>
       </div>
 
+      <LiveRefresh channel={`g:${active.id}`} />
       <AlertsCard />
       {demoAvailable && !inDemo && <DemoChamaCard compact />}
       {mods && <TabsHint records={!onlyBooks} ideas={mods.ideas} books={mods.books} messages={mods.messages} />}

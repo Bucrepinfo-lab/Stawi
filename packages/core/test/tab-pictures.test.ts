@@ -18,7 +18,9 @@ describe('main tabs use our own drawn pictures (standing rule 19, 24/11/26)', ()
   it('keeps a word under every picture, in English and Kiswahili', () => {
     const labels = [...tabs.matchAll(/label: \{ en: '([^']+)', sw: '([^']+)' \}/g)];
     expect(labels.length).toBe(4);
-    expect(tabs).toMatch(/SHARE_LABEL[^\n]*en: 'Share', sw: 'Shiriki'/);
+    // 26/11/26: Share moved into "Me" (five tabs at most); Me and Search keep words in both languages.
+    expect(tabs).toMatch(/ME_LABEL[^\n]*en: 'Me', sw: 'Mimi'/);
+    expect(tabs).toMatch(/SEARCH_LABEL[^\n]*en: 'Search', sw: 'Tafuta'/);
   });
   it('uses only the brand palette', () => {
     const hexes = new Set([...pictures.matchAll(/#[0-9a-f]{6}/gi)].map((m) => m[0].toLowerCase()));

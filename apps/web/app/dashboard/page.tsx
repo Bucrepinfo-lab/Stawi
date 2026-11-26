@@ -1,5 +1,4 @@
 import { DashboardClient } from './DashboardClient';
-import { LiveRefresh } from '@/components/LiveRefresh';
 import { MomentsStrip } from '@/components/MomentsStrip';
 import { ValueBanners } from '@/components/ValueBanners';
 import { ShareBar } from '@/components/ShareBar';
@@ -27,7 +26,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const inDemo = !!demo && groups.some((g) => g.id === demo);
   return (
     <main className="pillar-1" style={{ maxWidth: 920, margin: '0 auto', padding: '28px 24px 80px' }}>
-      <LiveRefresh />
       <DashboardClient groups={groups} initialId={activeId} modulesById={modulesById} demoAvailable={!!demo} inDemo={inDemo} />
       {/* No group yet: every problem we solve, the first one open (owner 26/11/26). */}
       {groups.length === 0 ? <ValueBanners pillars={[1, 2, 3, 4]} saccoPlus={saccoPlusEnabled()} /> : <ValueBanners pillars={[1]} startCollapsed />}

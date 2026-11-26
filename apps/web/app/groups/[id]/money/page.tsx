@@ -30,7 +30,7 @@ export default async function MoneyRecordPage({ params }: { params: Promise<{ id
   const data = await loadMoneyRecord(id);
   return (
     <main className="pillar-1" style={{ maxWidth: 860, margin: '0 auto', padding: '28px 24px 90px' }}>
-      <LiveRefresh />
+      <LiveRefresh channel={`g:${id}`} />
       <a href={`/groups/${id}`} className="back-link no-print">← {group.name}</a>
       <p style={{ fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700, marginTop: 12 }}>Open to every member</p>
       <h1 className="display" style={{ fontWeight: 600, fontSize: 32, marginTop: 6 }}>Money record</h1>
