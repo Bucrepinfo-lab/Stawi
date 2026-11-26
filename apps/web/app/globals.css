@@ -448,7 +448,7 @@ html.dark .vb-tab:not([aria-selected="true"]):hover { color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { .fb-banner { animation: none; } }
 
 /* ── Check before you record (owner 26/11/26) ─────────────────────────── */
-.cf-sheet { border: 0; padding: 0; border-radius: 20px; background: var(--paper); color: var(--ink); width: min(440px, calc(100vw - 32px)); box-shadow: 0 24px 60px -20px rgba(22, 38, 31, .55); }
+.cf-sheet { margin: auto; inset: 0; max-height: calc(100dvh - 32px); overflow: auto; border: 0; padding: 0; border-radius: 20px; background: var(--paper); color: var(--ink); width: min(440px, calc(100vw - 32px)); box-shadow: 0 24px 60px -20px rgba(22, 38, 31, .55); }
 .cf-sheet::backdrop { background: rgba(15, 22, 19, .55); backdrop-filter: blur(2px); }
 .cf-sheet[open] { animation: cf-in .18s ease-out; }
 @keyframes cf-in { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
