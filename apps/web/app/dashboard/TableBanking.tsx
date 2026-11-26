@@ -173,7 +173,7 @@ export function TableBanking({
         <FeedbackBanner feedback={feedback} onClose={() => setFeedback(null)} />
         {flash && !feedback && <div style={{ marginTop: 8, color: 'var(--good)', fontWeight: 600, fontSize: 14 }}>▲ {flash}</div>}
         {receipt && (
-          <a href={receiptHref(receipt)} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: 10, fontSize: 13, fontWeight: 700, color: 'var(--forest-deep)', background: 'var(--bone-2)', padding: '7px 13px', borderRadius: 9, textDecoration: 'none' }}>
+          <a href={receiptHref(receipt)} style={{ display: 'inline-block', marginTop: 10, fontSize: 13, fontWeight: 700, color: 'var(--forest-deep)', background: 'var(--bone-2)', padding: '7px 13px', borderRadius: 9, textDecoration: 'none' }}>
             ↓ Download receipt for {receipt.memberName}
           </a>
         )}

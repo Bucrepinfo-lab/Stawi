@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { PrintReturn } from '@/components/ReturnBar';
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
 import { AppTabs } from '@/components/AppTabs';
 
@@ -41,6 +42,7 @@ export default function RootLayout({
         <AppTabs />
         {children}
         <ServiceWorkerRegister />
+        <PrintReturn />
       </body>
     </html>
   );

@@ -2,6 +2,7 @@
 
 import type { ReceiptModel } from '@stawi/core';
 import { BackLink } from '@/components/BackLink';
+import { ReturnBar } from '@/components/ReturnBar';
 
 export function ReceiptView({ model }: { model: ReceiptModel }) {
   const row = (label: string, value: string, strong = false) => (
@@ -14,6 +15,7 @@ export function ReceiptView({ model }: { model: ReceiptModel }) {
   return (
     <main style={{ maxWidth: 520, margin: '0 auto', padding: '32px 24px 80px' }}>
       <BackLink fallback="/dashboard" />
+      <ReturnBar href="/dashboard" label="my group" />
       <style>{`@media print { .no-print { display: none !important; } body { background: #fff; } }`}</style>
 
       <div style={{ background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 'var(--radius)', padding: 28, boxShadow: 'var(--shadow)' }}>
