@@ -38,9 +38,9 @@ export function PhoneLoginScreen({ onLogin }: { onLogin: (phone: string, links: 
       </View>
       <Text style={s.note}>Enter your {rule.nationalDigits}-digit number.</Text>
       <TouchableOpacity style={s.cta} onPress={() => go(phone)}>
-        <Text style={s.ctaTxt}>Send code &amp; continue →</Text>
+        <Text style={s.ctaTxt}>Continue →</Text>
       </TouchableOpacity>
-      <Text style={s.note}>We’ll text a one-time code. (Prototype: continues instantly.)</Text>
+      <Text style={s.note}>No code is sent. (Prototype: continues instantly.)</Text>
 
       <Text style={[s.label, { marginTop: spacing.xl }]}>Try a demo number</Text>
       {DEMO.map((d) => (

@@ -93,9 +93,10 @@ deletion** in-app and at `/delete-account`; no data is sold):
 
 Ephemeral processing: No. Data collection is not optional for phone and name (needed to sign in).
 
-Sign-in (owner rule 07/11/26): phone number + 6-digit SMS code on a new device (valid 5 minutes,
-single use, rate-limited per number and IP), then a 4-digit PIN on that trusted device; 5 wrong
-PINs, a forgotten PIN or a new device need a new SMS code. The PIN is stored only as a bcrypt
+Sign-in (owner rule 20/11/26, no SMS): phone number + the person's own 4-digit PIN on any
+device. Someone new opens an account with phone + PIN. A member a group already added, a
+forgotten PIN or 5 wrong PINs uses a 6-digit joining code that a group official hands over in
+person or on WhatsApp (never sent by SMS; one phone, once, rate-limited). The PIN is stored only as a bcrypt
 hash; trusted devices can be signed out from Account → Sign out of all devices. No email needed.
 These are authentication credentials, not a separate Data safety data type.
 

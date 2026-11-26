@@ -22,7 +22,8 @@ export default async function PinSetupPage({ searchParams }: { searchParams: Pro
         <div className="display" style={{ fontSize: 28, fontWeight: 600, color: 'var(--forest-deep)' }}>Choose a 4-digit PIN</div>
         <p style={{ color: 'var(--ink-2)', margin: '8px 0 22px', fontSize: 14.5 }}>
           From now on, sign in on any phone or computer with your phone number and this PIN. Keep it to yourself. If you
-          forget it, or after 5 wrong tries, a group official can give you a new joining code.
+          forget it, or after 5 wrong tries, a group official gives you a new joining code in person or on WhatsApp.
+          Nothing is ever sent by SMS.
         </p>
         <Suspense>
           <PinSetupForm next={safeNext} canSkip={isReviewPhone(process.env, phone)} />

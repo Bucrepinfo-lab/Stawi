@@ -1,5 +1,10 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 — Joining code wording: clearly never an SMS code (owner: "Keep it for group members", "correct wording")
+- A tester elsewhere was asked for a "sent code"; the owner wants no app to suggest a code is sent. Stawi keeps the joining code for members a group already added and for a forgotten PIN (owner 26/11/26), because it stops a stranger typing a member's number and opening the group's money records. New people open an account with phone + PIN only.
+- Every screen and message now says the code is handed over in person or on WhatsApp and never sent by SMS; the sign-in links read "Your group added you, or forgot your PIN?" and "New to Stawi? Open an account (phone + PIN, no code)". Phone app: the same link text; the offline prototype no longer says "We'll text a one-time code". `docs/PLAY-LISTING.md` sign-in note updated (it still described the old SMS code).
+- Not done, needs the owner: a solo account (own books, no group) that forgets its PIN has no one to give it a code; Stawi has no support tool to clear a PIN safely yet (the /admin page is a demo board without staff sign-in checks).
+
 ## 26/11/26 (12:10) — Sent to Google for closed-testing review
 - Owner set PLAY_REVIEW_PHONE + a 4-digit PLAY_REVIEW_PIN (6 digits is refused by `isReviewPinLogin`), signed in and made the demo group "Stawi Demo Chama" through the app; entered the phone + PIN in Play Console Sign in details (Claude filled the name and instructions). `ANDROID_CERT_FINGERPRINTS` live with both fingerprints (assetlinks checked).
 - Claude: target audience 18+, Data safety submitted, content rating redone (block + report + moderated chat), PR #50 merged, then Publishing overview → 14 changes sent for review (closed testing Alpha, Kenya, Telpen Closed Testers). Google's review usually takes up to 7 days; then 12 testers × 14 days before production.

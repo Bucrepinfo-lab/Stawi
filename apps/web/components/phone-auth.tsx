@@ -154,7 +154,7 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
     return (
       <form onSubmit={redeem} style={{ display: "grid", gap: 12, textAlign: "left" }}>
         <p style={{ fontSize: 13.5, color: "var(--ink-2)", margin: 0 }}>
-          First time here, or forgot your PIN? Ask your group&apos;s chairperson, secretary or treasurer for a <b>joining code</b>. They give it to you in person or on WhatsApp.
+          Your group added you, or you forgot your PIN? Ask your group&apos;s chairperson, secretary or treasurer for your <b>joining code</b>. They hand it to you in person or on WhatsApp. It is never sent by SMS, so there is nothing to wait for. It proves you are the member your group added, so nobody else can open your group&apos;s records.
         </p>
         {phoneField}
         <label style={{ fontSize: 13, color: "var(--ink-2)" }}>
@@ -182,7 +182,7 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
     return (
       <form onSubmit={start} style={{ display: "grid", gap: 12, textAlign: "left" }}>
         <p style={{ fontSize: 13.5, color: "var(--ink-2)", margin: 0 }}>
-          Starting a group, or keeping your own business books? Open your account with your phone number and a PIN only you know.
+          New to Stawi? Starting a group, trying it out, or keeping your own business books? Open your account with just your phone number and a PIN only you know. No code needed.
         </p>
         {phoneField}
         <label style={{ fontSize: 13, color: "var(--ink-2)" }}>
@@ -227,8 +227,8 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
       <button type="submit" disabled={loading || pin.length < 4} style={{ ...btnStyle, opacity: loading || pin.length < 4 ? 0.6 : 1 }}>
         {loading ? "Checking…" : "Sign in"}
       </button>
-      <button type="button" onClick={() => switchTo("code")} style={linkStyle}>First time, or forgot your PIN? Use a joining code</button>
-      <button type="button" onClick={() => switchTo("start")} style={linkStyle}>Starting a new group or your own books? Open an account</button>
+      <button type="button" onClick={() => switchTo("code")} style={linkStyle}>Your group added you, or forgot your PIN? Use the code your group official gave you</button>
+      <button type="button" onClick={() => switchTo("start")} style={linkStyle}>New to Stawi? Open an account (phone + PIN, no code)</button>
     </form>
   );
 }
