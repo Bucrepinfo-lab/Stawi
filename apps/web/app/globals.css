@@ -711,3 +711,12 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 .sr-list a { display: block; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--paper); border: 1px solid var(--line); color: var(--ink); text-decoration: none; }
 .sr-list a:hover { border-color: var(--gold); }
 .sr-list a:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* Feedback that always shows, wherever the page is scrolled (owner 26/11/26). */
+.fb-banner.fb-float { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 70; width: min(520px, calc(100vw - 24px)); margin: 0; animation: fb-float-in .28s ease-out; box-shadow: 0 18px 40px -16px rgba(22, 38, 31, .55); }
+body.has-app-tabs .fb-banner.fb-float { bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+@media (min-width: 900px) { body.has-app-tabs .fb-banner.fb-float { bottom: 24px; } }
+@media print { .fb-banner.fb-float { display: none !important; } }
+@keyframes fb-float-in { from { transform: translate(-50%, 12px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .fb-banner.fb-float { animation: none; } }
+.cf-sheet.cf-fallback { position: fixed; inset: 0; z-index: 100; box-shadow: 0 0 0 100vmax rgba(15, 22, 19, .55), 0 24px 60px -20px rgba(22, 38, 31, .55); }

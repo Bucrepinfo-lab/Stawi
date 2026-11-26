@@ -170,7 +170,7 @@ export function TableBanking({
       <div style={{ background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 'var(--radius)', padding: 22, boxShadow: 'var(--shadow)' }}>
         <div style={{ fontSize: 12, color: 'var(--dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em' }}>Total group capital</div>
         <div className="mono" style={{ fontSize: 34, fontWeight: 600, color: 'var(--forest-deep)', marginTop: 4 }}>KES {formatMoney(snapshot.totalCents)}</div>
-        <FeedbackBanner feedback={feedback} onClose={() => setFeedback(null)} />
+        <FeedbackBanner feedback={feedback} onClose={() => setFeedback(null)} float />
         {flash && !feedback && <div style={{ marginTop: 8, color: 'var(--good)', fontWeight: 600, fontSize: 14 }}>▲ {flash}</div>}
         {receipt && (
           <a href={receiptHref(receipt)} style={{ display: 'inline-block', marginTop: 10, fontSize: 13, fontWeight: 700, color: 'var(--forest-deep)', background: 'var(--bone-2)', padding: '7px 13px', borderRadius: 9, textDecoration: 'none' }}>
