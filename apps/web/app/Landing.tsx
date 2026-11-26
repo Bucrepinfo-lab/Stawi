@@ -9,6 +9,7 @@ import { OpenDoor } from '@/components/OpenDoor';
 import { CountdownBadge } from '@/components/CountdownBadge';
 import { track } from '@/components/track';
 import { Picture } from '@/components/Pictures';
+import { HomeChoices, HomeDock, HomeHelp, HomeSteps } from '@/components/HomeFlow';
 
 type Lang = 'en' | 'sw' | 'fr' | 'es' | 'pt' | 'ar' | 'zh' | 'hi' | 'de' | 'ru';
 
@@ -289,6 +290,15 @@ const VALUE_DETAILS: Partial<Record<Lang, { cta: string; items: string[] }>> & {
 
 const navLink: React.CSSProperties = { fontWeight: 600, color: 'var(--ink-2)' };
 
+/** Our own drawn sun and moon (standing rule 13: no emoji), with the word beside it. */
+function ThemeGlyph({ dark }: { dark: boolean }) {
+  return dark ? (
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="currentColor" /><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+  ) : (
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="currentColor" /></svg>
+  );
+}
+
 function LogoMark() {
   return (
     <svg width="34" height="34" viewBox="0 0 96 96" aria-hidden>
@@ -383,9 +393,10 @@ export function Landing({ saccoPlus, foundingDays = null }: { saccoPlus: boolean
             <option value="ru">Русский</option>
           </select>
           <button onClick={toggleTheme} aria-label="Toggle theme"
-            style={{ padding: '7px 12px', borderRadius: 9, border: '1px solid var(--line)', background: 'var(--paper)', color: 'var(--ink)', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
-            {dark ? '☀️' : '🌙'}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 9, border: '1px solid var(--line)', background: 'var(--paper)', color: 'var(--ink)', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
+            <ThemeGlyph dark={dark} /> {dark ? 'Light' : 'Dark'}
           </button>
+          <Link href="/sign-in?next=/dashboard" style={{ fontWeight: 700, color: 'var(--forest-deep)', border: '1px solid var(--forest-deep)', padding: '9px 16px', borderRadius: 12, textDecoration: 'none' }}>{lang === 'sw' ? 'Ingia' : 'Sign in'}</Link>
           <Link href="/subscribe" style={{ fontWeight: 700, color: 'var(--forest-deep)', background: 'var(--gold)', padding: '10px 18px', borderRadius: 12, textDecoration: 'none' }}>{t.pricing}</Link>
         </nav>
       </header>
@@ -402,7 +413,12 @@ export function Landing({ saccoPlus, foundingDays = null }: { saccoPlus: boolean
           <p style={{ fontSize: 14.5, color: 'var(--ink)', fontWeight: 600, margin: 0 }}>{t.open}</p>
         </div>
 
-        <div style={{ display: 'flex', gap: 12, marginTop: 22, flexWrap: 'wrap' }}>
+        <div className="hf-ctas" style={{ marginTop: 24 }}>
+          <Link href="/sign-in?next=/dashboard" className="hf-btn hf-btn--gold">{lang === 'sw' ? 'Fungua kikundi changu' : 'Open my group'}</Link>
+          <a href="#how" className="hf-btn">{lang === 'sw' ? 'Inavyofanya kazi' : 'How it works'}</a>
+        </div>
+
+        <div style={{ display: 'flex', gap: 12, marginTop: 18, flexWrap: 'wrap' }}>
           {pillars.map((label, i) => {
             const routes = ['/dashboard', '/match', '/books', '/sacco'] as const;
             const href = routes[i] ?? '/dashboard';
@@ -414,6 +430,10 @@ export function Landing({ saccoPlus, foundingDays = null }: { saccoPlus: boolean
           })}
         </div>
       </section>
+
+      {/* The path for non-technical visitors (owner 26/11/26): choose, then the steps. */}
+      <HomeChoices lang={lang} />
+      <HomeSteps lang={lang} />
 
       {/* Problems we solve: the pain, the proof, what Stawi does (owner 20/11/26) */}
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -488,6 +508,8 @@ export function Landing({ saccoPlus, foundingDays = null }: { saccoPlus: boolean
         )}
       </section>
 
+      <HomeHelp lang={lang} />
+      <HomeDock lang={lang} />
       <footer style={{ marginTop: 60, paddingTop: 24, borderTop: '1px solid var(--line)', color: 'var(--faint)', fontSize: 13, display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
         <span className="display" style={{ color: 'var(--forest-deep)', fontWeight: 600 }}>Stawi</span>
         <span>Save · Grow · Thrive — for every group and business</span>
