@@ -47,6 +47,7 @@ export function AppTabs() {
   if (!visible) return null;
 
   return (
+    <>
     <nav className="app-tabs" aria-label="Main">
       {TABS.filter((t) => !hint || hint[t.needs] || t.match.test(pathname)).map((t) => (
         <Link key={t.href} href={t.href} className="app-tab" aria-current={t.match.test(pathname) ? 'page' : undefined} onClick={() => track('tab', t.key)}>
@@ -60,10 +61,12 @@ export function AppTabs() {
         <span className="i pic" aria-hidden><TabPicture name="me" /></span>
         <span>{ME_LABEL[lang]}</span>
       </Link>
+    </nav>
+      {/* Outside the nav: the bar's blur would otherwise pin this onto the Me tab. */}
       <Link href="/search" className="app-search" aria-label={SEARCH_LABEL[lang]} aria-current={/^\/search(\/|$)/.test(pathname) ? 'page' : undefined} onClick={() => track('tab', 'tab-search')}>
         <TabPicture name="search" size={28} />
         <span>{SEARCH_LABEL[lang]}</span>
       </Link>
-    </nav>
+    </>
   );
 }

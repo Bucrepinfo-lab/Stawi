@@ -699,7 +699,7 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 .app-search:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 @media (max-width: 380px) { .app-search span { display: none; } .app-search { padding: 4px; } }
 @media (min-width: 900px) {
-  .app-search { position: static; margin-left: 10px; box-shadow: none; }
+  .app-search { top: 9px; right: 20px; z-index: 46; box-shadow: none; }
 }
 @media print { .app-search { display: none !important; } }
 /* Room for the Search button above the page on phones. */
@@ -712,11 +712,22 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 .sr-list a:hover { border-color: var(--gold); }
 .sr-list a:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
-/* Feedback that always shows, wherever the page is scrolled (owner 26/11/26). */
-.fb-banner.fb-float { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 70; width: min(520px, calc(100vw - 24px)); margin: 0; animation: fb-float-in .28s ease-out; box-shadow: 0 18px 40px -16px rgba(22, 38, 31, .55); }
-body.has-app-tabs .fb-banner.fb-float { bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
-@media (min-width: 900px) { body.has-app-tabs .fb-banner.fb-float { bottom: 24px; } }
+/* Feedback that always shows, wherever the page is scrolled (owner 26/11/26):
+   at the TOP of the screen (the keyboard never covers it), in solid green for
+   done and solid red for not done, so it catches the eye. */
+.fb-banner.fb-float { position: fixed; left: 50%; transform: translateX(-50%); top: calc(62px + env(safe-area-inset-top, 0px)); bottom: auto; z-index: 70; width: min(560px, calc(100vw - 20px)); margin: 0; animation: fb-float-in .28s ease-out;
+  background: var(--fb, var(--good)); border-color: var(--fb, var(--good)); box-shadow: 0 18px 40px -14px rgba(22, 38, 31, .6); }
+/* Fixed shades (not theme tokens) so white words stay readable in dark mode too. */
+.fb-banner.fb-float.fb-success { --fb: #2f7d52; }
+.fb-banner.fb-float.fb-error { --fb: #c4452f; }
+.fb-banner.fb-float.fb-info { --fb: #3c7d8c; }
+.fb-banner.fb-float .fb-text strong, .fb-banner.fb-float .fb-text span { color: #fffdf8; }
+.fb-banner.fb-float .fb-text strong { font-size: 17px; }
+.fb-banner.fb-float .fb-mark { background: #fffdf8; color: var(--fb, var(--good)); }
+.fb-banner.fb-float .fb-close { color: #fffdf8; }
+.fb-banner.fb-float .fb-close:hover { background: rgba(255, 253, 248, .18); }
+@media (min-width: 900px) { .fb-banner.fb-float { top: 78px; } }
 @media print { .fb-banner.fb-float { display: none !important; } }
-@keyframes fb-float-in { from { transform: translate(-50%, 12px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+@keyframes fb-float-in { from { transform: translate(-50%, -12px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .fb-banner.fb-float { animation: none; } }
 .cf-sheet.cf-fallback { position: fixed; inset: 0; z-index: 100; box-shadow: 0 0 0 100vmax rgba(15, 22, 19, .55), 0 24px 60px -20px rgba(22, 38, 31, .55); }
