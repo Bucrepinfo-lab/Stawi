@@ -182,6 +182,11 @@ export function TableBanking({
             Money record: witnesses, confirmations &amp; corrections
           </a>
         )}
+        {groupId && (
+          <a href={`/groups/${encodeURIComponent(groupId)}/history`} style={{ display: 'inline-block', marginTop: 10, marginLeft: 12, fontSize: 13, fontWeight: 700, color: 'var(--forest-deep)', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+            My payment history (download)
+          </a>
+        )}
       </div>
 
       {!canRecord && (
