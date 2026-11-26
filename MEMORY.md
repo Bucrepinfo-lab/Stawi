@@ -1,5 +1,10 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 — Share where people are: WhatsApp, Facebook, X, Telegram, LinkedIn, SMS, email (owner: "come up with the most popular tools")
+- Owner saw the computer's own share box (OneNote, Outlook, Copilot). `ShareBar` (landing, subscribe, dashboard) now leads with WhatsApp and Facebook (most used in Kenya: Media Council of Kenya 2026, Communications Authority, GeoPoll 2025), then X, Telegram, LinkedIn, SMS, email, "TikTok, Instagram & more" (phone share sheet on phones; copy link + hint on computers) and Copy link; English and Kiswahili. Each button keeps its own `?via=` so engagement counts show which works (`ShareChannel` extended).
+- The tab-bar Share uses the phone's share sheet on phones and opens our panel on computers.
+- `@stawi/core` `share-targets.ts` (+ test), named `socialShareMessage`/`SocialChannel` here to avoid clashing with the existing share helpers; a private link only ever gets WhatsApp, SMS and email.
+
 ## 26/11/26 — Joining code wording: clearly never an SMS code (owner: "Keep it for group members", "correct wording")
 - A tester elsewhere was asked for a "sent code"; the owner wants no app to suggest a code is sent. Stawi keeps the joining code for members a group already added and for a forgotten PIN (owner 26/11/26), because it stops a stranger typing a member's number and opening the group's money records. New people open an account with phone + PIN only.
 - Every screen and message now says the code is handed over in person or on WhatsApp and never sent by SMS; the sign-in links read "Your group added you, or forgot your PIN?" and "New to Stawi? Open an account (phone + PIN, no code)". Phone app: the same link text; the offline prototype no longer says "We'll text a one-time code". `docs/PLAY-LISTING.md` sign-in note updated (it still described the old SMS code).

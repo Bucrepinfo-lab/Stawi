@@ -65,7 +65,7 @@ export function summariseEngagement(rows: EngagementRow[]): EngagementSummaryLin
 
 // ── Sharing ───────────────────────────────────────────────────────────────
 
-export type ShareChannel = 'whatsapp' | 'sms' | 'copy' | 'device';
+export type ShareChannel = 'whatsapp' | 'facebook' | 'x' | 'telegram' | 'linkedin' | 'sms' | 'email' | 'copy' | 'device';
 
 /** Add where the visit came from (?via=whatsapp). Never a person's identity. */
 export function shareLink(baseUrl: string, channel: ShareChannel): string {

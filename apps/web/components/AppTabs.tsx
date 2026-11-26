@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { shareLink, shareMessage, whatsappShareUrl, type ValueLang } from '@stawi/core';
+import { shareLink, shareMessage, type ValueLang } from '@stawi/core';
+import { ShareBar } from './ShareBar';
 import { storedLang, track } from './track';
 import { TABS_HINT_EVENT, readTabsHint, type TabsHintValue } from './TabsHint';
 import { TabPicture, type TabPictureName } from './TabPictures';
@@ -30,6 +31,7 @@ export function AppTabs() {
   const pathname = usePathname() ?? '/';
   const visible = SHOW_ON.test(pathname);
   const [lang, setLang] = useState<ValueLang>('en');
+  const [panel, setPanel] = useState(false);
   useEffect(() => { setLang(storedLang()); }, []);
   // Show only the tabs for the sections the group on screen uses (see TabsHint).
   const [hint, setHint] = useState<TabsHintValue | null>(null);
@@ -47,16 +49,18 @@ export function AppTabs() {
 
   async function share() {
     track('share', 'share-tab');
-    const text = shareMessage(lang, shareLink(window.location.origin, typeof navigator.share === 'function' ? 'device' : 'whatsapp'));
-    if (typeof navigator.share === 'function') {
+    // On a phone: the phone's own share sheet (WhatsApp, Facebook, TikTok…).
+    // On a computer: our own panel, never the computer's OneNote/Outlook box.
+    const touch = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+    if (touch && typeof navigator.share === 'function') {
       try {
-        await navigator.share({ title: 'Stawi', text });
+        await navigator.share({ title: 'Stawi', text: shareMessage(lang, shareLink(window.location.origin, 'device')) });
       } catch {
         // Closed the share sheet.
       }
       return;
     }
-    window.open(whatsappShareUrl(text), '_blank', 'noopener');
+    setPanel(true);
   }
 
   return (
@@ -71,6 +75,14 @@ export function AppTabs() {
         <span className="i pic" aria-hidden><TabPicture name="share" /></span>
         <span>{SHARE_LABEL[lang]}</span>
       </button>
+      {panel && (
+        <div role="dialog" aria-label={SHARE_LABEL[lang]} onClick={() => setPanel(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.35)', display: 'grid', placeItems: 'end center', zIndex: 50 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--paper)', borderRadius: '16px 16px 0 0', padding: 16, width: 'min(560px, 100%)', boxShadow: 'var(--shadow)' }}>
+            <ShareBar lang={lang} />
+            <button type="button" className="share-btn" onClick={() => setPanel(false)} style={{ marginTop: 10 }}>✕</button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
