@@ -1,7 +1,7 @@
 # Stawi — session memory / start-here
 
 ## 26/11/26 — Record feedback always visible (owner: "the feedback message is not popping up when you record")
-- Confirmed live: the "Contribution recorded / not recorded" banner was drawn inside the group-total card ABOVE the form, so after tapping Record it appeared off the top of the phone screen (on a computer it sat under the top tab bar). Now the treasurer form's banner floats pinned above the tab bar (`FeedbackBanner float`, `.fb-float`), so it shows wherever the page is scrolled.
+- Confirmed live: the "Contribution recorded / not recorded" banner was drawn inside the group-total card ABOVE the form, so after tapping Record it appeared off the top of the phone screen (on a computer it sat under the top tab bar). Now the treasurer form's banner floats pinned at the TOP of the screen (owner: the keyboard hides the bottom; top catches the eye) in solid green (done) or solid red (not done) with white words (`FeedbackBanner float`, `.fb-float`), so it shows wherever the page is scrolled.
 - Seen in the same live check: the Search button (from the audit) sat on top of the "Me" tab on phones — the tab bar's backdrop blur makes it the frame for fixed children. Search is now rendered outside the bar, pinned top-right on every screen size.
 - The "Record this contribution?" check now opens on older phone browsers too (no `showModal`: opened as a pinned box with a dark backdrop).
 

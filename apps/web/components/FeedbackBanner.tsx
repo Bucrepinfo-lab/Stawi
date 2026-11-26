@@ -9,8 +9,8 @@ export type Feedback = { tone: 'success' | 'error' | 'info'; title: string; deta
 
 export function FeedbackBanner({ feedback, onClose, float = false }: { feedback: Feedback | null; onClose: () => void; float?: boolean }) {
   if (!feedback) return null;
-  // `float`: pinned above the tab bar so it shows wherever the person has scrolled
-  // (owner 26/11/26: the banner sat above the form, off the phone screen).
+  // `float`: pinned at the top of the screen in solid green / red, so it shows wherever the
+  // person has scrolled and the keyboard never hides it (owner 26/11/26).
   return (
     <div className={`fb-banner fb-${feedback.tone}${float ? ' fb-float' : ''}`} role={feedback.tone === 'error' ? 'alert' : 'status'} aria-live={feedback.tone === 'error' ? 'assertive' : 'polite'}>
       <span className="fb-mark" aria-hidden>{feedback.tone === 'success' ? '✓' : feedback.tone === 'error' ? '!' : 'i'}</span>
