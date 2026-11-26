@@ -68,3 +68,4 @@ export * from './member-history';
 export * from './profile';
 export * from './formal-writer';
 export * from './funding-proposal';
+export * from './dictation';

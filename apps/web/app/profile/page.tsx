@@ -5,6 +5,7 @@ import { loadProfile } from '@/lib/profile';
 import { BackLink } from '@/components/BackLink';
 import { ProfileClient } from './ProfileClient';
 import { JoinChama } from './JoinChama';
+import { LanguagePicker } from './LanguagePicker';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +23,7 @@ export default async function ProfilePage() {
       <BackLink fallback="/dashboard" />
       <p className="hist-kicker">My profile</p>
       <ProfileClient initial={{ name: profile.name, phone: profile.phone, photo: profile.photo }} />
+      <LanguagePicker />
 
       <section className="pf-card" aria-labelledby="pf-pay">
         <h2 id="pf-pay">My chamas &amp; payments</h2>
