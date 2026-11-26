@@ -61,8 +61,8 @@ pure note-taking app, which Stawi is not.)
 - Category: Utility / productivity / reference (not a game).
 - Violence, sexuality, language, controlled substances, gambling: **none**.
 - Users can interact or exchange content: **Yes** (since 20/11/26) — group messages and "Ask the officials",
-  only between members of the same private group; every message passes the safety screen and
-  members can report. No public profiles, no strangers.
+  only between members of the same private group; every message passes the safety screen, and
+  members can Report any message (a pre-filled email to telpeninfo@gmail.com). No block button yet. No public profiles, no strangers.
 - Shares user location: **No**. Digital purchases: **No** (no in-app purchases in v1).
 - Expected rating: Everyone / PEGI 3 equivalent; audience is still set to adults below.
 
@@ -132,14 +132,25 @@ handles it.
 - Live: `/api/health` ok; `/privacy`, `/terms`, `/delete-account`, manifest (start URL `/dashboard?source=twa`) all 200.
 - `/.well-known/assetlinks.json` returns `[]`: `ANDROID_CERT_FINGERPRINTS` is set only after the Android build
   (upload key) and the first upload (Play App Signing key).
-- Play Console: the Stawi app is created under the Telpen Edu developer account (the same account as the
-  other four products); the listing, graphics and App content answers above are entered by Claude in Chrome.
-- Owner-only steps (credentials and signing keys are never handled by Claude):
-  1. Fly secrets `PLAY_REVIEW_PHONE` + `PLAY_REVIEW_PIN`, then `seed-demo.ts` once; type the PIN into App access.
-  2. PWABuilder → Android: package `ke.stawi.app`, signing **Create new**; keep the zip's keystore and
-     `signing-key-info.txt` in email + Drive ("Stawi - Google Play package").
-  3. Upload the `.aab` to the closed-testing release Claude prepared; then set `ANDROID_CERT_FINGERPRINTS`
-     (upload key from the zip's `assetlinks.json` + App signing key from Play Console → App integrity).
+- Play Console (26/11/26, Claude in Chrome, Telpen Edu developer account, app id 4975422423018163256):
+  created `ke.stawi.app` (owner's yes to the two declarations); store listing (text, 512 icon, feature
+  graphic, 4 phone screenshots), category Finance, contact telpeninfo@gmail.com + https://stawi.fly.dev;
+  privacy policy, ads No, government No, health None, advertising ID No, financial features "Other"
+  (record keeping + M-Pesa requests processed by Safaricom), Data safety (draft, imported from CSV),
+  content rating done (owner's yes to the IARC terms; Everyone, "users interact"); closed testing
+  "Alpha": Kenya, testers list "Telpen Closed Testers" (48), feedback telpeninfo@gmail.com, release 1
+  (1.0.0.0, version code 1, target SDK 36) saved as a draft.
+- Android build: PWABuilder, signing "New"; package files in Downloads "Stawi - Google Play package
+  26-11-26" and Drive folder of the same name (aab, signing-key-info.txt, assetlinks.json).
+- Fingerprints for `ANDROID_CERT_FINGERPRINTS` (both are public):
+  upload key `66:B7:6D:DD:D6:65:4F:DA:28:14:95:98:46:27:C5:74:11:28:CB:5A:EF:9B:F3:31:27:33:99:2B:E5:CD:54:D9`,
+  Play App Signing key `1A:0C:B3:1A:D0:5A:56:F4:50:25:67:1E:D1:0B:59:D4:B4:87:2C:2D:AD:6C:F0:A1:CF:B8:6A:90:54:A9:A1:3F`.
+- Owner-only steps left (credentials, signing keys and secrets are never handled by Claude):
+  1. Fly secrets `PLAY_REVIEW_PHONE` + `PLAY_REVIEW_PIN`, then `seed-demo.ts` once; Play Console → App
+     content → Sign in details: phone + PIN + the instructions below. Then Target audience (18+) unlocks.
+  2. Fly secret `ANDROID_CERT_FINGERPRINTS` = both fingerprints above, comma-separated.
+  3. Copy `signing.keystore` from the Downloads folder into the Drive folder (Drive refused it by reference).
+  4. Publishing overview → Send changes for review.
 
 ## Still to do (owner / Chrome)
 

@@ -4,7 +4,8 @@
 - Live checked: `/api/health` ok; privacy, terms, delete-account and manifest load. `assetlinks.json` is `[]` until the Android build.
 - `docs/PLAY-LISTING.md` brought up to date: phone + PIN sign-in (no SMS), in-app messages (content rating "users interact: Yes", Data safety "Other in-app messages"), Africa's Talking gone, live host, status and owner-only steps.
 - Landing: the last two emoji (door, gift) replaced by a drawn picture / plain words (standing rule 19).
-- Play Console: no Stawi app existed. Creating it needs the owner's yes to Google's two declarations (Developer Program Policies, US export laws). Store graphics ready: feature graphic 1024×500 and four 360×640 phone screenshots of the public pages (sign-in screens hide the rest; retake from a signed-in phone later).
+- Play Console filled and closed-testing release 1 saved as a draft (details and owner-only steps: `docs/PLAY-LISTING.md` → Status 26/11/26). Screenshots are of public pages only; retake from a signed-in phone later.
+- Messages: every message from someone else has a Report link (pre-filled email to telpeninfo@gmail.com) — Play's user-generated-content policy needs an in-app way to report. Tab emoji there replaced by drawn pictures. No block button yet (proposal).
 
 ## 25/11/26 — PRD v3 restructure merged (owner: "Two draft pull requests sitting idle fix them appropriately")
 - PR #28 is brought up to date with main and merged as the plan of record. Nothing new is built. The open decisions in `docs/PRD-V3-RESTRUCTURE.md` §7 and `docs/PRICING-PROPOSAL-2026-11.md` still need the owner's yes, and prices in code are unchanged.

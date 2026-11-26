@@ -5,6 +5,10 @@ import { MESSAGE_MAX_CHARS, type MessageChannel, type ValueLang } from '@stawi/c
 import type { MessagesView } from '@/lib/messages';
 import { storedLang, track } from '@/components/track';
 import { setUrlParams } from '@/lib/url-state';
+import { Picture } from '@/components/Pictures';
+
+/** Where reports go (Play user-generated-content policy: an in-app way to report). */
+const REPORT_TO = 'telpeninfo@gmail.com';
 
 /**
  * Two places to write: the whole group, and "Ask the officials" (seen by the
@@ -31,6 +35,8 @@ const T = {
   you: { en: 'You', sw: 'Wewe' },
   none: { en: 'Messages are not switched on for your group. An official can switch them on under “Choose what you use”.', sw: 'Ujumbe haujawashwa kwa kikundi chenu. Kiongozi anaweza kuuwasha chini ya “Chagueni mnachotumia”.' },
   fail: { en: 'Could not send. Please try again.', sw: 'Haikutumwa. Tafadhali jaribu tena.' },
+  report: { en: 'Report', sw: 'Ripoti' },
+  reportHint: { en: 'Something wrong or abusive? Tap Report on the message, or write to', sw: 'Kuna ujumbe mbaya au wa matusi? Gusa Ripoti kwenye ujumbe, au andika kwa' },
 } as const;
 
 const time = (iso: string) => {
@@ -38,6 +44,13 @@ const time = (iso: string) => {
   const p = (n: number) => String(n).padStart(2, '0');
   return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`;
 };
+
+/** A pre-filled email to Stawi about one message; the person can add why. */
+export function reportLink(groupId: string, messageId: string, body: string): string {
+  const subject = 'Report a message in Stawi';
+  const text = `Group: ${groupId}\nMessage: ${messageId}\n\n"${body.slice(0, 300)}"\n\nWhy I am reporting it:\n`;
+  return `mailto:${REPORT_TO}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+}
 
 export function MessagesClient({ groups, initialId }: { groups: { id: string; name: string }[]; initialId: string }) {
   const [lang, setLang] = useState<ValueLang>('en');
@@ -119,7 +132,7 @@ export function MessagesClient({ groups, initialId }: { groups: { id: string; na
       <div className="s-tabs" role="tablist" aria-label={T.title[lang]} style={{ marginTop: 0 }}>
         {(['ALL', 'OFFICIALS'] as MessageChannel[]).map((c) => (
           <button key={c} type="button" role="tab" aria-selected={channel === c} className="s-tab" onClick={() => { setChannel(c); setThread(null); setView(null); track('tab', c === 'ALL' ? 'messages-group' : 'messages-officials'); }}>
-            <span aria-hidden>{c === 'ALL' ? '👥' : '🙋'}</span>{c === 'ALL' ? T.all[lang] : T.officials[lang]}
+            <Picture name={c === 'ALL' ? 'group' : 'messages'} size={22} />{c === 'ALL' ? T.all[lang] : T.officials[lang]}
           </button>
         ))}
       </div>
@@ -150,7 +163,11 @@ export function MessagesClient({ groups, initialId }: { groups: { id: string; na
                 <div className="msg-bubble">
                   <p className="msg-from">{m.mine ? T.you[lang] : m.name}{m.official && <span className="msg-badge">{T.official[lang]}</span>}</p>
                   <p className="msg-body">{m.body}</p>
-                  <p className="msg-time">{time(m.at)}</p>
+                  <p className="msg-time">{time(m.at)}
+                    {!m.mine && (
+                      <a className="msg-report" href={reportLink(groupId, m.id, m.body)} onClick={() => track('cta', 'message-report')}>{T.report[lang]}</a>
+                    )}
+                  </p>
                 </div>
               </div>
             ))}
@@ -163,6 +180,7 @@ export function MessagesClient({ groups, initialId }: { groups: { id: string; na
             <button type="button" className="msg-send" disabled={busy || !text.trim()} onClick={send}>{T.send[lang]}</button>
           </div>
           {err && <p className="pay-note bad" role="alert">{err}</p>}
+          <p className="msg-hint">{T.reportHint[lang]} <span style={{ userSelect: 'all' }}>{REPORT_TO}</span>.</p>
         </>
       )}
     </section>
