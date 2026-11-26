@@ -315,6 +315,9 @@ html.dark .app-tab[aria-current="page"] { color: var(--ink); }
 .msg-badge { font-size: 10.5px; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: var(--gold); color: #16382a; }
 .msg-body { font-size: 15.5px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
 .msg-time { font-size: 11px; color: var(--dim); font-family: var(--font-mono); text-align: right; margin-top: 2px; }
+.msg-report { margin-left: 10px; color: var(--dim); text-decoration: underline; font-family: inherit; font-size: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.msg-block-ask { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 8px 0; padding: 12px; }
+.msg-block-ask p { flex-basis: 100%; margin: 0; }
 .msg-compose { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
 .msg-compose textarea { width: 100%; min-height: 52px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: inherit; font-size: 16px; resize: vertical; }
 .msg-send { min-height: 52px; padding: 0 22px; border-radius: 14px; border: 0; background: var(--forest-deep); color: #fffdf8; font: inherit; font-weight: 800; font-size: 16px; cursor: pointer; box-shadow: inset 0 -4px 0 var(--gold); }

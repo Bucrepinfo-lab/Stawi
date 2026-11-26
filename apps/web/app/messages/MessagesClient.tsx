@@ -1,10 +1,17 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { MESSAGE_MAX_CHARS, type MessageChannel, type ValueLang } from '@stawi/core';
+import { BLOCK_STORAGE_PREFIX, MESSAGE_MAX_CHARS, blockMember, parseBlocked, unblockMember, visibleMessages, type MessageChannel, type ValueLang } from '@stawi/core';
 import type { MessagesView } from '@/lib/messages';
+
+/** Sender id of Stawi's own notices (same value as STAWI_SENDER in lib/messages, which is server-only). */
+const STAWI_SENDER = 'stawi';
 import { storedLang, track } from '@/components/track';
 import { setUrlParams } from '@/lib/url-state';
+import { Picture } from '@/components/Pictures';
+
+/** Where reports go (Play user-generated-content policy: an in-app way to report). */
+const REPORT_TO = 'telpeninfo@gmail.com';
 
 /**
  * Two places to write: the whole group, and "Ask the officials" (seen by the
@@ -31,6 +38,14 @@ const T = {
   you: { en: 'You', sw: 'Wewe' },
   none: { en: 'Messages are not switched on for your group. An official can switch them on under “Choose what you use”.', sw: 'Ujumbe haujawashwa kwa kikundi chenu. Kiongozi anaweza kuuwasha chini ya “Chagueni mnachotumia”.' },
   fail: { en: 'Could not send. Please try again.', sw: 'Haikutumwa. Tafadhali jaribu tena.' },
+  report: { en: 'Report', sw: 'Ripoti' },
+  block: { en: 'Block', sw: 'Zuia' },
+  blockAsk: { en: 'Hide messages from {name} on this phone? They are not told and stay in the group.', sw: 'Ficha ujumbe wa {name} kwenye simu hii? Hawataarifiwa na wanabaki kikundini.' },
+  blockYes: { en: 'Block', sw: 'Zuia' },
+  cancel: { en: 'Cancel', sw: 'Ghairi' },
+  blockedN: { en: 'You have blocked {n} member(s) on this phone.', sw: 'Umezuia wanachama {n} kwenye simu hii.' },
+  unblockAll: { en: 'Show them again', sw: 'Waonyeshe tena' },
+  reportHint: { en: 'Something wrong or abusive? Tap Report or Block on the message, or write to', sw: 'Kuna ujumbe mbaya au wa matusi? Gusa Ripoti au Zuia kwenye ujumbe, au andika kwa' },
 } as const;
 
 const time = (iso: string) => {
@@ -38,6 +53,13 @@ const time = (iso: string) => {
   const p = (n: number) => String(n).padStart(2, '0');
   return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`;
 };
+
+/** A pre-filled email to Stawi about one message; the person can add why. */
+export function reportLink(groupId: string, messageId: string, body: string): string {
+  const subject = 'Report a message in Stawi';
+  const text = `Group: ${groupId}\nMessage: ${messageId}\n\n"${body.slice(0, 300)}"\n\nWhy I am reporting it:\n`;
+  return `mailto:${REPORT_TO}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+}
 
 export function MessagesClient({ groups, initialId }: { groups: { id: string; name: string }[]; initialId: string }) {
   const [lang, setLang] = useState<ValueLang>('en');
@@ -50,6 +72,17 @@ export function MessagesClient({ groups, initialId }: { groups: { id: string; na
   const [err, setErr] = useState<string>();
   const endRef = useRef<HTMLDivElement>(null);
   const count = useRef(0);
+  const [blocked, setBlocked] = useState<string[]>([]);
+  const [asking, setAsking] = useState<{ id: string; name: string } | null>(null);
+
+  // Blocks live on this phone only, one list per group.
+  useEffect(() => {
+    try { setBlocked(parseBlocked(localStorage.getItem(BLOCK_STORAGE_PREFIX + groupId))); } catch { setBlocked([]); }
+  }, [groupId]);
+  const saveBlocked = (next: string[]) => {
+    setBlocked(next);
+    try { localStorage.setItem(BLOCK_STORAGE_PREFIX + groupId, JSON.stringify(next)); } catch { /* private mode: this visit only */ }
+  };
 
   useEffect(() => { setLang(storedLang()); }, []);
   const setGroupId = (id: string) => { setGroupIdState(id); setThread(null); setView(null); setUrlParams({ group: id }); };
@@ -119,7 +152,7 @@ export function MessagesClient({ groups, initialId }: { groups: { id: string; na
       <div className="s-tabs" role="tablist" aria-label={T.title[lang]} style={{ marginTop: 0 }}>
         {(['ALL', 'OFFICIALS'] as MessageChannel[]).map((c) => (
           <button key={c} type="button" role="tab" aria-selected={channel === c} className="s-tab" onClick={() => { setChannel(c); setThread(null); setView(null); track('tab', c === 'ALL' ? 'messages-group' : 'messages-officials'); }}>
-            <span aria-hidden>{c === 'ALL' ? '👥' : '🙋'}</span>{c === 'ALL' ? T.all[lang] : T.officials[lang]}
+            <Picture name={c === 'ALL' ? 'group' : 'messages'} size={22} />{c === 'ALL' ? T.all[lang] : T.officials[lang]}
           </button>
         ))}
       </div>
@@ -145,17 +178,36 @@ export function MessagesClient({ groups, initialId }: { groups: { id: string; na
           )}
           <div className="msg-list s-card plain" aria-live="polite">
             {view && view.messages.length === 0 && <p className="msg-empty">{T.empty[lang]}</p>}
-            {(view?.messages ?? []).map((m) => (
+            {visibleMessages(view?.messages ?? [], blocked, channel, STAWI_SENDER).map((m) => (
               <div key={m.id} className={`msg-row ${m.mine ? 'mine' : ''}`}>
                 <div className="msg-bubble">
                   <p className="msg-from">{m.mine ? T.you[lang] : m.name}{m.official && <span className="msg-badge">{T.official[lang]}</span>}</p>
                   <p className="msg-body">{m.body}</p>
-                  <p className="msg-time">{time(m.at)}</p>
+                  <p className="msg-time">{time(m.at)}
+                    {!m.mine && (
+                      <a className="msg-report" href={reportLink(groupId, m.id, m.body)} onClick={() => track('cta', 'message-report')}>{T.report[lang]}</a>
+                    )}
+                    {!m.mine && channel === 'ALL' && m.from !== STAWI_SENDER && (
+                      <button type="button" className="msg-report" onClick={() => setAsking({ id: m.from, name: m.name })}>{T.block[lang]}</button>
+                    )}
+                  </p>
                 </div>
               </div>
             ))}
             <div ref={endRef} />
           </div>
+          {asking && (
+            <div className="s-card plain msg-block-ask" role="alertdialog" aria-label={T.block[lang]}>
+              <p>{T.blockAsk[lang].replace('{name}', asking.name)}</p>
+              <button type="button" className="msg-send" onClick={() => { saveBlocked(blockMember(blocked, asking.id)); setAsking(null); track('cta', 'message-block'); }}>{T.blockYes[lang]}</button>
+              <button type="button" className="msg-back" onClick={() => setAsking(null)}>{T.cancel[lang]}</button>
+            </div>
+          )}
+          {channel === 'ALL' && blocked.length > 0 && (
+            <p className="msg-hint">{T.blockedN[lang].replace('{n}', String(blocked.length))}{' '}
+              <button type="button" className="msg-report" onClick={() => saveBlocked(blocked.reduce((l, id) => unblockMember(l, id), blocked))}>{T.unblockAll[lang]}</button>
+            </p>
+          )}
           <div className="msg-compose">
             <textarea value={text} maxLength={MESSAGE_MAX_CHARS} rows={2} aria-label={T.write[lang]}
               placeholder={channel === 'ALL' ? T.write[lang] : official ? T.answer[lang] : T.ask[lang]}
@@ -163,6 +215,7 @@ export function MessagesClient({ groups, initialId }: { groups: { id: string; na
             <button type="button" className="msg-send" disabled={busy || !text.trim()} onClick={send}>{T.send[lang]}</button>
           </div>
           {err && <p className="pay-note bad" role="alert">{err}</p>}
+          <p className="msg-hint">{T.reportHint[lang]} <span style={{ userSelect: 'all' }}>{REPORT_TO}</span>.</p>
         </>
       )}
     </section>
