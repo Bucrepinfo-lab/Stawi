@@ -59,3 +59,4 @@ export * from './message-blocks';
 export * from './collect-ways';
 export * from './join-code';
 export * from './share-targets';
+export * from './demo-chama';

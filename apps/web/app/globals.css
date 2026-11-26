@@ -399,3 +399,34 @@ html.dark .vb-tab:not([aria-selected="true"]):hover { color: var(--ink); }
 .vb-icon, .door-icon { background: none; box-shadow: none; }
 .use-emoji { display: grid; place-items: center; }
 .s-tab .stawi-pic { border-radius: 7px; }
+
+/* ── Welcome for people not in a group yet (owner 26/11/26) ───────────────
+   Colourful, friendly, global: the four parts of Stawi as cards. Only Stawi's
+   own story is shown here, never another group's details. */
+.welcome-hero { position: relative; overflow: hidden; border-radius: var(--radius); padding: 26px 22px; color: #fffdf8;
+  background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--gold) 55%, transparent) 0, transparent 55%),
+    linear-gradient(135deg, var(--forest-deep), var(--forest) 55%, var(--sky)); box-shadow: var(--shadow); }
+.welcome-kicker { margin: 0; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; font-weight: 800; color: color-mix(in srgb, var(--gold) 85%, #fff); }
+.welcome-title { margin: 8px 0 8px; font-weight: 600; font-size: clamp(26px, 5vw, 36px); line-height: 1.1; color: #fffdf8; }
+.welcome-lead { margin: 0; max-width: 640px; font-size: 16px; line-height: 1.55; color: color-mix(in srgb, #fffdf8 88%, transparent); }
+.welcome-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 18px; }
+.welcome-hero .house-go { background: var(--gold); color: var(--forest-deep); box-shadow: inset 0 -4px 0 var(--gold-deep); transition: transform .15s ease, box-shadow .15s ease; }
+.welcome-hero .house-go:hover { transform: translateY(-2px); box-shadow: inset 0 -4px 0 var(--gold-deep), 0 10px 20px -10px rgba(0, 0, 0, .45); }
+.welcome-note { font-size: 13.5px; color: color-mix(in srgb, #fffdf8 80%, transparent); }
+.welcome-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.welcome-card { position: relative; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 16px 16px; box-shadow: var(--shadow);
+  border-top: 5px solid var(--pillar, var(--forest)); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.welcome-card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--pillar) 45%, var(--line)); box-shadow: 0 2px 4px rgba(22, 38, 31, .08), 0 18px 34px -14px color-mix(in srgb, var(--pillar) 55%, transparent); }
+.welcome-card-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.welcome-card-head strong { font-size: 17px; color: var(--ink); }
+.welcome-pic { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--pillar) 14%, var(--paper)); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--pillar) 30%, transparent); }
+.welcome-soon { margin-left: auto; font-size: 11.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px; background: color-mix(in srgb, var(--pillar) 16%, var(--paper)); color: var(--pillar); }
+.welcome-card p { margin: 10px 0 8px; color: var(--ink-2); font-size: 14.5px; line-height: 1.5; }
+.welcome-card ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.welcome-card li { position: relative; padding-left: 22px; font-size: 14px; color: var(--ink); }
+.welcome-card li::before { content: ""; position: absolute; left: 4px; top: .45em; width: 9px; height: 9px; border-radius: 50%; background: var(--pillar); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pillar) 22%, transparent); }
+.share-btn { transition: transform .15s ease, filter .15s ease, box-shadow .15s ease; }
+.share-btn:hover { transform: translateY(-1px); filter: brightness(1.05); box-shadow: 0 8px 16px -10px rgba(22, 38, 31, .45); }
+@media (prefers-reduced-motion: reduce) {
+  .welcome-card, .welcome-card:hover, .welcome-hero .house-go, .welcome-hero .house-go:hover, .share-btn, .share-btn:hover, .vb-card, .vb-card:hover { transition: none; transform: none; }
+}

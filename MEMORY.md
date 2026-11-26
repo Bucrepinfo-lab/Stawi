@@ -1,5 +1,13 @@
 # Stawi — session memory / start-here
 
+## 26/11/26 — One demo chama for every tester, and a welcome that sells the value (owner request)
+- Owner: all testers (and he, and the Play reviewer) in ONE registered group; people not yet in any group get a space that markets the value, without ever seeing another group's details.
+- "Join the demo chama" (`joinDemoGroupAction`, `components/DemoChamaCard.tsx`): anyone signed in joins the group set in `STAWI_DEMO_GROUP_ID` as an ordinary MEMBER with one tap, no joining code (sample money only). Shown as "Tester 482" (last three digits), phone stored empty, so testers never see each other's numbers. Never changes a role already held there. Officials stay the people the owner chose. Unset env = the card does not appear.
+- Judgement call: one tap instead of adding 47 phone numbers to the roster and handing out 47 joining codes (we hold testers' emails, not their numbers; roster rows would also show their numbers to other members).
+- No group yet: a colourful welcome (hero + four cards: Your group, Business matching, Simple business books, Savings and credit "Coming soon"), global wording (savings groups, chamas, stokvels), first month free and the starting price kept; all value banners below with the first one open. Only Stawi's own story: no other group's members, money or business.
+- CSS: `.welcome-*` cards with pillar colours, hover lift, dark mode via tokens, reduced-motion respected; share buttons lift on hover.
+- Owner steps: set `STAWI_DEMO_GROUP_ID` on Fly to the demo group's id (from its address /groups/<id>); make sure his own number is its chairperson.
+
 ## 26/11/26 — Share where people are: WhatsApp, Facebook, X, Telegram, LinkedIn, SMS, email (owner: "come up with the most popular tools")
 - Owner saw the computer's own share box (OneNote, Outlook, Copilot). `ShareBar` (landing, subscribe, dashboard) now leads with WhatsApp and Facebook (most used in Kenya: Media Council of Kenya 2026, Communications Authority, GeoPoll 2025), then X, Telegram, LinkedIn, SMS, email, "TikTok, Instagram & more" (phone share sheet on phones; copy link + hint on computers) and Copy link; English and Kiswahili. Each button keeps its own `?via=` so engagement counts show which works (`ShareChannel` extended).
 - The tab-bar Share uses the phone's share sheet on phones and opens our panel on computers.

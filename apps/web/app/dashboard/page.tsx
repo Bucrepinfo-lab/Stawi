@@ -8,6 +8,7 @@ import { getMyGroups } from '@/lib/data';
 import { pickAllowedId } from '@stawi/core';
 import { saccoPlusEnabled } from '@/lib/features';
 import { getModulesMap } from '@/lib/modules';
+import { demoGroupId } from '@/lib/demo-group';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,11 +22,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const activeId = pickAllowedId(group, groups.map((g) => g.id));
   // Which sections each group uses (owner 20/11/26): the home screen shows only those.
   const modulesById = await getModulesMap(groups.map((g) => g.id));
+  // The shared demo chama (owner 26/11/26): one tap to join it.
+  const demo = demoGroupId();
+  const inDemo = !!demo && groups.some((g) => g.id === demo);
   return (
     <main className="pillar-1" style={{ maxWidth: 920, margin: '0 auto', padding: '28px 24px 80px' }}>
       <LiveRefresh />
-      <DashboardClient groups={groups} initialId={activeId} modulesById={modulesById} />
-      <ValueBanners pillars={[1]} startCollapsed />
+      <DashboardClient groups={groups} initialId={activeId} modulesById={modulesById} demoAvailable={!!demo} inDemo={inDemo} />
+      {/* No group yet: every problem we solve, the first one open (owner 26/11/26). */}
+      {groups.length === 0 ? <ValueBanners pillars={[1, 2, 3, 4]} saccoPlus={saccoPlusEnabled()} /> : <ValueBanners pillars={[1]} startCollapsed />}
       <ShareBar />
       {/* SACCO+ marketing (interest, loan tiers) only when the flag is on. */}
       {saccoPlusEnabled() && <MomentsStrip />}
