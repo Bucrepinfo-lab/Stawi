@@ -31,7 +31,7 @@ export default async function MoneyRecordPage({ params }: { params: Promise<{ id
   return (
     <main className="pillar-1" style={{ maxWidth: 860, margin: '0 auto', padding: '28px 24px 90px' }}>
       <LiveRefresh />
-      <a href={`/groups/${id}`} style={{ fontSize: 13, color: 'var(--forest)', fontWeight: 600, textDecoration: 'none' }}>← {group.name}</a>
+      <a href={`/groups/${id}`} className="back-link no-print">← {group.name}</a>
       <p style={{ fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700, marginTop: 12 }}>Open to every member</p>
       <h1 className="display" style={{ fontWeight: 600, fontSize: 32, marginTop: 6 }}>Money record</h1>
       <p style={{ color: 'var(--ink-2)', marginTop: 6, maxWidth: 620 }}>

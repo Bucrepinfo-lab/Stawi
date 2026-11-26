@@ -1,8 +1,10 @@
-import { FormalizeWizard } from './FormalizeWizard';
+import { FormalizeWizard } from './FormalizeWizard';
+import { BackLink } from '@/components/BackLink';
 
 export default function FormalizePage() {
   return (
     <main style={{ maxWidth: 820, margin: '0 auto', padding: '28px 24px 80px' }}>
+      <BackLink fallback="/dashboard" />
       <p style={{ fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700 }}>
         Pillar 1 · Formalization
       </p>

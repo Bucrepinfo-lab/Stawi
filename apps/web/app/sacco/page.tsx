@@ -4,6 +4,7 @@ import { saccoPlusEnabled } from '@/lib/features';
 import { LiveRefresh } from '@/components/LiveRefresh';
 import { ValueBanners } from '@/components/ValueBanners';
 import { getSaccoAccountsData, getViewerRole } from '@/lib/data';
+import { BackLink } from '@/components/BackLink';
 
 // Flag is read per request (runtime env), never baked in at build time.
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,7 @@ export default async function SaccoPage() {
   const viewerRole = await getViewerRole();
   return (
     <main className="pillar-4" style={{ maxWidth: 980, margin: '0 auto', padding: '28px 24px 80px' }}>
+      <BackLink fallback="/dashboard" />
       <p
         style={{
           fontSize: 12,

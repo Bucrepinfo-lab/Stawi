@@ -73,7 +73,7 @@ export default async function PapersPage({ params, searchParams }: { params: Pro
   return (
     <main className={`pillar-${purpose.pillar}`} style={{ maxWidth: 860, margin: '0 auto', padding: '28px 24px 90px' }}>
       <style>{`@media print { .no-print, .app-tabs { display: none !important; } body { background: #fff !important; padding: 0 !important; } .print-doc { box-shadow: none !important; border: none !important; padding: 0 !important; break-inside: auto; } .page-break { break-before: page; } }`}</style>
-      <a href={`/groups/${encodeURIComponent(id)}`} className="no-print" style={{ fontSize: 13, color: 'var(--forest)', fontWeight: 600, textDecoration: 'none' }}>← {house.groupName}</a>
+      <a href={`/groups/${encodeURIComponent(id)}`} className="back-link no-print">← {house.groupName}</a>
 
       <section className="print-doc s-card" style={sheet}>
         <p style={{ fontSize: 12, letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 800, color: 'var(--gold-deep)' }}>{purpose.icon} {purpose.name.en}</p>

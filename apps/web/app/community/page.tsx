@@ -1,8 +1,10 @@
-import { CommunityBoard } from './CommunityBoard';
+import { CommunityBoard } from './CommunityBoard';
+import { BackLink } from '@/components/BackLink';
 
 export default function CommunityPage() {
   return (
     <main style={{ maxWidth: 720, margin: '0 auto', padding: '28px 24px 80px' }}>
+      <BackLink fallback="/dashboard" />
       <p style={{ fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700 }}>Group community</p>
       <h1 className="display" style={{ fontWeight: 600, fontSize: 34, marginTop: 6 }}>Messages</h1>
       <p style={{ color: 'var(--ink-2)', marginTop: 6, maxWidth: 560 }}>

@@ -2,7 +2,8 @@ import { BusinessMatch } from './BusinessMatch';
 import { ValueBanners } from '@/components/ValueBanners';
 import { DocumentHouse } from '@/components/DocumentHouse';
 import { getMyGroups } from '@/lib/data';
-import { pickAllowedId } from '@stawi/core';
+import { pickAllowedId } from '@stawi/core';
+import { BackLink } from '@/components/BackLink';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,7 @@ export default async function MatchPage({ searchParams }: { searchParams: Promis
   const groupId = pickAllowedId(group, groups.map((g) => g.id));
   return (
     <main className="pillar-2" style={{ maxWidth: 920, margin: '0 auto', padding: '28px 24px 80px' }}>
+      <BackLink fallback="/dashboard" />
       <p
         style={{
           fontSize: 12,

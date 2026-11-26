@@ -21,7 +21,7 @@ export default async function SecurityPage() {
   const fmt = (d: Date) => formatDate(d);
   return (
     <main style={{ maxWidth: 560, margin: '0 auto', padding: '28px 16px 80px' }}>
-      <Link href="/dashboard" style={{ fontSize: 13, color: 'var(--forest)', fontWeight: 600, textDecoration: 'none' }}>← Dashboard</Link>
+      <Link href="/dashboard" className="back-link no-print">← Dashboard</Link>
       <h1 className="display" style={{ fontWeight: 600, fontSize: 28, marginTop: 12 }}>Sign-in &amp; devices</h1>
       <p style={{ color: 'var(--ink-2)', fontSize: 14.5 }}>
         Phones and browsers you have signed in on. You can sign in anywhere with your phone number and 4-digit PIN; a forgotten PIN or 5 wrong PINs needs a new joining code, which a group official gives you in person or on WhatsApp (never by SMS).

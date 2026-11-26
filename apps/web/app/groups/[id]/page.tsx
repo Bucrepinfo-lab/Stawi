@@ -53,7 +53,7 @@ export default async function GroupWorkspacePage({ params, searchParams }: { par
   return (
     <main className="pillar-1" style={{ maxWidth: 860, margin: '0 auto', padding: '28px 24px 90px' }}>
       <LiveRefresh />
-      <a href="/dashboard" className="no-print" style={{ fontSize: 13, color: 'var(--forest)', fontWeight: 600, textDecoration: 'none' }}>← Dashboard</a>
+      <a href="/dashboard" className="back-link no-print">← Dashboard</a>
       <div style={{ marginTop: 10 }}>
         <p style={{ fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700 }}>{booksOnly(modules) ? 'My business' : 'Group records'}</p>
         <h1 className="display" style={{ fontWeight: 600, fontSize: 32, marginTop: 6 }}>{cockpit.groupName}</h1>

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import {
   addMember,
   removeMember,
@@ -129,6 +129,14 @@ export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, 
       saccoPlusEnabled: saccoPlus,
     });
   }, [charter, meetings, saccoActive, saccoPlus]);
+
+  // "＋ Add a member" from the home screen (owner 26/11/26): open the roster.
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.location.hash !== '#members') return;
+    setTab('charter');
+    const t = setTimeout(() => document.getElementById('members')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
+    return () => clearTimeout(t);
+  }, []);
 
   function goTo(target: JourneyTarget) {
     if (target.kind === 'tab') {
@@ -470,8 +478,8 @@ function CharterTab({ charter, setCharter, canEdit, groupId }: { charter: GroupC
         </div>
       </div>
 
-      {/* Roster */}
-      <div className="s-card" style={card}>
+      {/* Roster — the "＋ Add a member" button on the home screen lands here (#members). */}
+      <div className="s-card" style={card} id="members">
         <SectionTitle n={3} title="Members & officials" />
         <RosterEditor members={charter.members} disabled={disabled} country={charter.countryCode} onChange={(members) => set({ members })} />
         {canEdit && <JoiningCodes groupId={groupId} members={charter.members} country={charter.countryCode} />}

@@ -2,6 +2,7 @@ import { pickAllowedId } from '@stawi/core';
 import { MessagesClient } from './MessagesClient';
 import { getMyGroups } from '@/lib/data';
 import { getModulesMap } from '@/lib/modules';
+import { BackLink } from '@/components/BackLink';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Stawi' };
@@ -16,6 +17,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
   const activeId = pickAllowedId(group, open.map((g) => g.id));
   return (
     <main className="pillar-1" style={{ maxWidth: 760, margin: '0 auto', padding: '24px 16px 90px' }}>
+      <BackLink fallback="/dashboard" />
       <MessagesClient groups={open} initialId={activeId} />
     </main>
   );
