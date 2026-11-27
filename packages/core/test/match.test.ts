@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   generateVentures,
   canAddToShortlist,
+  readSavedMatch,
   type Venture,
 } from '../src/match';
 
@@ -44,5 +45,28 @@ describe('canAddToShortlist (save at least 3, max 3)', () => {
   });
   it('blocks the 4th', () => {
     expect(canAddToShortlist([v(1), v(2), v(3)])).toBe(false);
+  });
+});
+
+describe('readSavedMatch', () => {
+  const v = generateVentures({ industry: 'retail', capitalCents: 80_000 * 100, seed: 3 });
+
+  it('brings back what the member saved, so the shortlist survives a tab change', () => {
+    const back = readSavedMatch(JSON.parse(JSON.stringify({ industry: 'retail', capital: '80,000', seed: 3, saved: v.slice(0, 2) })));
+    expect(back).toEqual({ industry: 'retail', capital: '80,000', seed: 3, saved: v.slice(0, 2) });
+  });
+
+  it('never returns more than three ideas, and drops repeats', () => {
+    const back = readSavedMatch({ industry: 'retail', capital: '1', seed: 1, saved: [v[0], v[0], ...v] });
+    expect(back?.saved.length).toBe(Math.min(3, new Set(v.map((x) => x.title)).size));
+    expect(new Set(back?.saved.map((x) => x.title)).size).toBe(back?.saved.length);
+  });
+
+  it('drops malformed entries and rejects junk', () => {
+    expect(readSavedMatch(null)).toBeNull();
+    expect(readSavedMatch('x')).toBeNull();
+    expect(readSavedMatch({ industry: 'weapons', saved: [] })).toBeNull();
+    const back = readSavedMatch({ industry: 'agri', capital: 5, seed: 'a', saved: [{ title: 'x' }, { ...v[0], startupCents: -1 }, { ...v[0], risk: 'Wild' }] });
+    expect(back).toEqual({ industry: 'agri', capital: '', seed: 1, saved: [] });
   });
 });

@@ -5,6 +5,7 @@ import { AlertsCard } from '@/components/AlertsCard';
 import { LiveRefresh } from '@/components/LiveRefresh';
 import { GroupSwitcher } from '@/components/GroupSwitcher';
 import { TableBanking } from './TableBanking';
+import { MoneyHowTo } from '@/components/MoneyHowTo';
 import type { GroupAccount } from '@/lib/groups';
 import { setUrlParams } from '@/lib/url-state';
 import { PayContribution } from '@/components/PayContribution';
@@ -120,6 +121,7 @@ export function DashboardClient({ groups, initialId, modulesById = {}, demoAvail
         <a href={`/groups/${active.id}`} style={{ color: 'var(--forest)', fontWeight: 600 }}>Open group workspace &rarr;</a>
       </p>
       <WriteForMeLink groupId={active.id} />
+      <MoneyHowTo groupId={active.id} />
       {/* Officials add members from the home screen (owner 26/11/26: "there is nowhere like add new member"). */}
       {['Chairman', 'Secretary', 'Treasurer'].includes(active.myRole) && (
         <div className="add-member">
@@ -131,7 +133,9 @@ export function DashboardClient({ groups, initialId, modulesById = {}, demoAvail
 
       <PayContribution groupId={active.id} />
 
+      <div id="group-money" style={{ scrollMarginTop: 16 }}>
       <TableBanking key={active.id} groupId={active.id} groupName={active.name} seed={active.members} canRecord={active.myRole === 'Treasurer'} />
+      </div>
       <GrowCapitalCard groupId={active.id} members={active.members.length} totalCents={active.members.reduce((t, m) => t + m.totalCents, 0)} />
         </>
       ) : (
