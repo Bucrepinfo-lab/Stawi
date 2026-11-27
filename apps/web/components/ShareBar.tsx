@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { shareLink, shareMessage, shareTargets, valueLang, type ShareChannel, type ValueLang } from '@stawi/core';
 import { storedLang, track } from './track';
 import { Picture } from './Pictures';
+import { ArrowOut } from './ArrowOut';
 
 /**
  * Tell family, friends and other groups (owner 20/11/26) where people actually
@@ -83,7 +84,7 @@ export function ShareBar({ lang: langProp, compact = false }: { lang?: string; c
           {t.label}
         </a>
       ))}
-      <button type="button" className="share-btn" onClick={more}>↗ {w.more}</button>
+      <button type="button" className="share-btn" onClick={more}><ArrowOut /> {w.more}</button>
       <button type="button" className="share-btn" onClick={() => { track('share', 'share-copy'); void copy(w.copied); }} aria-live="polite">
         <Picture name="link" size={20} /> {w.copy}
       </button>
