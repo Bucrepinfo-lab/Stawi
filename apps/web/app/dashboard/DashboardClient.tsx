@@ -134,7 +134,7 @@ export function DashboardClient({ groups, initialId, modulesById = {}, demoAvail
       <PayContribution groupId={active.id} />
 
       <div id="group-money" style={{ scrollMarginTop: 16 }}>
-      <TableBanking key={active.id} groupId={active.id} groupName={active.name} seed={active.members} canRecord={active.myRole === 'Treasurer'} />
+      <TableBanking key={active.id} groupId={active.id} groupName={active.name} seed={active.members} canRecord={active.myRole === 'Treasurer'} myMemberIds={active.myMemberIds ?? []} />
       </div>
       <GrowCapitalCard groupId={active.id} members={active.members.length} totalCents={active.members.reduce((t, m) => t + m.totalCents, 0)} />
         </>

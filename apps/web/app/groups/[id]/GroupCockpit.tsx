@@ -50,6 +50,8 @@ import {
   saveStatementAction,
   activateSaccoFromPillar1Action,
   explainMemberStatementAction,
+  appointStandInAction,
+  endStandInAction,
 } from '@/app/actions';
 import type { Cockpit } from '@/lib/cockpit';
 import { setUrlParams } from '@/lib/url-state';
@@ -91,7 +93,7 @@ function Hint({ text }: { text?: string }) {
   );
 }
 
-export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, initialMonth, modules }: { cockpit: Cockpit; canEdit: boolean; saccoPlus?: boolean; initialTab?: string; initialMonth?: string; modules?: GroupModules }) {
+export function GroupCockpit({ cockpit, canEdit, minutes, saccoPlus = false, initialTab, initialMonth, modules }: { cockpit: Cockpit; canEdit: boolean; minutes?: MinutesRights; saccoPlus?: boolean; initialTab?: string; initialMonth?: string; modules?: GroupModules }) {
   // Only the sections the group has switched on are offered.
   const allowedTabs: readonly string[] = modules ? groupTabsFor(modules) : TABS;
   // Tab and statement month live in the URL (?tab=, ?month=) so a refresh or shared link reopens the same view.
@@ -172,7 +174,7 @@ export function GroupCockpit({ cockpit, canEdit, saccoPlus = false, initialTab, 
 
       <div style={{ marginTop: 20 }}>
         {tab === 'charter' && <CharterTab charter={charter} setCharter={setCharter} canEdit={canEdit} groupId={cockpit.groupId} />}
-        {tab === 'minutes' && <MinutesTab charter={charter} meetings={meetings} setMeetings={setMeetings} canEdit={canEdit} groupId={cockpit.groupId} />}
+        {tab === 'minutes' && <MinutesTab charter={charter} meetings={meetings} setMeetings={setMeetings} canEdit={minutes ? minutes.canWrite : canEdit} rights={minutes} groupId={cockpit.groupId} />}
         {tab === 'documents' && <DocumentsTab charter={charter} meetings={meetings} />}
         {tab === 'statement' && <StatementTab charter={charter} meetings={meetings} canEdit={canEdit} groupId={cockpit.groupId} initialMonth={initialMonth} />}
         {saccoPlus && tab === 'sacco' && <SaccoActivationTab charter={charter} meetings={meetings} canEdit={canEdit} groupId={cockpit.groupId} onActivated={() => setSaccoActive(true)} />}
@@ -590,7 +592,67 @@ function StatusBadge({ status }: { status: 'DRAFT' | 'POSTED' }) {
   return <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.06em', padding: '3px 9px', borderRadius: 7, background: posted ? 'rgba(47,125,82,.14)' : 'var(--bone-2)', color: posted ? 'var(--good)' : 'var(--dim)' }}>{posted ? 'POSTED' : 'DRAFT'}</span>;
 }
 
-function MinutesTab({ charter, meetings, setMeetings, canEdit, groupId }: { charter: GroupCharter; meetings: Meeting[]; setMeetings: (m: Meeting[]) => void; canEdit: boolean; groupId: string }) {
+/** Who may write the minutes here (owner 27/11/26), decided on the server. */
+export interface MinutesRights {
+  canWrite: boolean;
+  canNameStandIn: boolean;
+  standIn: { membershipId: string; name: string; until: string } | null;
+}
+
+/** Chair or secretary: name a member to write the minutes while the secretary is away. */
+function StandInCard({ groupId, rights, members }: { groupId: string; rights: MinutesRights; members: { id: string; name: string }[] }) {
+  const [who, setWho] = useState('');
+  const [days, setDays] = useState(7);
+  const [reason, setReason] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
+  const until = rights.standIn ? formatDate(rights.standIn.until, { year: 'yyyy' }, '') : '';
+  async function name() {
+    if (!who || busy) return;
+    setBusy(true); setNote(null);
+    const r = await appointStandInAction({ groupId, membershipId: who, days, reason }).catch(() => ({ ok: false, error: 'Could not save. Try again.' }));
+    setBusy(false);
+    if (r.ok) { setNote({ ok: true, text: 'Saved. They can write the minutes until the date shown.' }); setWho(''); setReason(''); location.reload(); }
+    else setNote({ ok: false, text: r.error ?? 'Could not save.' });
+  }
+  async function end() {
+    setBusy(true);
+    const r = await endStandInAction({ groupId }).catch(() => ({ ok: false, error: 'Could not save. Try again.' }));
+    setBusy(false);
+    if (r.ok) location.reload(); else setNote({ ok: false, text: r.error ?? 'Could not save.' });
+  }
+  return (
+    <div className="s-card standin" style={card}>
+      <p className="display" style={{ fontSize: 17, fontWeight: 600 }}>Secretary away?</p>
+      {rights.standIn ? (
+        <p style={{ color: 'var(--ink-2)', fontSize: 14, marginTop: 4 }}>
+          <b>{rights.standIn.name}</b> is writing the minutes until <b>{until}</b>.{' '}
+          {rights.canNameStandIn && <button type="button" style={btnGhost} disabled={busy} onClick={end}>End now</button>}
+        </p>
+      ) : (
+        <p style={{ color: 'var(--dim)', fontSize: 13.5, marginTop: 4 }}>
+          Only the secretary writes the minutes. If the secretary is away, name a member to write them for a few days.
+        </p>
+      )}
+      {rights.canNameStandIn && (
+        <div className="standin-row">
+          <select value={who} onChange={(e) => setWho(e.target.value)} aria-label="Stand-in">
+            <option value="">Choose a member…</option>
+            {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+          <select value={days} onChange={(e) => setDays(Number(e.target.value))} aria-label="For how long">
+            {[1, 3, 7, 14, 30].map((d) => <option key={d} value={d}>{d === 1 ? 'For 1 day' : `For ${d} days`}</option>)}
+          </select>
+          <input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={200} placeholder="Why (e.g. secretary travelling)" aria-label="Why" />
+          <button type="button" style={btnGold} disabled={!who || busy} onClick={name}>{busy ? 'Saving…' : 'Name stand-in'}</button>
+        </div>
+      )}
+      {note && <p role="status" style={{ marginTop: 8, fontSize: 13.5, color: note.ok ? 'var(--forest)' : 'var(--clay)' }}>{note.text}</p>}
+    </div>
+  );
+}
+
+function MinutesTab({ charter, meetings, setMeetings, canEdit, rights, groupId }: { charter: GroupCharter; meetings: Meeting[]; setMeetings: (m: Meeting[]) => void; canEdit: boolean; rights?: MinutesRights; groupId: string }) {
   const [editing, setEditing] = useState<Meeting | null>(null);
 
   function newMeeting() {
@@ -624,6 +686,12 @@ function MinutesTab({ charter, meetings, setMeetings, canEdit, groupId }: { char
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
+      {rights && (rights.canNameStandIn || rights.standIn) && (
+        <StandInCard groupId={groupId} rights={rights} members={charter.members.filter((m) => m.fullName.trim()).map((m) => ({ id: m.id, name: m.fullName }))} />
+      )}
+      {!canEdit && rights && (
+        <p style={{ fontSize: 13.5, color: 'var(--dim)' }}>Only the secretary writes the minutes{rights.standIn ? `, or ${rights.standIn.name} while standing in` : ''}. You can read them here.</p>
+      )}
       {canEdit && (
         <button style={btnGold} onClick={newMeeting}>＋ Record a new meeting</button>
       )}

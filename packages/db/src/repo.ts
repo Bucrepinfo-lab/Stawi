@@ -88,6 +88,7 @@ export async function getMemberGroups(
       id: g.id,
       name: g.name,
       myRole: titleRole(m.role),
+      myMemberIds: [m.id],
       flag: g.flagEmoji,
       type: mapKind(g.type),
       members,
@@ -891,7 +892,7 @@ export async function getGroupsByPhone(prisma: PrismaClient, phone: string, tena
       role: titleRole(mem.role),
       paid: mem.contributions.reduce((s, c) => s + c.amountCents, 0) > 0,
     }));
-    return { id: g.id, name: g.name, myRole: titleRole(m.role), flag: g.flagEmoji, type: mapKind(g.type), members };
+    return { id: g.id, name: g.name, myRole: titleRole(m.role), myMemberIds: [m.id], flag: g.flagEmoji, type: mapKind(g.type), members };
   });
 }
 

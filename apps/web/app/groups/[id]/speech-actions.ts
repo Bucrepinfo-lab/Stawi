@@ -17,9 +17,9 @@ export async function minutesFromSpeechAction(input: { groupId: string; transcri
   let members: string[] = [];
   let groupName: string | null = null;
   if (process.env.DATABASE_URL) {
-    const { myGroupRole, RECORD_EDITOR_ROLES } = await import('@/lib/group-access');
-    const role = await myGroupRole(input.groupId);
-    if (!role || !RECORD_EDITOR_ROLES.has(role)) return { ok: false, error: 'Only group officials can write minutes.' };
+    // Minutes: the secretary only, or the stand-in the chair named (owner 27/11/26).
+    const { minutesAccess, MINUTES_DENIED } = await import('@/lib/minutes-access');
+    if (!(await minutesAccess(input.groupId)).allowed) return { ok: false, error: MINUTES_DENIED };
     const { prisma } = await import('@stawi/db');
     const g = await prisma.group.findUnique({ where: { id: input.groupId }, select: { name: true, members: { select: { fullName: true } } } });
     groupName = g?.name ?? null;

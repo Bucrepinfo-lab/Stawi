@@ -44,12 +44,16 @@ function roleRank(role: string): number {
  * phone roster row); the switcher must list it once, with the most privileged
  * role — the same rule the server uses (`groupRoleFor`).
  */
-export function mergeGroupsById<T extends { id: string; myRole: string }>(groups: readonly T[]): T[] {
+export function mergeGroupsById<T extends { id: string; myRole: string; myMemberIds?: string[] }>(groups: readonly T[]): T[] {
   const byId = new Map<string, T>();
   for (const g of groups) {
     if (!g?.id) continue;
     const have = byId.get(g.id);
-    if (!have || roleRank(g.myRole) < roleRank(have.myRole)) byId.set(g.id, have ? { ...have, myRole: g.myRole } : g);
+    if (!have) { byId.set(g.id, g); continue; }
+    // Every roster row that is the caller's, so screens can leave them out (e.g. as a witness).
+    const ids = have.myMemberIds || g.myMemberIds ? { myMemberIds: [...new Set([...(have.myMemberIds ?? []), ...(g.myMemberIds ?? [])])] } : {};
+    const role = roleRank(g.myRole) < roleRank(have.myRole) ? { myRole: g.myRole } : {};
+    byId.set(g.id, { ...have, ...role, ...ids });
   }
   return [...byId.values()];
 }
