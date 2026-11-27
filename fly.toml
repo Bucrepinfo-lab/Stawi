@@ -1,8 +1,9 @@
-# Fly.io — Stawi web (Next.js standalone). Region: Frankfurt (fra).
+# Fly.io — Stawi web (Next.js standalone). Region: London (lhr), next to the
+# Supabase database and sign-in in eu-west-1 (Ireland); moved from fra 27/11/26.
 # One-time owner setup and secret NAMES: DEPLOYMENT-RUNBOOK.md.
 # Deploys: .github/workflows/deploy.yml (main, only when FLY_API_TOKEN exists).
 app = "stawi"
-primary_region = "fra"
+primary_region = "lhr"
 
 [build]
   dockerfile = "Dockerfile"
