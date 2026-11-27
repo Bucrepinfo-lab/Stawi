@@ -16,6 +16,16 @@ export function PinSetupForm({ next, canSkip }: { next: string; canSkip: boolean
   const router = useRouter();
   const [pin, setPin] = useState('');
   const [confirm, setConfirm] = useState('');
+  // Owner 27/11/26: a grey button with no reason. Say what is missing; let people see the PIN.
+  const [showPin, setShowPin] = useState(false);
+  const pinHint =
+    pin.length > 0 && pin.length < 4
+      ? `Your new PIN has ${pin.length} of 4 numbers. Add ${4 - pin.length} more.`
+      : pin.length === 4 && confirm.length > 0 && confirm.length < 4
+        ? `Repeat PIN has ${confirm.length} of 4 numbers.`
+        : pin.length === 4 && confirm.length === 4 && pin !== confirm
+          ? 'The two PINs are different. Type the same 4 numbers in both boxes.'
+          : null;
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -44,16 +54,20 @@ export function PinSetupForm({ next, canSkip }: { next: string; canSkip: boolean
     <form onSubmit={submit} style={{ display: 'grid', gap: 12, textAlign: 'left' }}>
       <label style={{ fontSize: 13, color: 'var(--ink-2)' }}>
         New PIN
-        <input type="password" inputMode="numeric" autoComplete="new-password" maxLength={4} value={pin}
+        <input type={showPin ? "text" : "password"} inputMode="numeric" autoComplete="new-password" maxLength={4} value={pin}
           onChange={(e) => setPin(digits(e.target.value))} style={{ ...input, marginTop: 6 }} autoFocus />
       </label>
       <label style={{ fontSize: 13, color: 'var(--ink-2)' }}>
         Repeat PIN
-        <input type="password" inputMode="numeric" autoComplete="new-password" maxLength={4} value={confirm}
+        <input type={showPin ? "text" : "password"} inputMode="numeric" autoComplete="new-password" maxLength={4} value={confirm}
           onChange={(e) => setConfirm(digits(e.target.value))} style={{ ...input, marginTop: 6 }} />
       </label>
       {error && <p style={{ fontSize: 13.5, color: '#b3261e', margin: 0 }}>{error}</p>}
-      <button type="submit" disabled={loading || pin.length < 4 || confirm.length < 4}
+      <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--ink-2)" }}>
+          <input type="checkbox" checked={showPin} onChange={(e) => setShowPin(e.target.checked)} /> Show PIN
+        </label>
+        {pinHint ? <p aria-live="polite" style={{ fontSize: 13.5, color: "#8a5a00", margin: 0 }}>{pinHint}</p> : null}
+        <button type="submit" disabled={loading || pin.length < 4 || confirm.length < 4}
         style={{ ...btn, opacity: loading || pin.length < 4 || confirm.length < 4 ? 0.6 : 1 }}>
         {loading ? 'Saving…' : 'Save PIN'}
       </button>
