@@ -269,7 +269,7 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
 
       <div className="s-card" style={card}>
         <h2 className="display" style={{ fontWeight: 600, fontSize: 20 }}>Stock movement</h2>
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, fontSize: 13.5 }}>
+        <div className="doc-table-wrap"><table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, fontSize: 13.5 }}>
           <thead>
             <tr>
               {['Item', 'Qty', 'Sold (wk)', 'Movement', 'Status'].map((h, i) => (
@@ -290,7 +290,7 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
 
         {critical.length > 0 && (
           <div style={{ marginTop: 14, padding: 14, background: 'rgba(196,69,47,.06)', border: '1px solid var(--clay)', borderRadius: 12 }}>
