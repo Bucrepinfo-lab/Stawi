@@ -12,6 +12,10 @@ export default async function MatchPage({ searchParams }: { searchParams: Promis
   const groups = await getMyGroups().catch(() => []);
   const { group } = await searchParams;
   const groupId = pickAllowedId(group, groups.map((g) => g.id));
+  // Start from the money the group really has (tester 27/11/26: KES 75,650 in the group, 120,000 here).
+  const active = groups.find((g) => g.id === groupId);
+  const groupCapitalCents = active ? active.members.reduce((t, m) => t + m.totalCents, 0) : 0;
+  const groupName = active?.name ?? null;
   return (
     <main className="pillar-2" style={{ maxWidth: 920, margin: '0 auto', padding: '28px 24px 80px' }}>
       <BackLink fallback="/dashboard" />
@@ -34,7 +38,7 @@ export default async function MatchPage({ searchParams }: { searchParams: Promis
         ventures that fit. Re-roll for fresh ideas, and save at least three to compare
         before the group decides.
       </p>
-      <BusinessMatch />
+      <BusinessMatch groupId={groupId ?? null} groupCapitalCents={groupCapitalCents} groupName={groupName} />
       <p className="mr-meta" style={{ marginTop: 10 }}>
         Chosen your business and need more money than your savings? Tap <strong>Write the funding proposal</strong> on it in your shortlist, or <a href={`/proposal${groupId ? `?group=${encodeURIComponent(groupId)}` : ''}`}>write one for any business</a>.
       </p>
