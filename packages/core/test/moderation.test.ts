@@ -43,4 +43,32 @@ describe('moderation', () => {
     expect(() => assertClean('I will hurt you')).toThrow();
     expect(() => assertClean('see you at the meeting')).not.toThrow();
   });
+
+  // Owner 27/11/26: a chama's own minutes and business notes must pass.
+  it('allows everyday chama and farm sentences that use strong verbs', () => {
+    for (const t of [
+      'We will slaughter three goats for the end-year party',
+      'Our charcoal group will burn charcoal in March',
+      'Buy pesticide to kill pests in the maize',
+      'We plan to eliminate the debt by June',
+      'exterminate rats in the store',
+      'I hate mosquitoes',
+      'We will attack the market early with fresh milk',
+    ]) {
+      expect(moderateText(t).allowed, t).toBe(true);
+    }
+  });
+
+  it('still blocks violence and hate aimed at people', () => {
+    for (const t of [
+      'kill all the kikuyus',
+      'burn the church',
+      'exterminate those people',
+      'I hate all the luos',
+      'slaughter the members of that clan',
+      'they should be lynched',
+    ]) {
+      expect(moderateText(t).allowed, t).toBe(false);
+    }
+  });
 });

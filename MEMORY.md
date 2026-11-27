@@ -1,5 +1,9 @@
 # Stawi — session memory / start-here
 
+## 27/11/26 — Moderation no longer blocks everyday chama sentences (owner "go ahead")
+- Found while testing: `moderateText` blocked "We will slaughter three goats", "burn charcoal", "kill pests in the maize", "eliminate the debt", "exterminate rats" (incitement/hate) and "I hate mosquitoes", because the patterns accepted any object. Minutes (now often spoken), messages, proposals and names go through it.
+- Fix (`packages/core/src/moderation.ts`): violence and hate patterns need a human target (them / those people / tribes, clans, communities, members, named ethnic groups…), plus "burn their houses / the church…" and "lynch". The existing tests pass unchanged; new tests both ways.
+
 ## 26/11/26 — Homepage path for non-technical visitors; audit clean-up (owner 22:29)
 - Landing now: hero with "Open my group" and "How it works" → "What would you like to do?" (run my chama's money, speak our minutes, find a business to start, keep my shop's books) → How it works (sign in with phone + PIN → join or start your group → record, and everyone sees → grow together) → the existing value banners, vision and "why groups stall" → Help (email). Phones get a fixed dock with "Open my group". English and Kiswahili (`components/HomeFlow.tsx`).
 - Header: a "Sign in" button; the theme toggle is a drawn sun/moon with the word (was an emoji, standing rule 13).
