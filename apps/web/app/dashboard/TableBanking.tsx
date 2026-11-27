@@ -13,6 +13,7 @@ import { COLLECT_WAYS, type CollectWay } from '@stawi/core';
 import { CollectTips } from '@/components/CollectTips';
 import { FeedbackBanner, type Feedback } from '@/components/FeedbackBanner';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
+import { ArrowOut } from '@/components/ArrowOut';
 
 interface SeedMember extends MemberContribution {
   role: string;
@@ -248,7 +249,7 @@ export function TableBanking({
           <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="0712 345 678" className="mono" style={{ ...inp, background: 'var(--bone)' }} />
         </label>
         <button onClick={askToSendStk} disabled={stkBusy} style={{ padding: '12px 20px', borderRadius: 10, border: '1px solid var(--forest-deep)', background: stkBusy ? 'var(--bone-2)' : 'var(--forest-deep)', color: stkBusy ? 'var(--dim)' : 'var(--bone)', fontWeight: 700, fontSize: 14, cursor: stkBusy ? 'default' : 'pointer', fontFamily: 'inherit' }}>
-          {stkBusy ? 'Sending…' : '↗ Request STK Push'}
+          {stkBusy ? 'Sending…' : <><ArrowOut /> Request STK Push</>}
         </button>
       </div>
       </>)}

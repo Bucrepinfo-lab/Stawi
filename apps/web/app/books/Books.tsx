@@ -32,6 +32,7 @@ import {
 } from '@stawi/core';
 import { addLedgerEntryAction } from '@/app/actions';
 import { setUrlParams } from '@/lib/url-state';
+import { ArrowOut } from '@/components/ArrowOut';
 
 export interface BooksProps {
   businessId?: string;
@@ -256,7 +257,7 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{t.label}</div>
                   <div style={{ fontSize: 12, color: 'var(--dim)' }}>
-                    {t.remitTo} · due {t.dueBy} · <a href={t.link} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--sky)', fontWeight: 600 }}>remit ↗</a>
+                    {t.remitTo} · due {t.dueBy} · <a href={t.link} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--sky)', fontWeight: 600 }}>remit <ArrowOut size={12} /></a>
                   </div>
                 </div>
                 <div className="mono" style={{ fontWeight: 600, color: 'var(--ink)' }}>KES {formatMoney(t.amountCents)}</div>
@@ -324,8 +325,8 @@ export function Books({ businessId, businessName, vatRegistered, tourismSector, 
                         style={btnGold}
                       >Acknowledge</button>
                       {stk?.supplierPhone
-                        ? <a href={`tel:${stk.supplierPhone}`} style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--forest-deep)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: 9, textDecoration: 'none' }}>Order ↗</a>
-                        : <a href="/match" style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--forest-deep)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: 9, textDecoration: 'none' }}>Find supplier ↗</a>}
+                        ? <a href={`tel:${stk.supplierPhone}`} style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--forest-deep)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: 9, textDecoration: 'none' }}>Order <ArrowOut size={12} /></a>
+                        : <a href="/match" style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--forest-deep)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: 9, textDecoration: 'none' }}>Find supplier <ArrowOut size={12} /></a>}
                     </span>
                   )}
                 </div>
@@ -455,8 +456,8 @@ function BusinessPackPanel({ pack }: { pack: BusinessAccountingPack }) {
                 {s.itemName} — {s.quantity} left{s.supplierName ? ` · ${s.supplierName}` : ''}
               </span>
               {s.action.kind === 'order'
-                ? <a href={`tel:${s.action.supplierPhone}`} style={{ fontSize: 12, fontWeight: 700, color: 'var(--forest-deep)', background: 'var(--gold)', padding: '6px 12px', borderRadius: 9, textDecoration: 'none', whiteSpace: 'nowrap' }}>Order ↗</a>
-                : <a href={s.action.href} style={{ fontSize: 12, fontWeight: 700, color: 'var(--forest-deep)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: 9, textDecoration: 'none', whiteSpace: 'nowrap' }}>Find supplier ↗</a>}
+                ? <a href={`tel:${s.action.supplierPhone}`} style={{ fontSize: 12, fontWeight: 700, color: 'var(--forest-deep)', background: 'var(--gold)', padding: '6px 12px', borderRadius: 9, textDecoration: 'none', whiteSpace: 'nowrap' }}>Order <ArrowOut size={12} /></a>
+                : <a href={s.action.href} style={{ fontSize: 12, fontWeight: 700, color: 'var(--forest-deep)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: 9, textDecoration: 'none', whiteSpace: 'nowrap' }}>Find supplier <ArrowOut size={12} /></a>}
             </div>
           ))}
           {pack.recommendedSuppliers.length > 0 && (
