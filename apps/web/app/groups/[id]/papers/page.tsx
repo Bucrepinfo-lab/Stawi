@@ -72,7 +72,7 @@ export default async function PapersPage({ params, searchParams }: { params: Pro
   const sheet: React.CSSProperties = { background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 'var(--radius)', padding: 22, boxShadow: 'var(--shadow)', marginTop: 16 };
 
   return (
-    <main className={`pillar-${purpose.pillar}`} style={{ maxWidth: 860, margin: '0 auto', padding: '28px 24px 90px' }}>
+    <main className={`pillar-${purpose.pillar} papers-page`} style={{ maxWidth: 860, margin: '0 auto', padding: '28px 24px 90px' }}>
       <style>{`@media print { .no-print, .app-tabs { display: none !important; } body { background: #fff !important; padding: 0 !important; } .print-doc { box-shadow: none !important; border: none !important; padding: 0 !important; break-inside: auto; } .page-break { break-before: page; } }`}</style>
       <a href={`/groups/${encodeURIComponent(id)}`} className="back-link no-print">← {house.groupName}</a>
       <ReturnBar href={`/groups/${encodeURIComponent(id)}`} label={house.groupName} />
@@ -84,7 +84,7 @@ export default async function PapersPage({ params, searchParams }: { params: Pro
           Papers taken from the group&rsquo;s own records and books kept in Stawi. Prepared on {dmy(today)}.
           {charter.registeredNumber ? ` Registration number: ${charter.registeredNumber}.` : ''}
         </p>
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 14 }}>
+        <div className="doc-table-wrap"><table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 14 }}>
           <thead><tr><th style={th}>Paper</th><th style={th}>What the group holds</th><th style={th}>From</th><th style={th}>Ready</th></tr></thead>
           <tbody>
             {check.lines.map((l) => (
@@ -96,7 +96,7 @@ export default async function PapersPage({ params, searchParams }: { params: Pro
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
         <p style={{ marginTop: 12, fontWeight: 700 }}>{check.mustReady} of {check.mustTotal} needed papers are ready.</p>
         <div className="no-print" style={{ marginTop: 14 }}><PrintButton label="Print, or save as PDF" /></div>
         <p className="no-print" style={{ marginTop: 10, fontSize: 13.5, color: 'var(--dim)' }}>
@@ -107,14 +107,14 @@ export default async function PapersPage({ params, searchParams }: { params: Pro
       {(needs('officials') || needs('member_list') || needs('member_ids')) && (
         <section className="print-doc" style={sheet}>
           <h2 style={h2}>Officials and members</h2>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="doc-table-wrap"><table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr><th style={th}>No.</th><th style={th}>Name</th><th style={th}>Post</th><th style={th}>ID number</th><th style={th}>Signature</th></tr></thead>
             <tbody>
               {charter.members.map((m) => (
                 <tr key={m.id}><td style={td}>{m.serial}</td><td style={td}>{m.fullName}</td><td style={td}>{m.designation}</td><td style={td}>{m.idNumber ?? ''}</td><td style={{ ...td, minWidth: 110 }} /></tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </section>
       )}
 
@@ -128,28 +128,28 @@ export default async function PapersPage({ params, searchParams }: { params: Pro
       {decisions.length > 0 && (
         <section className="print-doc" style={sheet}>
           <h2 style={h2}>Decisions the group agreed</h2>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="doc-table-wrap"><table className="doc-stack" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr><th style={th}>Date</th><th style={th}>Meeting</th><th style={th}>Matter</th><th style={th}>Decision</th></tr></thead>
             <tbody>
               {decisions.slice(0, 24).map((r, i) => (
-                <tr key={i}><td style={td}>{dmy(r.date)}</td><td style={td}>{r.no}</td><td style={td}>{r.title}</td><td style={td}>{r.text}</td></tr>
+                <tr key={i}><td style={td} data-label="Date">{dmy(r.date)}</td><td style={td} data-label="Meeting">{r.no}</td><td style={td} data-label="Matter">{r.title}</td><td style={td} data-label="Decision">{r.text}</td></tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </section>
       )}
 
       {months.length > 0 && (
         <section className="print-doc" style={sheet}>
           <h2 style={h2}>Monthly money statements</h2>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="doc-table-wrap"><table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr><th style={th}>Month</th><th style={th}>Meetings</th><th style={{ ...th, textAlign: 'right' }}>Money in</th><th style={{ ...th, textAlign: 'right' }}>Money out</th><th style={{ ...th, textAlign: 'right' }}>Left at month end</th></tr></thead>
             <tbody>
               {months.map(({ ym, s }) => (
                 <tr key={ym}><td style={td}>{monthLabel(ym)}</td><td style={td}>{s.meetingsHeld}</td><td style={num}>{formatMoney(s.finance.totalInCents)}</td><td style={num}>{formatMoney(s.finance.totalOutCents)}</td><td style={num}>{formatMoney(s.finance.closingCents)}</td></tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </section>
       )}
 
@@ -157,7 +157,7 @@ export default async function PapersPage({ params, searchParams }: { params: Pro
         <section className="print-doc" style={sheet}>
           <h2 style={h2}>Business: {house.business!.name}</h2>
           {bizMonths.length === 0 ? <p style={{ color: 'var(--ink-2)' }}>No sales or costs are written in the books yet.</p> : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div className="doc-table-wrap"><table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr><th style={th}>Month</th><th style={{ ...th, textAlign: 'right' }}>Sales</th><th style={{ ...th, textAlign: 'right' }}>Cost of goods</th><th style={{ ...th, textAlign: 'right' }}>Other costs</th><th style={{ ...th, textAlign: 'right' }}>Left over</th></tr></thead>
               <tbody>
                 {bizMonths.map(([ym, entries]) => {
@@ -165,7 +165,7 @@ export default async function PapersPage({ params, searchParams }: { params: Pro
                   return <tr key={ym}><td style={td}>{monthLabel(ym)}</td><td style={num}>{formatMoney(p.salesCents)}</td><td style={num}>{formatMoney(p.costOfGoodsCents)}</td><td style={num}>{formatMoney(p.expensesCents)}</td><td style={num}>{formatMoney(p.netProfitCents)}</td></tr>;
                 })}
               </tbody>
-            </table>
+            </table></div>
           )}
         </section>
       )}
@@ -174,14 +174,14 @@ export default async function PapersPage({ params, searchParams }: { params: Pro
         <section className="print-doc" style={sheet}>
           <h2 style={h2}>{showTogether ? 'Group and business together, month by month' : 'The record was checked'}</h2>
           {showTogether && (
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 12 }}>
+            <div className="doc-table-wrap"><table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 12 }}>
               <thead><tr><th style={th}>Month</th><th style={{ ...th, textAlign: 'right' }}>Money in</th><th style={{ ...th, textAlign: 'right' }}>Money out</th><th style={{ ...th, textAlign: 'right' }}>Left</th></tr></thead>
               <tbody>
                 {money.month.together.slice(0, 12).map((r) => (
                   <tr key={r.start}><td style={td}>{stepLabel(r.start, 'month')}</td><td style={num}>{formatMoney(r.inCents)}</td><td style={num}>{formatMoney(r.outCents)}</td><td style={num}>{formatMoney(r.leftCents)}</td></tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           )}
           <ul style={{ listStyle: 'none', display: 'grid', gap: 6 }}>
             {money.checks.map((c) => <li key={c.id} style={{ fontSize: 14 }}>{c.ok ? '✓' : '!'} {c.text.en}</li>)}

@@ -1,5 +1,8 @@
 # Stawi — session memory / start-here
 
+## 27/11/26 — Tables fit a phone (owner screenshot: "Decisions the group agreed" ran past its card)
+- Group papers page: on phones the decisions table becomes one small card per decision (Date / Meeting / Matter / Decision stacked, `.doc-stack` with data-labels); every other table sits in `.doc-table-wrap` and scrolls inside its card, so the page never slides sideways (`.papers-page { overflow-x: clip }`). Phone padding tightened. Print and PDF unchanged.
+- Same wrapper added to the tables in the group workspace (3), Books and the money summary.
 ## 27/11/26 — Empty shortlist slots now do something (owner: "not clickable")
 - The three dashed "Save an idea to fill this slot…" boxes were plain text. Each is now a button, "Tap ☆ on an idea above to save it here": it scrolls to the ideas and pulses their ☆ for a moment. The ☆ buttons grew from 28 to 40 px for easier tapping on phones.
 
