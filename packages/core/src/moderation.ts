@@ -51,14 +51,28 @@ const PROFANITY = ['fuck', 'shit', 'bitch', 'asshole', 'bastard', 'dick', 'crap'
 
 // Slurs/hate are matched via a small masked set + targeted-hate structure.
 const HATE_TERMS = ['nigger', 'faggot', 'retard', 'kike', 'chink', 'spic', 'tranny'];
+/**
+ * Who violence and hate are aimed at (owner 27/11/26, "go ahead and test"):
+ * the earlier patterns matched any object, so a chama's own minutes were
+ * blocked: "slaughter three goats", "burn charcoal", "kill pests", "eliminate
+ * the debt", "exterminate rats", "I hate mosquitoes". Hate and incitement now
+ * need a target that is people.
+ */
+const PEOPLE =
+  '(people|persons|tribe|tribes|clan|clans|community|communities|family|families|members|neighbours|neighbors|women|men|girls|boys|children|kids|christians|muslims|foreigners|immigrants|refugees|politicians|police|leaders|officials|youth|elders|outsiders|kikuyus|luos|kalenjins|luhyas|kambas|kisiis|merus|somalis|maasais)';
+const VIOLENT = '(kill|burn|attack|lynch|eliminate|wipe out|slaughter|butcher|massacre|exterminate|cleanse)';
+
 const HATE_STRUCTURE = [
   /\b(all|those|these)\s+\w+\s+(are|should)\s+(animals|vermin|subhuman|scum|cockroaches)\b/,
   /\bgo back to (your|where)\b/,
-  /\b(hate|exterminate|cleanse)\s+(all\s+)?(the\s+)?\w+(s)?\b/,
+  new RegExp(`\\b(hate|exterminate|cleanse)\\s+(all\\s+)?(the\\s+|those\\s+|these\\s+)?(\\w+\\s+)?${PEOPLE}\\b`),
 ];
 
 const INCITEMENT = [
-  /\b(kill|burn|attack|lynch|eliminate|wipe out|slaughter)\s+(all\s+|the\s+|them|those|these)?\w*/,
+  new RegExp(`\\b${VIOLENT}\\s+(all of them|them all|them|those people|these people|everyone|everybody)\\b`),
+  new RegExp(`\\b${VIOLENT}\\s+(all\\s+|the\\s+|those\\s+|these\\s+|their\\s+)?(\\w+\\s+)?${PEOPLE}\\b`),
+  /\b(burn|torch|destroy)\s+(their|his|her|the)\s+(house|houses|home|homes|shop|shops|property|properties|church|churches|mosque|mosques|school|schools|village|villages)\b/,
+  /\blynch(ing|ed)?\b/,
   /\blet'?s\s+(kill|attack|burn|destroy)\b/,
   /\b(rise up|take up arms)\s+(and|to)\s+(kill|attack|burn)\b/,
 ];
