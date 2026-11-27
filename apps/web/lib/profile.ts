@@ -28,7 +28,7 @@ export async function loadProfile() {
   const who = await me();
   if (!who) return null;
   const { prisma } = await import('@stawi/db');
-  const [memberships, pin, photo] = await Promise.all([
+  const [memberships, pin, photo, contact] = await Promise.all([
     prisma.membership.findMany({
       where: myMembershipsWhere(who),
       select: { id: true, fullName: true, role: true, phone: true, group: { select: { id: true, name: true } }, contributions: { where: { status: 'CONFIRMED' }, select: { amountCents: true } } },
@@ -36,6 +36,7 @@ export async function loadProfile() {
     }),
     prisma.authPin.findUnique({ where: { userId: who.userId }, select: { phone: true } }),
     prisma.profilePhoto.findUnique({ where: { userId: who.userId }, select: { version: true } }),
+    prisma.profileContact.findUnique({ where: { userId: who.userId }, select: { email: true } }),
   ]);
   const name = memberships.find((m) => m.fullName && m.fullName !== 'Group founder')?.fullName ?? memberships[0]?.fullName ?? '';
   return {
@@ -43,6 +44,7 @@ export async function loadProfile() {
     name,
     phone: pin?.phone ?? who.loginPhone,
     photo: photo ? photoLink(who.userId, photo.version) : null,
+    email: contact?.email ?? null,
     groups: memberships.map((m) => ({
       membershipId: m.id,
       groupId: m.group.id,

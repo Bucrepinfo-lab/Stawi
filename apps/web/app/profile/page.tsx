@@ -23,7 +23,7 @@ export default async function ProfilePage() {
     <main className="pillar-1" style={{ maxWidth: 760, margin: '0 auto', padding: '28px 20px 90px' }}>
       <BackLink fallback="/dashboard" />
       <p className="hist-kicker">My profile</p>
-      <ProfileClient initial={{ name: profile.name, phone: profile.phone, photo: profile.photo }} />
+      <ProfileClient initial={{ name: profile.name, phone: profile.phone, photo: profile.photo, email: profile.email }} />
       <LanguagePicker />
 
       <section className="pf-card" aria-labelledby="pf-pay">

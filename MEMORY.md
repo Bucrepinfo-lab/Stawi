@@ -1,5 +1,10 @@
 # Stawi — session memory / start-here
 
+## 27/11/26 — My email on My profile (owner: research, decide and customise)
+- Optional email for receipts, statements and replies, never used to sign in (phone + PIN stays). Hidden on screen ("wa•••@gmail.com") with Show / Hide, editable, an empty box removes it.
+- New per-user table `ProfileContact { userId, email, updatedAt }` like ProfilePhoto and AuthPin (kept out of Membership; no tenant column, so no RLS policy, same as those two). Additive `db push` on release.
+- Rules in `@stawi/core` `contactEmail` / `hideEmail` (+ tests).
+
 ## 27/11/26 — Same tester, two more: business ideas start from the group's real capital; profile phone hidden
 - `/match` started at a fixed KES 120,000 while the group had KES 75,650. It now starts from the group's recorded capital (sum of members' totals), names it ("Stawi Demo Chama has KES 75,650 recorded") and offers "Use this amount" when the member typed another figure. 120,000 stays only for someone with no group. The saved shortlist is now kept per group (`stawi.match.v1:<groupId>`).
 - My profile showed the full sign-in number. It now shows "07•• ••• 678" with a Show/Hide button. Judgement call: a small local `hidePhone` in the profile page rather than importing `maskPhone` from `pin-policy.ts`, which is server-side sign-in code (protected) and not exported for the browser.
