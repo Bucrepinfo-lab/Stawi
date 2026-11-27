@@ -1,0 +1,46 @@
+name: Set the number of London machines (manual)
+
+# Owner 27/11/26: after the move to London the app ran on one machine (it had
+# two in Frankfurt). Run this to set how many London machines there are.
+# fly.toml keeps min_machines_running = 1 and auto_stop "stop", so the second
+# machine sleeps when it is not needed and wakes on its own when traffic or a
+# failure needs it: it is a standby, not a second always-on bill.
+
+on:
+  workflow_dispatch:
+    inputs:
+      count:
+        description: "London machines (1 to 3)"
+        required: true
+        default: "2"
+        type: choice
+        options: ["1", "2", "3"]
+
+concurrency:
+  group: scale-london
+  cancel-in-progress: false
+
+jobs:
+  scale:
+    runs-on: ubuntu-latest
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      APP: stawi
+      COUNT: ${{ inputs.count }}
+    steps:
+      - name: Check Fly token
+        run: test -n "$FLY_API_TOKEN" || { echo "FLY_API_TOKEN not set"; exit 1; }
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Machines before
+        run: flyctl machine list -a "$APP"
+      - name: Set London machine count
+        run: flyctl scale count "$COUNT" --region lhr -a "$APP" --yes
+      - name: Machines after
+        run: flyctl machine list -a "$APP"
+      - name: Public health
+        run: |
+          for i in $(seq 1 10); do
+            if curl -fsS https://getstawi.com/api/health; then echo; exit 0; fi
+            sleep 10
+          done
+          exit 1
