@@ -46,6 +46,9 @@ export function WriteClient({ groups, groupId, initialKind, aiOn }: { groups: { 
   const [group, setGroup] = useState(groupId ?? '');
   const [notes, setNotes] = useState('');
   const [doc, setDoc] = useState('');
+  // What Stawi wrote, before any correction: "Undo my changes" goes back to it (owner 27/11/26).
+  const [original, setOriginal] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [step, setStep] = useState<Step>('choose');
   const [status, setStatus] = useState('');
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -62,6 +65,7 @@ export function WriteClient({ groups, groupId, initialKind, aiOn }: { groups: { 
       return;
     }
     setDoc(r.doc);
+    setOriginal(r.doc);
     setStep('done');
     setFeedback({ tone: 'success', title: 'Your document is ready', detail: r.by === 'ai' ? 'Read it through and correct anything before you print or share it.' : 'Your words are in a formal layout. Fill in the blank lines (_____) and check it before you print or share it.' });
   }
@@ -161,6 +165,21 @@ export function WriteClient({ groups, groupId, initialKind, aiOn }: { groups: { 
             <button type="button" className="mr-btn" onClick={() => void copy()}>Copy</button>
             <a className="mr-btn" href={`https://wa.me/?text=${encodeURIComponent(doc.slice(0, 3500))}`} target="_blank" rel="noopener noreferrer">Share on WhatsApp</a>
             <button type="button" className="mr-btn" onClick={() => { setStep('choose'); setDoc(''); }}>Write another</button>
+            {doc !== original && (
+              <button type="button" className="mr-btn" onClick={() => { setDoc(original); setFeedback({ tone: 'info', title: 'Back to what Stawi wrote', detail: 'Your corrections were taken out.' }); }}>Undo my changes</button>
+            )}
+            <button
+              type="button"
+              className={`mr-btn danger${confirmDelete ? ' armed' : ''}`}
+              onClick={() => {
+                if (!confirmDelete) { setConfirmDelete(true); setTimeout(() => setConfirmDelete(false), 4000); return; }
+                setDoc(''); setOriginal(''); setNotes(''); setStep('choose'); setConfirmDelete(false);
+                setFeedback({ tone: 'info', title: 'Deleted', detail: 'Nothing was kept. Give Stawi your points again when you are ready.' });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            >
+              {confirmDelete ? 'Tap again to delete it' : 'Delete and start again'}
+            </button>
           </div>
           <ReturnBar href={group ? `/groups/${encodeURIComponent(group)}` : '/dashboard'} label={group ? 'my group' : 'home'} />
         </section>

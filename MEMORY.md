@@ -1,5 +1,9 @@
 # Stawi — session memory / start-here
 
+## 27/11/26 — Undo, clear and delete-and-restart (owner: "somebody could be talking of something out of context")
+- Speak-or-type box (`DictateBox`, used by Write it for me and the minutes): "Undo last part" takes back the last spoken part (up to 10 steps), "Clear all" needs a second tap within 4 s and can itself be undone. English and Kiswahili.
+- Write it for me result: "Undo my changes" returns to what Stawi wrote; "Delete and start again" (second tap to confirm) clears the document and the points and goes back to step 1. Nothing is stored, so nothing is left behind.
+
 ## 27/11/26 — Tables fit a phone (owner screenshot: "Decisions the group agreed" ran past its card)
 - Group papers page: on phones the decisions table becomes one small card per decision (Date / Meeting / Matter / Decision stacked, `.doc-stack` with data-labels); every other table sits in `.doc-table-wrap` and scrolls inside its card, so the page never slides sideways (`.papers-page { overflow-x: clip }`). Phone padding tightened. Print and PDF unchanged.
 - Same wrapper added to the tables in the group workspace (3), Books and the money summary.
