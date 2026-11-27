@@ -1,5 +1,8 @@
 # Stawi — session memory / start-here
 
+## 27/11/26 — Tables fit a phone (owner screenshot: "Decisions the group agreed" ran past its card)
+- Group papers page: on phones the decisions table becomes one small card per decision (Date / Meeting / Matter / Decision stacked, `.doc-stack` with data-labels); every other table sits in `.doc-table-wrap` and scrolls inside its card, so the page never slides sideways (`.papers-page { overflow-x: clip }`). Phone padding tightened. Print and PDF unchanged.
+- Same wrapper added to the tables in the group workspace (3), Books and the money summary.
 ## 27/11/26 — Instant revisit of screens (owner: taps better but not much)
 - Measured from the owner's browser after the per-request sign-in fix: network round trip alone ~0.18 s; pages 0.3–0.45 s, so the server does ~0.1–0.25 s per page now. JS ~540 KB (normal for Next + React).
 - `experimental.staleTimes.dynamic = 30`: tapping back to a screen seen in the last 30 s shows it at once from the phone's router cache. Own writes refresh at once (revalidatePath / router.refresh); Stawi also refreshes on every group event (LiveRefresh), so money figures never wait on it.

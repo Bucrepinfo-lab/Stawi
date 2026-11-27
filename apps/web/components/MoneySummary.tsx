@@ -96,7 +96,7 @@ export function MoneySummary({ groupId }: { groupId: string }) {
 
         {rows.length === 0 ? <p className="money-none">{T.none[lang]}</p> : (
           <div className="money-scroll">
-            <table className="money-table">
+            <div className="doc-table-wrap"><table className="money-table">
               <thead><tr><th>{T.when[lang]}</th><th>{T.in[lang]}</th><th>{T.out[lang]}</th><th>{T.left[lang]}</th></tr></thead>
               <tbody>
                 {rows.map((r) => (
@@ -111,7 +111,7 @@ export function MoneySummary({ groupId }: { groupId: string }) {
               <tfoot>
                 <tr><td>{T.all[lang]} ({info.currency})</td><td className="n">{money(total.inCents)}</td><td className="n">{money(total.outCents)}</td><td className={`n ${total.leftCents < 0 ? 'neg' : ''}`}>{money(total.leftCents)}</td></tr>
               </tfoot>
-            </table>
+            </table></div>
           </div>
         )}
 

@@ -353,7 +353,7 @@ function SaccoActivationTab({ charter, meetings, canEdit, groupId, onActivated }
           <h4 style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--forest-deep)', margin: 0 }}>Your members' savings, reflected as credit</h4>
           <span style={{ fontSize: 12.5, color: 'var(--dim)' }}>{packet.monthsOfHistory} month{packet.monthsOfHistory === 1 ? '' : 's'} of history · pooled {formatKes(packet.openingState.balanceCents)}</span>
         </div>
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, fontSize: 12.5 }}>
+        <div className="doc-table-wrap"><table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12, fontSize: 12.5 }}>
           <thead><tr style={{ borderBottom: '2px solid var(--forest-deep)', textAlign: 'left' }}>
             <th style={{ padding: '6px 4px' }}>Member</th>
             <th style={{ padding: '6px 4px', textAlign: 'center' }}>Streak</th>
@@ -377,7 +377,7 @@ function SaccoActivationTab({ charter, meetings, canEdit, groupId, onActivated }
               );
             })}
           </tbody>
-        </table>
+        </table></div>
         <p style={{ fontSize: 12, color: 'var(--dim)', marginTop: 10 }}>
           {qualified.length} of {packet.members.length} members already pre-qualify for credit based on their saved deposits.
           Loans use reducing-balance interest and are earned by consistent saving — the same guard-rail that keeps chamas from failing.
@@ -1113,7 +1113,7 @@ function MinutesDocument({ doc, charter }: { doc: ProfessionalMinutes; charter: 
             <h4 style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--forest-deep)', letterSpacing: '.02em' }}>{s.heading}</h4>
             {s.paragraphs.map((p, j) => <p key={j} style={{ fontSize: 13.5, lineHeight: 1.7, color: 'var(--ink)', marginTop: 5 }}>{p}</p>)}
             {s.heading.startsWith('5.') && (
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 10, fontSize: 13 }}>
+              <div className="doc-table-wrap"><table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 10, fontSize: 13 }}>
                 <tbody>
                   {doc.financeRows.map((r, k) => (
                     <tr key={k} style={{ borderBottom: '1px solid var(--line)' }}>
@@ -1122,7 +1122,7 @@ function MinutesDocument({ doc, charter }: { doc: ProfessionalMinutes; charter: 
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </div>
         ))}
@@ -1254,7 +1254,7 @@ function StatementDocument({ charter, st, narrative, onEditNarrative }: { charte
       </div>
 
       <h4 style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--forest-deep)', marginTop: 22 }}>2. MEMBER ATTENDANCE & CONTRIBUTIONS</h4>
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8, fontSize: 12.5 }}>
+      <div className="doc-table-wrap"><table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8, fontSize: 12.5 }}>
         <thead><tr style={{ borderBottom: '2px solid var(--forest-deep)', textAlign: 'left' }}>
           <th style={{ padding: '6px 4px' }}>Member</th><th style={{ padding: '6px 4px', textAlign: 'center' }}>Present</th><th style={{ padding: '6px 4px', textAlign: 'center' }}>Att.%</th><th style={{ padding: '6px 4px', textAlign: 'right' }}>Contributed</th><th style={{ padding: '6px 4px', textAlign: 'right' }}>Fines</th><th className="no-print" style={{ padding: '6px 4px' }} />
         </tr></thead>
@@ -1274,7 +1274,7 @@ function StatementDocument({ charter, st, narrative, onEditNarrative }: { charte
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
       {(explained || explainErr) && (
         <div className="no-print" style={{ marginTop: 10, padding: 12, background: 'var(--bone-2)', borderRadius: 12, fontSize: 13, lineHeight: 1.6 }}>
           {explainErr
