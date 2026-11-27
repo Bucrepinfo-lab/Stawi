@@ -35,12 +35,15 @@ export function TableBanking({
   groupId,
   groupName = 'Stawi Group',
   canRecord = false,
+  myMemberIds = [],
 }: {
   seed: SeedMember[];
   groupId?: string;
   groupName?: string;
   /** Treasurer of this group (server re-checks every write). */
   canRecord?: boolean;
+  /** The recorder's own roster row(s): never offered as a witness (owner 27/11/26). */
+  myMemberIds?: string[];
 }) {
   const [members, setMembers] = useState<SeedMember[]>(seed);
   const [flash, setFlash] = useState<string | null>(null);
@@ -65,7 +68,8 @@ export function TableBanking({
   // Check-before-you-record (owner 26/11/26): what is waiting for "Yes".
   const [pending, setPending] = useState<{ kind: 'record' | 'stk'; confirm: ContributionConfirm } | null>(null);
   const witnessesNeeded = needsWitnesses(way);
-  const witnessChoices = members.filter((m) => m.memberId !== selected);
+  // Not the member paying, and not the person recording (owner 27/11/26).
+  const witnessChoices = members.filter((m) => m.memberId !== selected && !myMemberIds.includes(m.memberId));
 
   const snapshot = useMemo(() => computeCapitalShares(members), [members]);
 

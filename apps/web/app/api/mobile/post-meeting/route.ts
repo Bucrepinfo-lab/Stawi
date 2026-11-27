@@ -13,6 +13,11 @@ export async function POST(req: Request) {
   const { groupId, meetingNo, generatedDoc } = body ?? {};
   if (!groupId || !meetingNo) return bad('groupId and meetingNo are required');
   if (dbEnabled()) { const denied = await requireMobileGroupRole(auth.identity, groupId, 'records'); if (denied) return denied; }
+  // Minutes: the secretary only, or the stand-in the chair named (owner 27/11/26).
+  if (dbEnabled() && auth.identity) {
+    const { minutesAccessFor, MINUTES_DENIED } = await import('@/lib/minutes-access');
+    if (!(await minutesAccessFor(groupId, auth.identity)).allowed) return bad(MINUTES_DENIED, 403);
+  }
   if (!dbEnabled()) { if (!seedAllowed()) return dbRequired(); publishEvent({ type: 'meeting', channel: 'public' }); return ok({ ok: true, persisted: false }); }
   const { checkMeetingPost } = await import('@/lib/meeting-guard');
   const refused = await checkMeetingPost(groupId, Number(meetingNo));

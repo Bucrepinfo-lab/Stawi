@@ -36,6 +36,16 @@ describe('unique options', () => {
     expect(merged[0]!.myRole).toBe('Treasurer');
   });
 
+  it('mergeGroupsById keeps every roster row that is mine, so I am never offered as my own witness', () => {
+    const merged = mergeGroupsById([
+      { id: 'g1', myRole: 'Member', myMemberIds: ['row-by-phone'] },
+      { id: 'g1', myRole: 'Treasurer', myMemberIds: ['row-by-login'] },
+      { id: 'g1', myRole: 'Member', myMemberIds: ['row-by-phone'] },
+    ]);
+    expect(merged[0]!.myRole).toBe('Treasurer');
+    expect(merged[0]!.myMemberIds).toEqual(['row-by-phone', 'row-by-login']);
+  });
+
   it('pickAllowedId never selects an id outside the caller’s own list', () => {
     expect(pickAllowedId('g2', ['g1', 'g2'])).toBe('g2');
     expect(pickAllowedId('someone-elses-group', ['g1', 'g2'])).toBe('g1');

@@ -106,6 +106,7 @@ model Group {
   messages      GroupMessage[]
   joinCodes     JoinCode[]
   contributionWitnesses ContributionWitness[]
+  minutesStandIns MinutesStandIn[]
   contributionChecks    ContributionCheck[]
   corrections           ContributionCorrection[]
   correctionDecisions   CorrectionDecision[]
@@ -764,4 +765,21 @@ model ProfileContact {
   userId    String   @id
   email     String?
   updatedAt DateTime @updatedAt
+}
+
+// Minutes stand-in (owner 27/11/26): only the secretary writes the minutes;
+// when the secretary is away the chair or secretary names a member to write
+// them until a date, like a lesson cover. Kept as a record of who wrote when.
+model MinutesStandIn {
+  id                String    @id @default(cuid())
+  group             Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId           String
+  membershipId      String // Membership.id of the stand-in
+  until             DateTime
+  reason            String?
+  setByMembershipId String
+  createdAt         DateTime  @default(now())
+  endedAt           DateTime?
+
+  @@index([groupId, until])
 }

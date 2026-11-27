@@ -30,6 +30,13 @@ export default async function GroupWorkspacePage({ params, searchParams }: { par
   const canEdit = dbEnabled()
     ? viewer === 'SUPER_ADMIN' || (!!groupRole && RECORD_EDITOR_ROLES.has(groupRole))
     : viewer === 'OFFICIAL' || viewer === 'SUPER_ADMIN';
+  // Minutes: the secretary only, or the stand-in the chair named (owner 27/11/26).
+  const access = await (await import('@/lib/minutes-access')).minutesAccess(id);
+  const minutes = {
+    canWrite: viewer === 'SUPER_ADMIN' || access.allowed,
+    canNameStandIn: access.role === 'CHAIRMAN' || access.role === 'SECRETARY',
+    standIn: access.standIn,
+  };
   // Flow & escalation: only this viewer's own duties and what has climbed to them (decided here, on the server).
   // Which sections this group uses (owner 20/11/26). Applied here, on the server.
   const modules = await getGroupModules(id);
@@ -70,7 +77,7 @@ export default async function GroupWorkspacePage({ params, searchParams }: { par
       <WriteForMeLink groupId={cockpit.groupId} />
       {dbEnabled() && modules.money && <MoneyTrustCard groupId={cockpit.groupId} alerts={moneyAlerts} />}
       <div style={{ marginTop: 22 }}>
-        <GroupCockpit cockpit={shown} canEdit={canEdit} saccoPlus={saccoPlusEnabled() && modules.savings_credit} initialTab={tab} initialMonth={month} modules={modules} />
+        <GroupCockpit cockpit={shown} canEdit={canEdit} minutes={minutes} saccoPlus={saccoPlusEnabled() && modules.savings_credit} initialTab={tab} initialMonth={month} modules={modules} />
       </div>
       {(modules.money || modules.books) && <MoneySummary groupId={cockpit.groupId} />}
       {!booksOnly(modules) && <DocumentHouse groupId={cockpit.groupId} />}

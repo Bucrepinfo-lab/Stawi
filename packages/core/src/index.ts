@@ -71,3 +71,4 @@ export * from './funding-proposal';
 export * from './dictation';
 export * from './search';
 export * from './grow-capital';
+export * from './minutes-access';

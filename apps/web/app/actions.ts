@@ -529,8 +529,9 @@ export async function saveMeetingAction(input: {
     publishEvent({ type: 'meeting', channel: 'public' });
     return { ok: true, persisted: false };
   }
-  const deniedMeeting = await requireGroupRole(input.groupId, 'records');
-  if (deniedMeeting) return { ok: false, persisted: false, error: deniedMeeting };
+  // Minutes: the secretary only, or the stand-in the chair named (owner 27/11/26).
+  const { minutesAccess, MINUTES_DENIED } = await import('@/lib/minutes-access');
+  if (!(await minutesAccess(input.groupId)).allowed) return { ok: false, persisted: false, error: MINUTES_DENIED };
   const { checkMeetingWrite } = await import('@/lib/meeting-guard');
   const refused = await checkMeetingWrite(input.groupId, m);
   if (refused) return { ok: false, persisted: false, error: refused.error };
@@ -554,8 +555,9 @@ export async function postMeetingAction(input: {
     publishEvent({ type: 'meeting', channel: 'public' });
     return { ok: true, persisted: false };
   }
-  const deniedPost = await requireGroupRole(input.groupId, 'records');
-  if (deniedPost) return { ok: false, persisted: false, error: deniedPost };
+  // Minutes: the secretary only, or the stand-in the chair named (owner 27/11/26).
+  const { minutesAccess, MINUTES_DENIED } = await import('@/lib/minutes-access');
+  if (!(await minutesAccess(input.groupId)).allowed) return { ok: false, persisted: false, error: MINUTES_DENIED };
   const { checkMeetingPost } = await import('@/lib/meeting-guard');
   const refusedPost = await checkMeetingPost(input.groupId, input.meetingNo);
   if (refusedPost) return { ok: false, persisted: false, error: refusedPost.error };
@@ -705,4 +707,42 @@ export async function updateMyNameAction(input: { groupId: string; name: string 
   if (done.count === 0) return { ok: false, error: 'You are not a member of this group.' };
   publishEvent({ type: 'group', channel: groupChannel(input.groupId) });
   return { ok: true, name: checked.name };
+}
+
+/** Name a stand-in to write the minutes while the secretary is away (chair or secretary only; owner 27/11/26). */
+export async function appointStandInAction(input: { groupId: string; membershipId: string; days: number; reason?: string }): Promise<{ ok: boolean; error?: string }> {
+  if (!dbEnabled()) return { ok: false, error: 'Stand-ins open when the live records are connected.' };
+  const { standInProblem } = await import('@stawi/core');
+  const { myGroupRole, myMembershipIds } = await import('@/lib/group-access');
+  const { prisma } = await import('@stawi/db');
+  const [role, myIds, members] = await Promise.all([
+    myGroupRole(input.groupId),
+    myMembershipIds(input.groupId),
+    prisma.membership.findMany({ where: { groupId: input.groupId }, select: { id: true } }),
+  ]);
+  const problem = standInProblem({ appointerRole: role, membershipId: input.membershipId, memberIds: members.map((m) => m.id), days: Math.round(Number(input.days)) });
+  if (problem) return { ok: false, error: problem };
+  const now = new Date();
+  const until = new Date(now.getTime() + Math.round(Number(input.days)) * 86_400_000);
+  await prisma.$transaction([
+    // One stand-in at a time: naming a new one ends the current one.
+    prisma.minutesStandIn.updateMany({ where: { groupId: input.groupId, endedAt: null }, data: { endedAt: now } }),
+    prisma.minutesStandIn.create({
+      data: { groupId: input.groupId, membershipId: input.membershipId, until, reason: (input.reason ?? '').trim().slice(0, 200) || null, setByMembershipId: myIds[0] ?? 'unknown' },
+    }),
+  ]);
+  publishEvent({ type: 'charter', channel: groupChannel(input.groupId) });
+  return { ok: true };
+}
+
+/** End the stand-in early (chair or secretary). */
+export async function endStandInAction(input: { groupId: string }): Promise<{ ok: boolean; error?: string }> {
+  if (!dbEnabled()) return { ok: false, error: 'Stand-ins open when the live records are connected.' };
+  const { myGroupRole } = await import('@/lib/group-access');
+  const role = await myGroupRole(input.groupId);
+  if (role !== 'CHAIRMAN' && role !== 'SECRETARY') return { ok: false, error: 'Only the chair or the secretary can end a stand-in.' };
+  const { prisma } = await import('@stawi/db');
+  await prisma.minutesStandIn.updateMany({ where: { groupId: input.groupId, endedAt: null }, data: { endedAt: new Date() } });
+  publishEvent({ type: 'charter', channel: groupChannel(input.groupId) });
+  return { ok: true };
 }

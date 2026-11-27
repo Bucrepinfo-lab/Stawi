@@ -17,6 +17,8 @@ export interface GroupAccountDTO {
   id: string;
   name: string;
   myRole: string;
+  /** The caller's own roster row(s) in this group. */
+  myMemberIds?: string[];
   flag: string;
   type: GroupKind;
   members: MemberDTO[];

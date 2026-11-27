@@ -56,7 +56,7 @@ export function witnessProblem(input: {
   for (const id of ids) {
     if (!input.memberIds.includes(id)) return 'A witness must be a member of this group.';
     if (id === input.contributorId) return 'The member paying cannot be their own witness.';
-    if (input.recorderIds.includes(id)) return 'The person recording cannot be a witness.';
+    if (input.recorderIds.includes(id)) return 'You are recording this payment, so you cannot also be a witness. Choose another member.';
   }
   return null;
 }

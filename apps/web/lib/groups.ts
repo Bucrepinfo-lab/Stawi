@@ -19,6 +19,8 @@ export interface GroupAccount {
   name: string;
   /** The signed-in member's role in THIS group. */
   myRole: string;
+  /** The signed-in member's own roster row(s) here (left out of witness choices). */
+  myMemberIds?: string[];
   flag: string;
   type: 'Chama' | 'SACCO' | 'Business';
   members: SeedMember[];
