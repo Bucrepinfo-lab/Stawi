@@ -1,5 +1,11 @@
 # Stawi — session memory / start-here
 
+## 27/11/26 — Taps were slow (owner: "10 to 15 seconds"): measured and fixed
+- Measured in Chrome (signed in): server pages answer in ~0.4 s alone, but taps took 0.6–4.3 s on desktop and pages fetched together queued (8 at once → all 1.6 s). Cause: `supabase.auth.getUser()` (a network round trip to Supabase Auth) ran up to five times per page (getUserId, getUserPhone, tenantCtx, getMyGroups, modules/messages); on a phone over 4G that stacks to many seconds. Also no page had a loading screen, so a tap showed nothing until the server finished.
+- Fixes: `getSupabaseUser` and `tenantCtx` run once per request (`lib/request-cache.ts` → React `cache`, still verified with Supabase every request); `app/loading.tsx` shows an instant outline of cards on every tap (bottom bar stays); phone alerts re-save at most once a day per phone (was every visit: two extra calls).
+- Judgement call: groups and modules are NOT cached per request, because an action that changes them re-renders in the same request and must show the new state.
+- Ruled out: the service worker (network-only for pages), the live events stream (in-memory, light), page size (6–9 KB), Fly connection limits (200/250).
+
 ## 27/11/26 — Officials can start a private message to any member (owner screenshot: "no area to choose a member")
 - "Ask the officials" was only an inbox for officials: they could open a conversation only after a member wrote first. It now opens with "Write privately to a member": a list of every other member, by name (no numbers), and Write. The conversation is the same private thread a member's own question uses (only that member and the officials read it), so `canSeeMessage` and `threadForNewMessage` are unchanged; the server lets an official open a thread with any member of the group (`lib/messages.ts`, `members` in the view).
 

@@ -812,3 +812,15 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 .msg-start-label { font-weight: 800; font-size: 15px; color: var(--ink); }
 .msg-start-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .msg-start-row .msg-group { flex: 1 1 200px; min-width: 0; min-height: 44px; }
+
+/* Instant loading outline on every tap (owner 27/11/26). */
+.pg-loading { max-width: 760px; margin: 0 auto; padding: 24px 16px 90px; display: grid; gap: 14px; }
+.pg-loading-bar { height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--gold), var(--forest), var(--gold)); background-size: 200% 100%; animation: pg-sweep 1.1s linear infinite; }
+.pg-loading-title { height: 34px; width: 55%; border-radius: 10px; background: var(--line); opacity: .6; }
+.pg-loading-card { height: 120px; border-radius: var(--radius, 16px); background: var(--paper); border: 1px solid var(--line); position: relative; overflow: hidden; }
+.pg-loading-card.short { height: 76px; }
+.pg-loading-card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 20%, rgba(224, 163, 46, .10) 50%, transparent 80%); transform: translateX(-100%); animation: pg-shine 1.2s ease-in-out infinite; }
+@keyframes pg-sweep { to { background-position: -200% 0; } }
+@keyframes pg-shine { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .pg-loading-bar, .pg-loading-card::after { animation: none; } }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
