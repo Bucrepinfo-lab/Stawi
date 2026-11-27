@@ -830,3 +830,22 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 .standin-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px; }
 .standin-row select, .standin-row input { min-height: 44px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: inherit; flex: 1 1 180px; min-width: 0; }
 .standin-row select:focus-visible, .standin-row input:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* Group papers fit a phone (owner 27/11/26: a table ran past its card and the page slid sideways). */
+.papers-page { overflow-x: clip; }
+.doc-table-wrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.doc-table-wrap td, .doc-table-wrap th { overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .papers-page { padding-left: 14px !important; padding-right: 14px !important; }
+  .papers-page .print-doc { padding: 16px !important; }
+  /* Decisions: one small card per decision instead of four squeezed columns. */
+  .doc-stack thead { display: none; }
+  .doc-stack, .doc-stack tbody, .doc-stack tr, .doc-stack td { display: block; width: 100%; }
+  .doc-stack tr { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; background: var(--bone); }
+  .doc-stack td { border: 0 !important; padding: 3px 0 !important; }
+  .doc-stack td::before { content: attr(data-label); display: block; font-size: 11.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); }
+}
+@media print {
+  .papers-page { overflow: visible; }
+  .doc-table-wrap { overflow: visible; }
+}
