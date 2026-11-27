@@ -5,6 +5,10 @@
 - Same wrapper added to the tables in the group workspace (3), Books and the money summary.
 ## 27/11/26 — Empty shortlist slots now do something (owner: "not clickable")
 - The three dashed "Save an idea to fill this slot…" boxes were plain text. Each is now a button, "Tap ☆ on an idea above to save it here": it scrolls to the ideas and pulses their ☆ for a moment. The ☆ buttons grew from 28 to 40 px for easier tapping on phones.
+## 27/11/26 — Instant revisit of screens (owner: taps better but not much)
+- Measured from the owner's browser after the per-request sign-in fix: network round trip alone ~0.18 s; pages 0.3–0.45 s, so the server does ~0.1–0.25 s per page now. JS ~540 KB (normal for Next + React).
+- `experimental.staleTimes.dynamic = 30`: tapping back to a screen seen in the last 30 s shows it at once from the phone's router cache. Own writes refresh at once (revalidatePath / router.refresh); Stawi also refreshes on every group event (LiveRefresh), so money figures never wait on it.
+- Found, not changed: Stawi's Supabase (database + sign-in) is in eu-west-1 (Ireland) while the Fly app runs in fra (Frankfurt), ~20 ms per query each way. Moving the Fly app to lhr (London) would cut that roughly in half; deploy config, owner decision.
 
 ## 27/11/26 — Witness lists leave out the recorder; minutes are the secretary's (owner screenshot + rules)
 - Owner's screenshot: as Treasurer he recorded KES 8,000 cash with witnesses Mary Achieng and Fredrick Gathii (himself) and got "The person recording cannot be a witness". The rule was right; the list should never have offered him. Now `GroupAccount.myMemberIds` (all the caller's roster rows, unioned in `mergeGroupsById`) is passed to TableBanking and left out of both witness lists, with the member paying. Message now: "You are recording this payment, so you cannot also be a witness. Choose another member."
