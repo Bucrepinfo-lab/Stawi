@@ -27,8 +27,8 @@ function recogniser(): (new () => Rec) | null {
 }
 
 const T = {
-  en: { lang: 'I will speak in', start: 'Tap and speak', stop: 'Stop', listening: 'Listening… speak clearly, close to the phone', none: 'Your phone cannot listen inside the app. Tap the box, then the microphone key on your keyboard, and speak.', denied: 'The microphone is blocked for Stawi. Allow it in your phone settings, or use the keyboard microphone.', fix: 'Read it through and correct any wrong words before you continue.' },
-  sw: { lang: 'Nitaongea kwa', start: 'Bonyeza uongee', stop: 'Simamisha', listening: 'Ninasikiliza… ongea wazi, karibu na simu', none: 'Simu yako haiwezi kusikiliza ndani ya programu. Gusa kisanduku, kisha kitufe cha maikrofoni kwenye kibodi, uongee.', denied: 'Maikrofoni imezuiwa kwa Stawi. Iruhusu kwenye mipangilio ya simu, au tumia maikrofoni ya kibodi.', fix: 'Soma tena na urekebishe maneno yasiyo sahihi kabla ya kuendelea.' },
+  en: { lang: 'I will speak in', start: 'Tap and speak', stop: 'Stop', listening: 'Listening… speak clearly, close to the phone', none: 'Your phone cannot listen inside the app. Tap the box, then the microphone key on your keyboard, and speak.', denied: 'The microphone is blocked for Stawi. Allow it in your phone settings, or use the keyboard microphone.', fix: 'Read it through and correct any wrong words before you continue.', undo: 'Undo last part', clear: 'Clear all', sure: 'Tap again to clear everything', cleared: 'Cleared. Tap “Undo last part” if that was a mistake.' },
+  sw: { lang: 'Nitaongea kwa', start: 'Bonyeza uongee', stop: 'Simamisha', listening: 'Ninasikiliza… ongea wazi, karibu na simu', none: 'Simu yako haiwezi kusikiliza ndani ya programu. Gusa kisanduku, kisha kitufe cha maikrofoni kwenye kibodi, uongee.', denied: 'Maikrofoni imezuiwa kwa Stawi. Iruhusu kwenye mipangilio ya simu, au tumia maikrofoni ya kibodi.', fix: 'Soma tena na urekebishe maneno yasiyo sahihi kabla ya kuendelea.', undo: 'Ondoa sehemu ya mwisho', clear: 'Futa yote', sure: 'Gusa tena kufuta yote', cleared: 'Imefutwa. Gusa “Ondoa sehemu ya mwisho” kama ni kosa.' },
 } as const;
 
 export function DictateBox({ value, onChange, placeholder, rows = 7 }: { value: string; onChange: (v: string) => void; placeholder?: string; rows?: number }) {
@@ -38,6 +38,25 @@ export function DictateBox({ value, onChange, placeholder, rows = 7 }: { value: 
   const [interim, setInterim] = useState('');
   const rec = useRef<Rec | null>(null);
   const base = useRef('');
+  // Undo and clear (owner 27/11/26: "somebody could be talking of something out of context").
+  const [history, setHistory] = useState<string[]>([]);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const remember = (v: string) => setHistory((h) => [...h.slice(-9), v]);
+  function undo() {
+    if (!history.length) return;
+    if (listening) rec.current?.stop();
+    onChange(history[history.length - 1]!);
+    setHistory(history.slice(0, -1));
+    setConfirmClear(false);
+  }
+  function clearAll() {
+    if (!confirmClear) { setConfirmClear(true); setTimeout(() => setConfirmClear(false), 4000); return; }
+    if (listening) rec.current?.stop();
+    remember(value);
+    onChange('');
+    setConfirmClear(false);
+    setNote(t.cleared);
+  }
   const supported = typeof window !== 'undefined' && !!recogniser();
   const t = T[lang === 'sw-KE' ? 'sw' : 'en'];
 
@@ -57,6 +76,7 @@ export function DictateBox({ value, onChange, placeholder, rows = 7 }: { value: 
     r.lang = lang;
     r.continuous = true;
     r.interimResults = true;
+    remember(value);
     base.current = value ? `${value.trimEnd()} ` : '';
     r.onresult = (e) => {
       let finalText = '';
@@ -100,6 +120,16 @@ export function DictateBox({ value, onChange, placeholder, rows = 7 }: { value: 
       )}
       {listening && <p className="dc-live" role="status"><span className="wr-dot" aria-hidden />{t.listening}{interim ? ` — “${interim}”` : ''}</p>}
       <textarea className="mr-input dc-text" rows={rows} lang={lang === 'sw-KE' ? 'sw' : 'en'} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+      {(value.trim() || history.length > 0) && (
+        <div className="dc-tools">
+          {history.length > 0 && <button type="button" className="dc-tool" onClick={undo}>↶ {t.undo}</button>}
+          {value.trim() && (
+            <button type="button" className={`dc-tool danger${confirmClear ? ' armed' : ''}`} onClick={clearAll} aria-live="polite">
+              {confirmClear ? t.sure : t.clear}
+            </button>
+          )}
+        </div>
+      )}
       {(note || !supported) && <p className="mr-meta">{note ?? t.none}</p>}
     </div>
   );

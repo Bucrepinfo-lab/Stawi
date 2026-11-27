@@ -856,3 +856,12 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 .star-nudge { animation: star-nudge .6s ease-in-out 3; border-color: var(--gold) !important; color: var(--gold-deep, #b97e15) !important; }
 @keyframes star-nudge { 50% { transform: scale(1.18); box-shadow: 0 0 0 6px rgba(224, 163, 46, .25); } }
 @media (prefers-reduced-motion: reduce) { .star-nudge { animation: none; } }
+
+/* Undo / clear on spoken notes, delete-and-restart on written documents (owner 27/11/26). */
+.dc-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.dc-tool { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--forest-deep); font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; transition: transform .15s ease, border-color .15s ease; }
+.dc-tool:hover { transform: translateY(-1px); border-color: var(--gold); }
+.dc-tool.danger, .mr-btn.danger { color: var(--clay); border-color: color-mix(in srgb, var(--clay) 45%, var(--line)); }
+.dc-tool.danger.armed, .mr-btn.danger.armed { background: var(--clay); color: #fff; border-color: var(--clay); }
+.dc-tool:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .dc-tool { transition: none; } .dc-tool:hover { transform: none; } }
