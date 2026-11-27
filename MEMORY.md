@@ -624,3 +624,4 @@ Sandbox cannot run `npm run build`/Expo/Postgres (blocked binaries) — those ga
 run on Jacob's machine / DO.
 - 27/11/26 Second London machine (owner "yes"): manual workflow `.github/workflows/scale-london.yml` (input count 1–3, default 2) runs `flyctl scale count N --region lhr`; with auto_stop "stop" + min_machines_running 1 the second machine is a sleeping standby.
 - 27/11/26 PIN set-up hint (owner screenshot on HarvestHub: button grey with no reason when one PIN box had 3 digits): choose-PIN screens now say "N of 4 numbers" / "the two PINs are different" and have a Show PIN box. Same change in HarvestHub, Stawi, SellFindConnect, InsurOS.
+- 28/11/26 Share row is an even grid (equal-size channel buttons; "more" button on its own row). Same in SellFindConnect, HarvestHub, InsurOS.
