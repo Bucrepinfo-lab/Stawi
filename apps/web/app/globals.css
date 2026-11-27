@@ -849,6 +849,13 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
   .papers-page { overflow: visible; }
   .doc-table-wrap { overflow: visible; }
 }
+/* Empty shortlist slot: a real button that points to the stars (owner 27/11/26). */
+.slot-empty { flex: 1; text-align: left; background: none; border: 0; padding: 6px 0; font: inherit; font-size: 13.5px; color: var(--forest); font-weight: 700; cursor: pointer; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--forest) 35%, transparent); text-underline-offset: 3px; }
+.slot-empty:hover { color: var(--forest-deep); }
+.slot-empty:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; border-radius: 6px; }
+.star-nudge { animation: star-nudge .6s ease-in-out 3; border-color: var(--gold) !important; color: var(--gold-deep, #b97e15) !important; }
+@keyframes star-nudge { 50% { transform: scale(1.18); box-shadow: 0 0 0 6px rgba(224, 163, 46, .25); } }
+@media (prefers-reduced-motion: reduce) { .star-nudge { animation: none; } }
 
 /* Undo / clear on spoken notes, delete-and-restart on written documents (owner 27/11/26). */
 .dc-tools { display: flex; flex-wrap: wrap; gap: 8px; }
