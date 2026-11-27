@@ -61,6 +61,13 @@ export function BusinessMatch({
   const [saved, setSaved] = useState<Venture[]>([]);
   const [note, setNote] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  // An empty shortlist slot points to the ☆ on the ideas above (owner 27/11/26: "not clickable").
+  const [nudge, setNudge] = useState(false);
+  function pointToStars() {
+    document.getElementById('idea-grid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setNudge(true);
+    setTimeout(() => setNudge(false), 1800);
+  }
 
   const run = useCallback(
     (nextSeed: number) => {
@@ -226,6 +233,7 @@ export function BusinessMatch({
 
         {/* Venture grid */}
         <div
+          id="idea-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
@@ -247,12 +255,13 @@ export function BusinessMatch({
               <button
                 onClick={() => toggleSave(v)}
                 aria-label={isSaved(v) ? 'Remove from shortlist' : 'Save to shortlist'}
+                className={nudge && !isSaved(v) ? 'star-nudge' : undefined}
                 style={{
                   position: 'absolute',
-                  top: 11,
-                  right: 11,
-                  width: 28,
-                  height: 28,
+                  top: 8,
+                  right: 8,
+                  width: 40,
+                  height: 40,
                   borderRadius: 8,
                   cursor: 'pointer',
                   border: `1px solid ${isSaved(v) ? 'var(--gold)' : 'var(--line)'}`,
@@ -264,7 +273,7 @@ export function BusinessMatch({
               >
                 {isSaved(v) ? '★' : '☆'}
               </button>
-              <div style={{ fontWeight: 700, fontSize: 14.5, paddingRight: 28 }}>{v.title}</div>
+              <div style={{ fontWeight: 700, fontSize: 14.5, paddingRight: 44 }}>{v.title}</div>
               <div style={{ fontSize: 12, color: 'var(--dim)', margin: '5px 0 10px', minHeight: 34 }}>
                 {v.description}
               </div>
@@ -355,9 +364,9 @@ export function BusinessMatch({
                     </button>
                   </>
                 ) : (
-                  <span style={{ color: 'var(--dim)', fontSize: 13 }}>
-                    Save an idea to fill this slot…
-                  </span>
+                  <button type="button" className="slot-empty" onClick={pointToStars}>
+                    Tap ☆ on an idea above to save it here
+                  </button>
                 )}
               </div>
             );
