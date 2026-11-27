@@ -13,6 +13,11 @@ const nextConfig = {
   // root — that pulls in a second React copy and breaks prerender.
   outputFileTracingRoot: path.join(__dirname, '../../'),
   transpilePackages: ['@stawi/core', '@stawi/db'],
+  // Tapping back to a screen seen in the last 30 s shows it at once from the
+  // phone's memory (owner 27/11/26: taps still felt slow). Any write — a payment,
+  // a message, minutes — refreshes it straight away (LiveRefresh + revalidatePath),
+  // so money figures never wait on this.
+  experimental: { staleTimes: { dynamic: 30 } },
   // Android TWA Digital Asset Links, built from ANDROID_CERT_FINGERPRINTS at request time.
   async rewrites() {
     return [{ source: '/.well-known/assetlinks.json', destination: '/api/assetlinks' }];
