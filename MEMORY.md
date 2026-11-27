@@ -1,5 +1,10 @@
 # Stawi — session memory / start-here
 
+## 27/11/26 — Tester (+254 789 334508): shortlist kept between tabs; "Money: what do I do?" on the member home
+- Business ideas (`/match`): the shortlist was only in page memory, so leaving the tab reset it to 0/3. It is now kept on the phone (`stawi.match.v1`, read back through `readSavedMatch` in `@stawi/core`, which drops malformed entries and never returns more than three). A line under the shortlist explains how to change it: × to take one off, ☆ to add another, and Write the funding proposal to edit name, cost and plan.
+- Judgement call: kept per phone, not shared with the group, because a shared shortlist would need a new table (database is a protected area). Ask the owner before making it a group list.
+- Member home: three drawn cards, Pay my contribution (jumps to Pay, or to the group money table where that country cannot take payments yet), Borrow from the group, Take my money out. Borrowing and withdrawing are explained as agreed at the meeting and written in the minutes; Stawi does not lend or pay out. English and Kiswahili (`components/MoneyHowTo.tsx`).
+
 ## 27/11/26 — Actions trimmed (owner: trim the bill)
 - CI ran on every PR push and again on the push to main (49 duplicate runs in a week). Now pull requests only (plus by hand), docs-only changes skipped, superseded PR runs cancelled. Deploy and the PR image build also skip docs-only changes.
 

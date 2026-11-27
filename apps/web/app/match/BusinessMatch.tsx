@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   generateVentures,
   canAddToShortlist,
+  readSavedMatch,
   formatMoney,
   type Industry,
   type Venture,
@@ -38,6 +39,9 @@ const tag: React.CSSProperties = {
   borderRadius: 8,
 };
 
+/** The phone keeps the shortlist between tabs (tester 27/11/26: it reset to 0/3). */
+const STORE_KEY = 'stawi.match.v1';
+
 function parseCapital(s: string): number {
   return parseInt(s.replace(/[^0-9]/g, ''), 10) || 0;
 }
@@ -49,6 +53,7 @@ export function BusinessMatch() {
   const [ventures, setVentures] = useState<Venture[]>([]);
   const [saved, setSaved] = useState<Venture[]>([]);
   const [note, setNote] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
 
   const run = useCallback(
     (nextSeed: number) => {
@@ -69,6 +74,36 @@ export function BusinessMatch() {
     run(seed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [industry]);
+
+  // Bring back what this phone saved, after the first draw so the server and
+  // phone render the same page.
+  useEffect(() => {
+    let back: ReturnType<typeof readSavedMatch> = null;
+    try {
+      back = readSavedMatch(JSON.parse(localStorage.getItem(STORE_KEY) ?? 'null'));
+    } catch {
+      back = null;
+    }
+    if (back) {
+      setIndustry(back.industry);
+      if (back.capital) setCapital(back.capital);
+      setSeed(back.seed);
+      setSaved(back.saved);
+      const capCents = parseCapital(back.capital || capital) * 100;
+      if (capCents > 0) setVentures(generateVentures({ industry: back.industry, capitalCents: capCents, seed: back.seed }));
+    }
+    setReady(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({ industry, capital, seed, saved }));
+    } catch {
+      // Private mode or full storage: the page still works, it just forgets.
+    }
+  }, [ready, industry, capital, seed, saved]);
 
   function generate() {
     run(seed);
@@ -306,6 +341,11 @@ export function BusinessMatch() {
             ✓ Three ideas saved — ready to book a group discussion to decide.
           </p>
         )}
+        <p style={{ marginTop: 10, fontSize: 12.5, color: 'var(--dim)', lineHeight: 1.5 }}>
+          Your shortlist stays on this phone when you open other tabs. To change it, tap × to take an idea off
+          and ☆ on another to add it. To change the name, the cost or the plan, tap Write the funding proposal:
+          everything there can be edited.
+        </p>
       </div>
     </div>
   );

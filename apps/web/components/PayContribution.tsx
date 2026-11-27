@@ -72,7 +72,7 @@ export function PayContribution({ groupId }: { groupId: string }) {
   }
 
   return (
-    <section className="pay s-card" aria-label={T.title[lang]}>
+    <section id="pay" className="pay s-card" aria-label={T.title[lang]}>
       <div className="pay-head">
         <span className="pay-icon" aria-hidden>📲</span>
         <div>

@@ -124,3 +124,48 @@ export function generateVentures(opts: MatchOptions): Venture[] {
 export function canAddToShortlist(current: Venture[]): boolean {
   return current.length < 3;
 }
+
+/** What a member's phone keeps of the matching page between tabs (tester 27/11/26). */
+export interface SavedMatch {
+  industry: Industry;
+  capital: string;
+  seed: number;
+  saved: Venture[];
+}
+
+const INDUSTRIES = new Set(Object.keys(CATALOG));
+const RISKS = new Set(['Low', 'Moderate', 'Higher']);
+
+/**
+ * Pure: read back a saved shortlist from the phone's storage. Anything
+ * malformed is dropped, repeats are dropped, and never more than three ideas
+ * come back, so an old or tampered entry can never break the page.
+ */
+export function readSavedMatch(raw: unknown): SavedMatch | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, unknown>;
+  if (typeof r.industry !== 'string' || !INDUSTRIES.has(r.industry)) return null;
+  const capital = typeof r.capital === 'string' ? r.capital.slice(0, 20) : '';
+  const seed = Number.isSafeInteger(r.seed) ? (r.seed as number) : 1;
+  const saved: Venture[] = [];
+  for (const v of Array.isArray(r.saved) ? r.saved : []) {
+    if (saved.length >= 3) break;
+    if (!v || typeof v !== 'object') continue;
+    const x = v as Record<string, unknown>;
+    if (typeof x.title !== 'string' || !x.title || typeof x.description !== 'string') continue;
+    if (!Number.isSafeInteger(x.startupCents) || (x.startupCents as number) < 0) continue;
+    if (typeof x.marginPct !== 'number' || !Number.isFinite(x.marginPct)) continue;
+    if (typeof x.risk !== 'string' || !RISKS.has(x.risk)) continue;
+    if (typeof x.industry !== 'string' || !INDUSTRIES.has(x.industry)) continue;
+    if (saved.some((s) => s.title === x.title)) continue;
+    saved.push({
+      title: x.title.slice(0, 120),
+      description: x.description.slice(0, 300),
+      startupCents: x.startupCents as number,
+      marginPct: x.marginPct,
+      risk: x.risk as Venture['risk'],
+      industry: x.industry as Industry,
+    });
+  }
+  return { industry: r.industry as Industry, capital, seed, saved };
+}

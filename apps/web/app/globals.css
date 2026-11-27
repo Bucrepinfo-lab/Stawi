@@ -788,3 +788,21 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
   .hf-choice, .hf-step, .hf-btn, .hf-arrow { transition: none; }
   .hf-choice:hover, .hf-choice:focus-visible, .hf-step:hover, .hf-btn:hover { transform: none; }
 }
+
+/* Money: what do I do? (tester 27/11/26) */
+.money-how { margin-top: 18px; }
+.money-how h2 { font-weight: 600; font-size: 24px; }
+.money-how-sub { margin-top: 4px; color: var(--dim); font-size: 14px; }
+.money-how ul { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.money-how-card { display: flex; align-items: flex-start; gap: 12px; height: 100%; padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); text-decoration: none; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.money-how-card:hover, .money-how-card:focus-visible { transform: translateY(-2px); border-color: var(--gold); box-shadow: 0 14px 30px -18px rgba(22, 56, 42, .55); }
+.money-how-card:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.money-how-text { display: grid; gap: 4px; min-width: 0; }
+.money-how-text strong { font-size: 16px; color: var(--forest-deep); }
+.money-how-text span { font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+.money-how-text em { font-style: normal; font-weight: 800; font-size: 13.5px; color: var(--forest); margin-top: 2px; }
+#pay { scroll-margin-top: 16px; }
+@media (prefers-reduced-motion: reduce) {
+  .money-how-card { transition: none; }
+  .money-how-card:hover, .money-how-card:focus-visible { transform: none; }
+}
