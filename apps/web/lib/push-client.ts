@@ -46,6 +46,23 @@ async function save(sub: PushSubscription): Promise<boolean> {
   }
 }
 
+/** Re-save an existing subscription at most once a day, or at once if it changed (owner 27/11/26: fewer calls per visit). */
+const SAVED_KEY = 'stawi.push.saved';
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function savedRecently(endpoint: string): boolean {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SAVED_KEY) ?? 'null') as { endpoint?: string; at?: number } | null;
+    return !!raw && raw.endpoint === endpoint && typeof raw.at === 'number' && Date.now() - raw.at < DAY_MS;
+  } catch {
+    return false;
+  }
+}
+
+function markSaved(endpoint: string): void {
+  try { localStorage.setItem(SAVED_KEY, JSON.stringify({ endpoint, at: Date.now() })); } catch { /* private mode */ }
+}
+
 /** Where this phone stands, re-saving an existing yes. Never asks. */
 export async function syncAlerts(): Promise<AlertsState> {
   if (!supported()) return 'unsupported';
@@ -56,7 +73,10 @@ export async function syncAlerts(): Promise<AlertsState> {
   try {
     const reg = await timeout(registration(), 8_000);
     const sub = (await reg.pushManager.getSubscription()) ?? (await timeout(reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64urlToBytes(key) as BufferSource }), 15_000));
-    return (await save(sub)) ? 'on' : 'off';
+    if (savedRecently(sub.endpoint)) return 'on';
+    if (!(await save(sub))) return 'off';
+    markSaved(sub.endpoint);
+    return 'on';
   } catch {
     return 'off';
   }
@@ -74,7 +94,9 @@ export async function turnOnAlerts(): Promise<AlertsState> {
     const reg = await timeout(registration(), 8_000);
     await timeout(navigator.serviceWorker.ready, 8_000);
     const sub = (await reg.pushManager.getSubscription()) ?? (await timeout(reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64urlToBytes(key) as BufferSource }), 15_000));
-    return (await save(sub)) ? 'on' : 'off';
+    if (!(await save(sub))) return 'off';
+    markSaved(sub.endpoint);
+    return 'on';
   } catch {
     return 'off';
   }

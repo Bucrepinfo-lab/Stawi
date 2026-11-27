@@ -1,14 +1,21 @@
+import { perRequest } from './request-cache';
 import { phoneIsProven, toE164 } from '@stawi/core';
 import { createSupabaseServerClient } from './supabase/server';
 
-/** The Supabase-authenticated user for this request, or null. */
-export async function getSupabaseUser() {
+/**
+ * The Supabase-authenticated user for this request, or null.
+ * `getUser()` is a network round trip to Supabase Auth; a page used to make it
+ * up to five times (user id, phone, groups, modules, messages). Cached per
+ * request (owner 27/11/26: taps had become slow), so it runs once per request.
+ * Still verified with Supabase every request — never trusted from the cookie.
+ */
+export const getSupabaseUser = perRequest(async () => {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   return user;
-}
+});
 
 /**
  * The app's user identity (Supabase UUID). Stored in the `*clerkUserId` columns —

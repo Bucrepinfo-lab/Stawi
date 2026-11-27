@@ -6,6 +6,7 @@
  * the user's own tenant. All queries are tenant-scoped. Seed mode: bundled demo.
  */
 
+import { perRequest } from './request-cache';
 import { MY_GROUPS, type GroupAccount } from './groups';
 import { GROUP_BUSINESS } from './books';
 
@@ -24,7 +25,8 @@ export const dbEnabled = () => !!process.env.DATABASE_URL;
 // don't belong to, so queries return nothing instead of leaking their own data.
 const DENY = '__deny__';
 
-async function tenantCtx() {
+/** Who is asking and their tenant: once per request (owner 27/11/26: taps had become slow). */
+const tenantCtx = perRequest(async function tenantCtx() {
   if (!dbEnabled()) return null;
   const db = await import('@stawi/db');
   const { getUserId } = await import('@/lib/auth');
@@ -42,7 +44,7 @@ async function tenantCtx() {
     tenantId = ctx?.tenantId;
   }
   return { db, userId, tenantId };
-}
+});
 
 export async function getMyGroups(): Promise<GroupAccount[]> {
   const c = await tenantCtx();
