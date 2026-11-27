@@ -28,6 +28,14 @@ async function shrink(file: File): Promise<string> {
   }
 }
 
+/** "+254712345678" → "07•• ••• 678", so someone looking at the screen cannot read it (tester 27/11/26). */
+function hidePhone(phone: string | null): string {
+  const d = (phone ?? '').replace(/\D/g, '');
+  if (d.length < 6) return phone ?? '—';
+  const local = d.startsWith('254') ? `0${d.slice(3)}` : d;
+  return `${local.slice(0, 2)}•• ••• ${local.slice(-3)}`;
+}
+
 export function ProfileClient({ initial }: { initial: { name: string; phone: string | null; photo: string | null } }) {
   const router = useRouter();
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -37,6 +45,7 @@ export function ProfileClient({ initial }: { initial: { name: string; phone: str
   const [phonePin, setPhonePin] = useState('');
   const [pins, setPins] = useState({ current: '', next: '', repeat: '' });
   const [open, setOpen] = useState<'phone' | 'pin' | null>(null);
+  const [showPhone, setShowPhone] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const four = (v: string) => v.replace(/\D/g, '').slice(0, 4);
 
@@ -60,7 +69,12 @@ export function ProfileClient({ initial }: { initial: { name: string; phone: str
         </button>
         <div>
           <h1 className="display" style={{ fontWeight: 600, fontSize: 30, margin: 0 }}>{initial.name && initial.name !== 'Group founder' ? initial.name : 'Add your name'}</h1>
-          <p className="mr-meta" style={{ marginTop: 4 }}>Signs in with <span className="mono">{initial.phone ?? '—'}</span></p>
+          <p className="mr-meta" style={{ marginTop: 4 }}>Signs in with <span className="mono">{showPhone ? (initial.phone ?? '—') : hidePhone(initial.phone)}</span>{' '}
+            {initial.phone && (
+              <button type="button" className="pf-link" style={{ color: 'var(--forest)' }} onClick={() => setShowPhone((v) => !v)} aria-pressed={showPhone}>
+                {showPhone ? 'Hide' : 'Show'}
+              </button>
+            )}</p>
           {initial.photo && (
             <button type="button" className="pf-link" disabled={!!busy} onClick={() => run('rm', () => removeMyPhotoAction())}>Remove photo</button>
           )}

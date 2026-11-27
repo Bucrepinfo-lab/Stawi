@@ -1,5 +1,9 @@
 # Stawi — session memory / start-here
 
+## 27/11/26 — Same tester, two more: business ideas start from the group's real capital; profile phone hidden
+- `/match` started at a fixed KES 120,000 while the group had KES 75,650. It now starts from the group's recorded capital (sum of members' totals), names it ("Stawi Demo Chama has KES 75,650 recorded") and offers "Use this amount" when the member typed another figure. 120,000 stays only for someone with no group. The saved shortlist is now kept per group (`stawi.match.v1:<groupId>`).
+- My profile showed the full sign-in number. It now shows "07•• ••• 678" with a Show/Hide button. Judgement call: a small local `hidePhone` in the profile page rather than importing `maskPhone` from `pin-policy.ts`, which is server-side sign-in code (protected) and not exported for the browser.
+
 ## 27/11/26 — Tester (+254 789 334508): shortlist kept between tabs; "Money: what do I do?" on the member home
 - Business ideas (`/match`): the shortlist was only in page memory, so leaving the tab reset it to 0/3. It is now kept on the phone (`stawi.match.v1`, read back through `readSavedMatch` in `@stawi/core`, which drops malformed entries and never returns more than three). A line under the shortlist explains how to change it: × to take one off, ☆ to add another, and Write the funding proposal to edit name, cost and plan.
 - Judgement call: kept per phone, not shared with the group, because a shared shortlist would need a new table (database is a protected area). Ask the owner before making it a group list.

@@ -41,14 +41,21 @@ const tag: React.CSSProperties = {
 
 /** The phone keeps the shortlist between tabs (tester 27/11/26: it reset to 0/3). */
 const STORE_KEY = 'stawi.match.v1';
+const storeKey = (groupId: string | null) => (groupId ? `${STORE_KEY}:${groupId}` : STORE_KEY);
 
 function parseCapital(s: string): number {
   return parseInt(s.replace(/[^0-9]/g, ''), 10) || 0;
 }
 
-export function BusinessMatch() {
+export function BusinessMatch({
+  groupId = null,
+  groupCapitalCents = 0,
+  groupName = null,
+}: { groupId?: string | null; groupCapitalCents?: number; groupName?: string | null } = {}) {
+  // Start from the group's own capital; 120,000 only when there is no group yet.
+  const groupCapital = groupCapitalCents > 0 ? formatMoney(groupCapitalCents) : '';
   const [industry, setIndustry] = useState<Industry>('agri');
-  const [capital, setCapital] = useState('120,000');
+  const [capital, setCapital] = useState(groupCapital || '120,000');
   const [seed, setSeed] = useState(1);
   const [ventures, setVentures] = useState<Venture[]>([]);
   const [saved, setSaved] = useState<Venture[]>([]);
@@ -80,7 +87,7 @@ export function BusinessMatch() {
   useEffect(() => {
     let back: ReturnType<typeof readSavedMatch> = null;
     try {
-      back = readSavedMatch(JSON.parse(localStorage.getItem(STORE_KEY) ?? 'null'));
+      back = readSavedMatch(JSON.parse(localStorage.getItem(storeKey(groupId)) ?? 'null'));
     } catch {
       back = null;
     }
@@ -99,11 +106,18 @@ export function BusinessMatch() {
   useEffect(() => {
     if (!ready) return;
     try {
-      localStorage.setItem(STORE_KEY, JSON.stringify({ industry, capital, seed, saved }));
+      localStorage.setItem(storeKey(groupId), JSON.stringify({ industry, capital, seed, saved }));
     } catch {
       // Private mode or full storage: the page still works, it just forgets.
     }
-  }, [ready, industry, capital, seed, saved]);
+  }, [ready, industry, capital, seed, saved, groupId]);
+
+  function applyGroupCapital() {
+    setCapital(groupCapital);
+    const capCents = groupCapitalCents;
+    setVentures(generateVentures({ industry, capitalCents: capCents, seed }));
+    setNote(null);
+  }
 
   function generate() {
     run(seed);
@@ -178,6 +192,19 @@ export function BusinessMatch() {
             />
           </label>
         </div>
+
+        {groupCapital ? (
+          <p style={{ marginTop: 10, fontSize: 13, color: 'var(--ink-2)' }}>
+            {groupName ?? 'Your group'} has <strong className="mono">KES {groupCapital}</strong> recorded.{' '}
+            {parseCapital(capital) * 100 !== groupCapitalCents ? (
+              <button type="button" onClick={applyGroupCapital} style={{ ...btnGhost, padding: '4px 10px', fontSize: 12.5 }}>
+                Use this amount
+              </button>
+            ) : (
+              'The ideas below fit this amount.'
+            )}
+          </p>
+        ) : null}
 
         <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
           <button onClick={generate} style={btnPrimary}>
