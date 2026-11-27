@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { myRecordsCsv, phoneChange, photoProblem, pinChangeProblem } from '../src/profile';
+import { contactEmail, hideEmail, myRecordsCsv, phoneChange, photoProblem, pinChangeProblem } from '../src/profile';
 
 /** Owner 26/11/26: one personal place to fix name, photo, phone, PIN and keep records. */
 describe('my profile rules', () => {
@@ -26,5 +26,19 @@ describe('my profile rules', () => {
     expect(csv).toContain("Phone,'+254712345678");
     expect(csv).toContain('Umoja,05/09/26,"2,500",Cash,');
     expect(csv).toContain('Total,,"2,500"');
+  });
+});
+
+describe('my email (owner 27/11/26)', () => {
+  it('is optional, lower-cased, and an empty box removes it', () => {
+    expect(contactEmail(' Wanjiru@Gmail.com ')).toEqual({ ok: true, email: 'wanjiru@gmail.com' });
+    expect(contactEmail('')).toEqual({ ok: true, email: null });
+    expect(contactEmail('wanjiru').ok).toBe(false);
+    expect(contactEmail('a b@c.com').ok).toBe(false);
+  });
+  it('is hidden on screen until Show', () => {
+    expect(hideEmail('wanjiru@gmail.com')).toBe('wa•••@gmail.com');
+    expect(hideEmail('w@gmail.com')).toBe('w•••@gmail.com');
+    expect(hideEmail(null)).toBe('—');
   });
 });

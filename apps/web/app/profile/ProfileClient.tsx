@@ -3,7 +3,8 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FeedbackBanner, type Feedback } from '@/components/FeedbackBanner';
-import { changeMyPhoneAction, changeMyPinAction, removeMyPhotoAction, saveMyNameAction, saveMyPhotoAction } from './actions';
+import { changeMyPhoneAction, changeMyPinAction, removeMyPhotoAction, saveMyEmailAction, saveMyNameAction, saveMyPhotoAction } from './actions';
+import { hideEmail } from '@stawi/core';
 
 const initials = (n: string) => n.split(' ').filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase() || '·';
 
@@ -36,7 +37,7 @@ function hidePhone(phone: string | null): string {
   return `${local.slice(0, 2)}•• ••• ${local.slice(-3)}`;
 }
 
-export function ProfileClient({ initial }: { initial: { name: string; phone: string | null; photo: string | null } }) {
+export function ProfileClient({ initial }: { initial: { name: string; phone: string | null; photo: string | null; email: string | null } }) {
   const router = useRouter();
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -46,6 +47,8 @@ export function ProfileClient({ initial }: { initial: { name: string; phone: str
   const [pins, setPins] = useState({ current: '', next: '', repeat: '' });
   const [open, setOpen] = useState<'phone' | 'pin' | null>(null);
   const [showPhone, setShowPhone] = useState(false);
+  const [email, setEmail] = useState(initial.email ?? '');
+  const [showEmail, setShowEmail] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const four = (v: string) => v.replace(/\D/g, '').slice(0, 4);
 
@@ -106,6 +109,21 @@ export function ProfileClient({ initial }: { initial: { name: string; phone: str
         <form className="pf-row" onSubmit={(e) => { e.preventDefault(); void run('name', () => saveMyNameAction(name)); }}>
           <input className="mr-input" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} autoComplete="name" placeholder="e.g. Fredrick Gathii" required />
           <button type="submit" className="mr-btn go" disabled={busy === 'name'}>{busy === 'name' ? 'Saving…' : 'Save my name'}</button>
+        </form>
+      </section>
+
+      <section className="pf-card" aria-labelledby="pf-email">
+        <h2 id="pf-email">My email <span className="mr-meta" style={{ fontWeight: 400 }}>(optional)</span></h2>
+        <p className="mr-meta">
+          For receipts, statements and replies. You never sign in with it.{' '}
+          {initial.email ? (
+            <>Saved: <span className="mono">{showEmail ? initial.email : hideEmail(initial.email)}</span>{' '}
+              <button type="button" className="pf-link" style={{ color: 'var(--forest)' }} onClick={() => setShowEmail((v) => !v)} aria-pressed={showEmail}>{showEmail ? 'Hide' : 'Show'}</button></>
+          ) : null}
+        </p>
+        <form className="pf-row" onSubmit={(e) => { e.preventDefault(); void run('email', () => saveMyEmailAction(email)); }}>
+          <input className="mr-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={254} autoComplete="email" inputMode="email" placeholder="name@gmail.com" />
+          <button type="submit" className="mr-btn go" disabled={busy === 'email'}>{busy === 'email' ? 'Saving…' : email ? 'Save my email' : 'Remove my email'}</button>
         </form>
       </section>
 

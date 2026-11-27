@@ -757,3 +757,11 @@ model ProfilePhoto {
   version   String
   updatedAt DateTime @updatedAt
 }
+
+// My email (owner 27/11/26): optional, for receipts, statements and replies;
+// never used to sign in. Per user, like ProfilePhoto and AuthPin.
+model ProfileContact {
+  userId    String   @id
+  email     String?
+  updatedAt DateTime @updatedAt
+}

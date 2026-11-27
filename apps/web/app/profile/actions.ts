@@ -50,6 +50,22 @@ export async function saveMyPhotoAction(dataUrl: string): Promise<Result> {
   return { ok: true, message: 'Photo saved.' };
 }
 
+/** My email (owner 27/11/26): optional, never used to sign in. Empty removes it. */
+export async function saveMyEmailAction(email: string): Promise<Result> {
+  const ctx = await ready();
+  if ('error' in ctx) return { ok: false, error: ctx.error };
+  const { contactEmail } = await import('@stawi/core');
+  const checked = contactEmail(email);
+  if (!checked.ok) return { ok: false, error: checked.error };
+  await ctx.prisma.profileContact.upsert({
+    where: { userId: ctx.who.userId },
+    create: { userId: ctx.who.userId, email: checked.email },
+    update: { email: checked.email },
+  });
+  revalidatePath('/profile');
+  return { ok: true, message: checked.email ? 'Saved. Receipts and statements can go to this email.' : 'Your email was removed.' };
+}
+
 export async function removeMyPhotoAction(): Promise<Result> {
   const ctx = await ready();
   if ('error' in ctx) return { ok: false, error: ctx.error };

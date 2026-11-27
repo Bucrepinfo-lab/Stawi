@@ -67,3 +67,24 @@ export function myRecordsCsv(input: { name: string; phone: string | null; groups
   ];
   return lines.map((l) => l.join(',')).join('\r\n') + '\r\n';
 }
+
+/**
+ * My email (owner 27/11/26): optional, for receipts, statements and replies.
+ * Never used to sign in (that stays phone + PIN). An empty box removes it.
+ */
+export function contactEmail(raw: string): { ok: true; email: string | null } | { ok: false; error: string } {
+  const value = raw.trim().toLowerCase();
+  if (!value) return { ok: true, email: null };
+  if (value.length > 254 || !/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/.test(value)) {
+    return { ok: false, error: 'Enter an email like name@gmail.com, or leave it empty.' };
+  }
+  return { ok: true, email: value };
+}
+
+/** "wanjiru@gmail.com" → "wa•••@gmail.com", so someone looking at the screen cannot read it. */
+export function hideEmail(email: string | null | undefined): string {
+  if (!email) return '—';
+  const at = email.indexOf('@');
+  if (at < 1) return email;
+  return `${email.slice(0, Math.min(2, at))}•••${email.slice(at)}`;
+}
