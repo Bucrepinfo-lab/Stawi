@@ -25,7 +25,12 @@ const T = {
   officials: { en: 'Ask the officials', sw: 'Uliza viongozi' },
   allHint: { en: 'Everyone in the group can read this.', sw: 'Kila mwanachama anaweza kusoma hapa.' },
   askHint: { en: 'Only you and the officials can read this.', sw: 'Ni wewe na viongozi tu mnaoweza kusoma hapa.' },
-  pick: { en: 'Choose a member to read and answer.', sw: 'Chagua mwanachama usome na ujibu.' },
+  pick: { en: 'Answer a member below, or start a private message to anyone in the group.', sw: 'Jibu mwanachama hapa chini, au anza ujumbe wa faragha kwa yeyote kikundini.' },
+  start: { en: 'Write privately to a member', sw: 'Mwandikie mwanachama kwa faragha' },
+  choose: { en: 'Choose a member', sw: 'Chagua mwanachama' },
+  open: { en: 'Write', sw: 'Andika' },
+  privateTo: { en: 'Private with {name}. Only {name} and the officials can read this.', sw: 'Faragha na {name}. Ni {name} na viongozi tu wanaoweza kusoma hapa.' },
+  noMembers: { en: 'Add members to the group first.', sw: 'Ongeza wanachama kwenye kikundi kwanza.' },
   nobody: { en: 'No member has written to the officials yet.', sw: 'Bado hakuna mwanachama aliyewaandikia viongozi.' },
   empty: { en: 'No messages yet. Write the first one.', sw: 'Bado hakuna ujumbe. Andika wa kwanza.' },
   write: { en: 'Write a message', sw: 'Andika ujumbe' },
@@ -74,6 +79,7 @@ export function MessagesClient({ groups, initialId }: { groups: { id: string; na
   const count = useRef(0);
   const [blocked, setBlocked] = useState<string[]>([]);
   const [asking, setAsking] = useState<{ id: string; name: string } | null>(null);
+  const [pickMember, setPickMember] = useState('');
 
   // Blocks live on this phone only, one list per group.
   useEffect(() => {
@@ -159,6 +165,21 @@ export function MessagesClient({ groups, initialId }: { groups: { id: string; na
       <p className="msg-hint">{channel === 'ALL' ? T.allHint[lang] : official ? T.pick[lang] : T.askHint[lang]}</p>
 
       {pickingThread ? (
+        <>
+        <form className="msg-start s-card plain" onSubmit={(e) => { e.preventDefault(); if (!pickMember) return; setThread(pickMember); setView(null); track('cta', 'message-start-private'); }}>
+          <label htmlFor="msg-start-who" className="msg-start-label">{T.start[lang]}</label>
+          {(view?.members ?? []).length === 0 ? (
+            <p className="msg-hint">{T.noMembers[lang]}</p>
+          ) : (
+            <div className="msg-start-row">
+              <select id="msg-start-who" className="msg-group" value={pickMember} onChange={(e) => setPickMember(e.target.value)}>
+                <option value="">{T.choose[lang]}</option>
+                {(view?.members ?? []).map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+              <button type="submit" className="msg-send" disabled={!pickMember}>{T.open[lang]}</button>
+            </div>
+          )}
+        </form>
         <ul className="msg-threads">
           {(view?.threads ?? []).length === 0 && <li className="msg-empty">{T.nobody[lang]}</li>}
           {(view?.threads ?? []).map((t) => (
@@ -171,10 +192,16 @@ export function MessagesClient({ groups, initialId }: { groups: { id: string; na
             </li>
           ))}
         </ul>
+        </>
       ) : (
         <>
           {channel === 'OFFICIALS' && official && (
-            <button type="button" className="msg-back" onClick={() => { setThread(null); setView(null); }}>← {T.back[lang]}</button>
+            <>
+              <button type="button" className="msg-back" onClick={() => { setThread(null); setView(null); setPickMember(''); }}>← {T.back[lang]}</button>
+              {thread && (
+                <p className="msg-hint">{T.privateTo[lang].replaceAll('{name}', (view?.members ?? []).find((m) => m.id === thread)?.name ?? '…')}</p>
+              )}
+            </>
           )}
           <div className="msg-list s-card plain" aria-live="polite">
             {view && view.messages.length === 0 && <p className="msg-empty">{T.empty[lang]}</p>}
@@ -210,7 +237,7 @@ export function MessagesClient({ groups, initialId }: { groups: { id: string; na
           )}
           <div className="msg-compose">
             <textarea value={text} maxLength={MESSAGE_MAX_CHARS} rows={2} aria-label={T.write[lang]}
-              placeholder={channel === 'ALL' ? T.write[lang] : official ? T.answer[lang] : T.ask[lang]}
+              placeholder={channel === 'ALL' ? T.write[lang] : official ? T.write[lang] : T.ask[lang]}
               onChange={(e) => setText(e.target.value)} />
             <button type="button" className="msg-send" disabled={busy || !text.trim()} onClick={send}>{T.send[lang]}</button>
           </div>

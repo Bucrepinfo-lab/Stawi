@@ -1,5 +1,8 @@
 # Stawi — session memory / start-here
 
+## 27/11/26 — Officials can start a private message to any member (owner screenshot: "no area to choose a member")
+- "Ask the officials" was only an inbox for officials: they could open a conversation only after a member wrote first. It now opens with "Write privately to a member": a list of every other member, by name (no numbers), and Write. The conversation is the same private thread a member's own question uses (only that member and the officials read it), so `canSeeMessage` and `threadForNewMessage` are unchanged; the server lets an official open a thread with any member of the group (`lib/messages.ts`, `members` in the view).
+
 ## 27/11/26 — My email on My profile (owner: research, decide and customise)
 - Optional email for receipts, statements and replies, never used to sign in (phone + PIN stays). Hidden on screen ("wa•••@gmail.com") with Show / Hide, editable, an empty box removes it.
 - New per-user table `ProfileContact { userId, email, updatedAt }` like ProfilePhoto and AuthPin (kept out of Membership; no tenant column, so no RLS policy, same as those two). Additive `db push` on release.

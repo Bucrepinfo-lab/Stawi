@@ -30,6 +30,8 @@ export interface MessagesView {
   messages: MessageView[];
   /** Officials only, on "Ask the officials": who has written, unanswered first. */
   threads: (ThreadSummary & { name: string })[];
+  /** Officials only, on "Ask the officials": every other member, by name, to start a private message (tester/owner 27/11/26). No numbers. */
+  members: { id: string; name: string }[];
 }
 
 /** Sender id of notices Stawi itself posts (daily alerts): shown as "Stawi". */
@@ -97,12 +99,18 @@ export async function readMessages(groupId: string, channel: MessageChannel, thr
   const isOfficial = (id: string) => ctx.showPosts && RECORD_EDITOR_ROLES.has((ctx.people.get(id)?.role ?? 'MEMBER') as GroupRole);
 
   let threads: MessagesView['threads'] = [];
+  let members: MessagesView['members'] = [];
   let shown = rows;
   let openThread: string | null = null;
   if (channel === 'OFFICIALS') {
     if (ctx.official) {
       threads = summariseThreads(rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }))).map((t) => ({ ...t, name: name(t.memberId) }));
-      openThread = thread && threads.some((t) => t.memberId === thread) ? thread : null;
+      members = [...ctx.people.values()]
+        .filter((p) => p.id !== ctx.me.id)
+        .map((p) => ({ id: p.id, name: p.fullName?.trim() || 'Member' }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      // An official may open a conversation with any member of this group, not only one who wrote first.
+      openThread = thread && (threads.some((t) => t.memberId === thread) || (thread !== ctx.me.id && ctx.people.has(thread))) ? thread : null;
       shown = openThread ? rows.filter((r) => r.threadMemberId === openThread) : [];
     } else {
       openThread = ctx.me.id;
@@ -116,6 +124,7 @@ export async function readMessages(groupId: string, channel: MessageChannel, thr
       channel,
       thread: openThread,
       threads,
+      members,
       messages: shown.slice(-MESSAGES_PAGE).map((r) => ({
         id: r.id,
         body: r.body,

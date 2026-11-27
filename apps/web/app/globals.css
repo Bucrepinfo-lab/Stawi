@@ -806,3 +806,9 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
   .money-how-card { transition: none; }
   .money-how-card:hover, .money-how-card:focus-visible { transform: none; }
 }
+
+/* Officials start a private message to any member (owner 27/11/26). */
+.msg-start { display: grid; gap: 8px; padding: 14px; margin-bottom: 12px; }
+.msg-start-label { font-weight: 800; font-size: 15px; color: var(--ink); }
+.msg-start-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.msg-start-row .msg-group { flex: 1 1 200px; min-width: 0; min-height: 44px; }
