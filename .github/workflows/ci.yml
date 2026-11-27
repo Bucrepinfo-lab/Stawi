@@ -1,10 +1,19 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
+  # Owner audit 27/11/26 (Actions bill): pull requests only. Every merge is a
+  # squash of a PR whose CI passed at its exact head, and the Fly deploy on
+  # main runs on its own, so re-running CI on the push to main repeated the
+  # same checks (49 runs in a week). Docs-only changes skip CI; a newer push
+  # to the same PR cancels the older run. Run it on main by hand if wanted.
   pull_request:
     branches: [main]
+    paths-ignore: ["**/*.md", "docs/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build-test:

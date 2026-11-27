@@ -1,5 +1,8 @@
 # Stawi — session memory / start-here
 
+## 27/11/26 — Actions trimmed (owner: trim the bill)
+- CI ran on every PR push and again on the push to main (49 duplicate runs in a week). Now pull requests only (plus by hand), docs-only changes skipped, superseded PR runs cancelled. Deploy and the PR image build also skip docs-only changes.
+
 ## 27/11/26 — Moderation no longer blocks everyday chama sentences (owner "go ahead")
 - Found while testing: `moderateText` blocked "We will slaughter three goats", "burn charcoal", "kill pests in the maize", "eliminate the debt", "exterminate rats" (incitement/hate) and "I hate mosquitoes", because the patterns accepted any object. Minutes (now often spoken), messages, proposals and names go through it.
 - Fix (`packages/core/src/moderation.ts`): violence and hate patterns need a human target (them / those people / tribes, clans, communities, members, named ethnic groups…), plus "burn their houses / the church…" and "lynch". The existing tests pass unchanged; new tests both ways.

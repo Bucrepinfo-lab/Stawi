@@ -4,10 +4,13 @@ name: Deploy (Fly.io)
 # the owner adds the FLY_API_TOKEN repo secret. PRs only build the Docker image
 # so a broken Dockerfile is caught before merge.
 on:
+  # Docs-only changes neither rebuild the image on a PR nor redeploy (owner audit 27/11/26).
   push:
     branches: [main]
+    paths-ignore: ["**/*.md", "docs/**"]
   pull_request:
     branches: [main]
+    paths-ignore: ["**/*.md", "docs/**"]
   workflow_dispatch: {}
 
 concurrency:
