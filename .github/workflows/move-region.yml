@@ -1,0 +1,53 @@
+name: Move the app to London (manual, one-off)
+
+# Owner 27/11/26: the Supabase database and sign-in run in eu-west-1 (Ireland);
+# the app ran in fra (Frankfurt). London (lhr) is about half the distance, so
+# every query and sign-in check is quicker. Live stays live:
+#   1. start one machine in lhr with the current image,
+#   2. wait until it is started and its /api/health check passes,
+#   3. only then remove the fra machines.
+# If step 2 never passes, the job stops and fra keeps serving.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: move-region
+  cancel-in-progress: false
+
+jobs:
+  move:
+    runs-on: ubuntu-latest
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      APP: stawi
+    steps:
+      - name: Check Fly token
+        run: test -n "$FLY_API_TOKEN" || { echo "FLY_API_TOKEN not set"; exit 1; }
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Machines before
+        run: flyctl machine list -a "$APP"
+      - name: Start one machine in London
+        run: flyctl scale count 1 --region lhr -a "$APP" --yes
+      - name: Wait until London is healthy
+        run: |
+          for i in $(seq 1 40); do
+            json=$(flyctl machine list -a "$APP" --json)
+            ok=$(echo "$json" | jq '[.[] | select(.region=="lhr" and .state=="started" and ((.checks // []) | length > 0) and all((.checks // [])[]; .status=="passing"))] | length')
+            echo "attempt $i: healthy London machines = $ok"
+            if [ "$ok" -ge 1 ]; then exit 0; fi
+            sleep 15
+          done
+          echo "London never became healthy; Frankfurt keeps serving. Nothing removed."
+          exit 1
+      - name: Remove the Frankfurt machines
+        run: flyctl scale count 0 --region fra -a "$APP" --yes
+      - name: Machines after
+        run: flyctl machine list -a "$APP"
+      - name: Public health
+        run: |
+          for i in $(seq 1 10); do
+            if curl -fsS https://getstawi.com/api/health; then echo; exit 0; fi
+            sleep 10
+          done
+          exit 1

@@ -1,5 +1,8 @@
 # Stawi — session memory / start-here
 
+## 27/11/26 — Moving the app to London (lhr), next to Supabase (eu-west-1)
+- Supabase (database + sign-in) is in eu-west-1 (Ireland); the app ran in fra. `fly.toml` primary_region is now lhr, and the one-off manual workflow "Move the app to London" starts one lhr machine, waits until it is started with its health check passing, then removes the fra machines (fra keeps serving if lhr never turns healthy). Owner approved ("fix this suitably").
+
 ## 27/11/26 — Undo, clear and delete-and-restart (owner: "somebody could be talking of something out of context")
 - Speak-or-type box (`DictateBox`, used by Write it for me and the minutes): "Undo last part" takes back the last spoken part (up to 10 steps), "Clear all" needs a second tap within 4 s and can itself be undone. English and Kiswahili.
 - Write it for me result: "Undo my changes" returns to what Stawi wrote; "Delete and start again" (second tap to confirm) clears the document and the points and goes back to step 1. Nothing is stored, so nothing is left behind.
