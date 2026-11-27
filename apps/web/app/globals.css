@@ -865,3 +865,10 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 .dc-tool.danger.armed, .mr-btn.danger.armed { background: var(--clay); color: #fff; border-color: var(--clay); }
 .dc-tool:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .dc-tool { transition: none; } .dc-tool:hover { transform: none; } }
+
+/* Share row as an even grid (owner 28/11/26: buttons of different widths wrapped raggedly). */
+.share-bar { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); align-items: stretch; width: 100%; min-width: 0; }
+.share-bar > strong, .share-bar > p, .share-bar > label { grid-column: 1 / -1; }
+.share-bar .share-btn { width: 100%; justify-content: center; text-align: center; padding: 10px 8px; white-space: nowrap; }
+.share-bar > button.share-btn:first-of-type { grid-column: 1 / -1; order: 1; }
+.share-bar > p, .share-bar > label { order: 2; }
