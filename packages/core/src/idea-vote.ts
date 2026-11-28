@@ -82,3 +82,14 @@ export function confirmNote(t: IdeaTally, title: string): string {
   if (!t.majority) return 'It leads, but has less than half of the votes cast.';
   return `${t.rows.find((r) => r.title === title)?.votes ?? 0} of ${t.voted} votes. The group has spoken.`;
 }
+
+/**
+ * Why an open vote cannot be closed without a choice, or null. Any official
+ * who may open a vote may also close one (owner 28/11/26), e.g. a test vote
+ * or a list the group no longer wants. Votes already cast stay in the record.
+ */
+export function closeVoteProblem(input: { role: string | null; open: boolean }): string | null {
+  if (!canPresentIdeas(input.role)) return 'Only the chairperson, secretary or treasurer can close a vote.';
+  if (!input.open) return 'This vote is already closed.';
+  return null;
+}

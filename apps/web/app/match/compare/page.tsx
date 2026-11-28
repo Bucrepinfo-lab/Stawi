@@ -44,10 +44,13 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
         chosenTitle: list.chosenTitle,
         chosenOn: list.chosenAt ? list.chosenAt.toISOString().slice(0, 10) : null,
         chosenBy: chosenBy ? chosenBy.fullName : null,
-        replaced: !!list.closedAt && !list.chosenTitle,
+        // Closed with no choice: replaced by a newer list, or closed by an official.
+        replaced: !!list.closedAt && !list.chosenTitle && !!(await prisma.ideaShortlist.findFirst({ where: { groupId: list.groupId, createdAt: { gt: list.createdAt } }, select: { id: true } })),
+        closedNoChoice: !!list.closedAt && !list.chosenTitle,
         tally: ideaTally(titles, list.votes, memberCount),
         myTitle: list.votes.find((v) => mine.includes(v.membershipId))?.title ?? null,
         canConfirm: canConfirmIdea(role),
+        canClose: canPresentIdeas(role),
       };
     } else if (groupId) {
       const open = await prisma.ideaShortlist.findFirst({ where: { groupId, closedAt: null }, orderBy: { createdAt: 'desc' }, select: { id: true } });
@@ -63,7 +66,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
     : Number.isSafeInteger(linkCap) && linkCap > 0 && linkCap < 1e13 ? linkCap : 0;
   const comparison = compareIdeas(ideas, capitalCents);
   let canPresent = false;
-  if (groupId && !vote && process.env.DATABASE_URL) {
+  if (groupId && (!vote || vote.closedNoChoice) && process.env.DATABASE_URL) {
     const { myGroupRole } = await import('@/lib/group-access');
     canPresent = canPresentIdeas(await myGroupRole(groupId));
   }

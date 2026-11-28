@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canConfirmIdea, canPresentIdeas, castVoteProblem, confirmIdeaProblem, confirmNote, ideaTally } from '../src';
+import { closeVoteProblem, canConfirmIdea, canPresentIdeas, castVoteProblem, confirmIdeaProblem, confirmNote, ideaTally } from '../src';
 
 const T = ['Egg supply route', 'Car wash bay', 'Cargo pickup hire'];
 
@@ -55,5 +55,13 @@ describe('idea vote', () => {
     const t = ideaTally(T, [{ membershipId: 'a', title: T[0]! }, { membershipId: 'b', title: T[0]! }], 3);
     expect(confirmNote(t, T[1]!)).toMatch(/not the idea with the most votes/);
     expect(confirmNote(t, T[0]!)).toMatch(/2 of 2 votes/);
+  });
+});
+
+describe('closing a vote without a choice', () => {
+  it('officials who can open a vote can close it; members cannot; closed stays closed', () => {
+    expect(closeVoteProblem({ role: 'TREASURER', open: true })).toBeNull();
+    expect(closeVoteProblem({ role: 'MEMBER', open: true })).toMatch(/Only the chairperson, secretary or treasurer/);
+    expect(closeVoteProblem({ role: 'CHAIRMAN', open: false })).toMatch(/already closed/);
   });
 });
