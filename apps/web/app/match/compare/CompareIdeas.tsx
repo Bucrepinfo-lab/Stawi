@@ -354,7 +354,7 @@ export function CompareIdeas({
             )}
             {askClose && (
               <div className="ci-ask" role="alertdialog" aria-labelledby="close-q">
-                <p id="close-q"><b>Close this vote without choosing?</b> Members can no longer vote on it. The {vote.tally.voted} vote{vote.tally.voted === 1 ? '' : 's'} cast stay in the record, and you can open a new vote any time.</p>
+                <p id="close-q"><b>Close this vote without choosing?</b> Members can no longer vote on it. {vote.tally.voted === 0 ? 'Nobody has voted yet' : vote.tally.voted === 1 ? 'The 1 vote cast stays in the record' : `The ${vote.tally.voted} votes cast stay in the record`}, and you can open a new vote any time.</p>
                 <div className="ci-actions">
                   <button type="button" className="mr-btn go" disabled={busy === 'close'} onClick={closeVote}>{busy === 'close' ? 'Closing…' : 'Yes, close it'}</button>
                   <button type="button" className="mr-btn" onClick={() => setAskClose(false)}>Keep it open</button>
