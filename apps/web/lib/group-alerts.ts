@@ -110,3 +110,15 @@ export async function alertByPhoneKey(key: string, alert: import('@stawi/core').
     console.error('[alerts] phone', err instanceof Error ? err.message : err);
   }
 }
+
+/** Alert every member who has not left (e.g. a vote opened or a choice confirmed). Never throws. */
+export async function alertGroupMembers(groupId: string, alert: import('@stawi/core').GroupAlert, exceptUserId?: string | null): Promise<void> {
+  try {
+    if (!process.env.DATABASE_URL) return;
+    const g = await groupMembers(groupId);
+    if (!g) return;
+    await sendAlert(alertUserIds({ members: g.members, exceptUserIds: [exceptUserId] }), alert);
+  } catch (err) {
+    console.error('[alerts] group', err instanceof Error ? err.message : err);
+  }
+}

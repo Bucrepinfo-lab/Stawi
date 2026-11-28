@@ -110,6 +110,7 @@ model Group {
   contributionWitnesses ContributionWitness[]
   minutesStandIns MinutesStandIn[]
   tableRounds   TableRound[]
+  ideaShortlists IdeaShortlist[]
   contributionChecks    ContributionCheck[]
   corrections           ContributionCorrection[]
   correctionDecisions   CorrectionDecision[]
@@ -986,5 +987,41 @@ model BizRestockRequest {
 
   @@index([businessId, createdAt])
   @@index([supplierPhoneKey, createdAt])
+  @@index([groupId])
+}
+
+// ───────── Group vote on shortlisted business ideas (owner 28/11/26) ─────────
+// An official puts 2–3 researched ideas to the vote; one vote per member;
+// the chairperson or secretary confirms the choice. Additive only.
+model IdeaShortlist {
+  id                    String    @id @default(cuid())
+  group                 Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId               String
+  // string[]: "title|startupCents|marginPct|risk|industry", re-read with ideasFromParams
+  ideas                 Json
+  capitalCents          Int       @default(0)
+  createdByMembershipId String
+  createdAt             DateTime  @default(now())
+  chosenTitle           String?
+  chosenAt              DateTime?
+  chosenByMembershipId  String?
+  closedAt              DateTime?
+
+  votes IdeaVote[]
+
+  @@index([groupId, closedAt])
+}
+
+model IdeaVote {
+  id           String        @id @default(cuid())
+  shortlist    IdeaShortlist @relation(fields: [shortlistId], references: [id], onDelete: Cascade)
+  shortlistId  String
+  groupId      String // repeated for the per-group row rule (rls.sql)
+  membershipId String
+  title        String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([shortlistId, membershipId])
   @@index([groupId])
 }
