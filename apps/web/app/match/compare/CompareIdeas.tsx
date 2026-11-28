@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { BEFORE_YOU_DECIDE, IDEA_CRITERIA, formatMoney, type IdeaComparison, type IdeaStudy } from '@stawi/core';
+import { useRouter } from 'next/navigation';
+import { BEFORE_YOU_DECIDE, IDEA_CRITERIA, confirmNote, formatMoney, type IdeaComparison, type IdeaStudy, type IdeaTally } from '@stawi/core';
 import { researchIdeasOnWebAction } from '../actions';
+import { castIdeaVoteAction, confirmIdeaChoiceAction, presentIdeasForVoteAction } from '../vote-actions';
 import type { WebResearch } from '@/lib/idea-research-ai';
 
 const VERDICT: Record<IdeaStudy['verdict'], { label: string; tone: string; ink: string }> = {
@@ -11,6 +13,20 @@ const VERDICT: Record<IdeaStudy['verdict'], { label: string; tone: string; ink: 
   weakest: { label: 'Weakest of the three', tone: 'var(--bone-2, #efe8d9)', ink: 'var(--ink)' },
 };
 
+export interface VoteView {
+  id: string;
+  open: boolean;
+  chosenTitle: string | null;
+  chosenOn: string | null;
+  chosenBy: string | null;
+  /** Closed by a newer list, with no choice. */
+  replaced: boolean;
+  tally: IdeaTally;
+  myTitle: string | null;
+  canConfirm: boolean;
+}
+
+const ddmmyy = (iso: string | null) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(2, 4)}` : '');
 const kes = (c: number) => `KES ${formatMoney(Math.max(0, c))}`;
 const months = (m: number | null) => (m === null ? 'Does not pay back' : m < 1 ? 'Under a month' : `About ${Math.round(m)} month${Math.round(m) === 1 ? '' : 's'}`);
 
@@ -21,6 +37,9 @@ export function CompareIdeas({
   groupId,
   groupName,
   webResearch,
+  vote = null,
+  canPresent = false,
+  openVoteId = null,
 }: {
   comparison: IdeaComparison;
   params: string[];
@@ -28,9 +47,16 @@ export function CompareIdeas({
   groupId: string | null;
   groupName: string | null;
   webResearch: boolean;
+  vote?: VoteView | null;
+  canPresent?: boolean;
+  openVoteId?: string | null;
 }) {
   const { studies } = comparison;
-  const [chosen, setChosen] = useState<string | null>(null);
+  const router = useRouter();
+  const [chosen, setChosen] = useState<string | null>(vote?.chosenTitle ?? null);
+  const [busy, setBusy] = useState('');
+  const [voteError, setVoteError] = useState('');
+  const [pick, setPick] = useState<string>(vote?.tally.leader ?? studies[0]?.venture.title ?? '');
   const [web, setWeb] = useState<WebResearch | null>(null);
   const [webBusy, setWebBusy] = useState(false);
   const [webError, setWebError] = useState('');
@@ -62,6 +88,35 @@ export function CompareIdeas({
     setWebBusy(false);
     if (out.ok) setWeb(out.research);
     else setWebError(out.error);
+  }
+
+  async function openVote() {
+    if (!groupId) return;
+    setBusy('present');
+    setVoteError('');
+    const out = await presentIdeasForVoteAction(groupId, params, capitalCents).catch(() => ({ ok: false as const, error: 'That did not go through. Try again.' }));
+    setBusy('');
+    if (!out.ok) return setVoteError(out.error);
+    router.push(`/match/compare?vote=${encodeURIComponent(out.id ?? '')}&group=${encodeURIComponent(groupId)}`);
+  }
+  async function castVote(title: string) {
+    if (!vote) return;
+    setBusy(title);
+    setVoteError('');
+    const out = await castIdeaVoteAction(vote.id, title).catch(() => ({ ok: false as const, error: 'Your vote did not go through. Try again.' }));
+    setBusy('');
+    if (!out.ok) return setVoteError(out.error);
+    router.refresh();
+  }
+  async function confirmChoice() {
+    if (!vote || !pick) return;
+    setBusy('confirm');
+    setVoteError('');
+    const out = await confirmIdeaChoiceAction(vote.id, pick).catch(() => ({ ok: false as const, error: 'That did not go through. Try again.' }));
+    setBusy('');
+    if (!out.ok) return setVoteError(out.error);
+    setChosen(pick);
+    router.refresh();
   }
 
   async function copyLink() {
@@ -227,12 +282,76 @@ export function CompareIdeas({
       {/* Decide */}
       <section className="ci-card ci-decide" id="decide">
         <h2 className="display ci-h2">Now decide</h2>
-        <p className="mr-meta">Three ways forward. Most groups present the ideas first, then choose at the meeting.</p>
+        {vote?.chosenTitle ? (
+          <div className="ci-chosen">
+            <p className="ci-kicker">Confirmed</p>
+            <h3 className="display">{groupName ?? 'The group'} chose {vote.chosenTitle}</h3>
+            <p className="mr-meta">Confirmed{vote.chosenBy ? ` by ${vote.chosenBy}` : ''} on {ddmmyy(vote.chosenOn)}, after {vote.tally.voted} of {vote.tally.memberCount} members voted. The next steps are below.</p>
+          </div>
+        ) : vote?.replaced ? (
+          <p className="ci-note">This vote was replaced by a newer list. Open the latest vote from the alert or the Ideas page.</p>
+        ) : vote?.open ? (
+          <div className="ci-vote">
+            <h3 className="display">Vote: which business should we start?</h3>
+            <p className="mr-meta">
+              {vote.tally.voted} of {vote.tally.memberCount} members have voted ({vote.tally.turnoutPct}%). You can change your vote until the chairperson or secretary confirms the choice.
+            </p>
+            <ul className="ci-ballot">
+              {vote.tally.rows.map((row) => {
+                const isMine = vote.myTitle === row.title;
+                return (
+                  <li key={row.title} className={isMine ? 'mine' : ''}>
+                    <div className="ci-ballot-top">
+                      <b>{row.title}</b>
+                      <span className="mono">{row.votes} vote{row.votes === 1 ? '' : 's'}</span>
+                    </div>
+                    <div className="ci-bar" aria-hidden><span style={{ width: `${row.pct}%` }} /></div>
+                    <button type="button" className={`mr-btn${isMine ? ' go' : ''}`} disabled={!!busy || isMine} onClick={() => castVote(row.title)}>
+                      {busy === row.title ? 'Saving…' : isMine ? 'Your vote' : vote.myTitle ? 'Change my vote to this' : 'Vote for this'}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            {vote.tally.tie && <p className="ci-note">It is a tie. Talk it through at the meeting, or ask members who have not voted.</p>}
+            {vote.canConfirm && (
+              <div className="ci-confirm-box">
+                <h4>Confirm the group&rsquo;s choice</h4>
+                <div className="ci-pick" role="radiogroup" aria-label="The idea to confirm">
+                  {vote.tally.rows.map((row) => (
+                    <label key={row.title} className={pick === row.title ? 'on' : ''}>
+                      <input type="radio" name="confirm" checked={pick === row.title} onChange={() => setPick(row.title)} />
+                      {row.title} <span className="mr-meta">({row.votes})</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="mr-meta" style={{ margin: '8px 0' }}>{confirmNote(vote.tally, pick)}</p>
+                <button type="button" className="mr-btn go" disabled={!!busy || !pick} onClick={confirmChoice}>
+                  {busy === 'confirm' ? 'Confirming…' : `Confirm ${pick} as our business`}
+                </button>
+              </div>
+            )}
+            {voteError && <p className="ci-err" role="alert">{voteError}</p>}
+          </div>
+        ) : (
+          <p className="mr-meta">Three ways forward. Most groups present the ideas first, then choose at the meeting.</p>
+        )}
+        {openVoteId && !vote && (
+          <p className="ci-note">Your group has a vote open. <a href={`/match/compare?vote=${encodeURIComponent(openVoteId)}&group=${encodeURIComponent(groupId ?? '')}`}>Go and vote</a></p>
+        )}
+        {!vote?.chosenTitle && (
         <div className="ci-paths">
           <div className="ci-path">
-            <h3>Present the {n} ideas to the group</h3>
-            <p>Send this page to every member so they read the reasons before the meeting, then decide together.</p>
-            <a className="mr-btn go" href="https://wa.me/" target="_blank" rel="noopener noreferrer" onClick={(e) => { (e.currentTarget as HTMLAnchorElement).href = `https://wa.me/?text=${encodeURIComponent(shareText())}`; }}>
+            <h3>{vote?.open ? 'Bring in every member' : `Present the ${n} ideas to the group`}</h3>
+            <p>{vote?.open ? 'Send the vote to members on WhatsApp so nobody is left out.' : canPresent ? 'Open a vote in Stawi: every member gets an alert, reads the reasons and taps a choice.' : 'Send this page to every member so they read the reasons before the meeting, then decide together.'}</p>
+            {canPresent && !vote && (
+              <>
+                <button type="button" className="mr-btn go" disabled={!!busy} onClick={openVote}>{busy === 'present' ? 'Opening…' : 'Open a vote in Stawi'}</button>
+                {openVoteId && <small className="mr-meta">This replaces the vote that is open now.</small>}
+                {voteError && <small className="ci-err" role="alert">{voteError}</small>}
+              </>
+            )}
+            <a className={`mr-btn${canPresent && !vote ? '' : ' go'}`} href="https://wa.me/" target="_blank" rel="noopener noreferrer" onClick={(e) => { (e.currentTarget as HTMLAnchorElement).href = `https://wa.me/?text=${encodeURIComponent(shareText())}`; }}>
               Send on WhatsApp
             </a>
             <button type="button" className="mr-btn" onClick={copyLink}>{copied ? 'Copied' : 'Copy the message'}</button>
@@ -242,6 +361,7 @@ export function CompareIdeas({
             <p>Not happy with one of them? Take it off the shortlist and save another, then research again.</p>
             <a className="mr-btn" href={backToIdeas}>Change the shortlist</a>
           </div>
+          {!vote && (
           <div className="ci-path">
             <h3>The group has chosen</h3>
             <p>Agreed at a meeting? Pick the idea to confirm it and take the next steps.</p>
@@ -254,10 +374,12 @@ export function CompareIdeas({
               ))}
             </div>
           </div>
+          )}
         </div>
+        )}
         {choice && (
           <div className="ci-confirm" aria-live="polite">
-            <h3 className="display">{groupName ?? 'The group'} chose {choice.venture.title}</h3>
+            <h3 className="display">{vote?.chosenTitle ? 'Next steps' : `${groupName ?? 'The group'} chose ${choice.venture.title}`}</h3>
             {choice.verdict !== 'best' && (
               <p className="mr-meta">Stawi scored {studies[0]!.venture.title} higher. That is fine if the group has good reasons, such as the skills, the place or a buyer already waiting. Write the reasons in the minutes.</p>
             )}
@@ -358,4 +480,14 @@ const css = `
 .ci-web p{margin:0 0 6px;font-size:13.5px;line-height:1.5}
 .ci-sources{font-size:12.5px;padding-left:18px;word-break:break-word}
 .ci-err{color:var(--danger);font-size:13.5px;margin:8px 0 0}
+.ci-vote,.ci-chosen{border:2px solid var(--forest-deep);border-radius:14px;padding:14px;margin-top:10px}
+.ci-vote h3,.ci-chosen h3{font-size:19px;margin:0 0 4px}
+.ci-ballot{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:10px}
+.ci-ballot li{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.ci-ballot li.mine{border-color:var(--forest-deep);background:rgba(31,77,58,.05)}
+.ci-ballot-top{display:flex;justify-content:space-between;gap:8px}
+.ci-ballot .mr-btn{width:100%;justify-content:center}
+.ci-confirm-box{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.ci-confirm-box h4{margin:0 0 8px;font-size:15px}
+.ci-chosen{background:rgba(31,77,58,.06)}
 `;

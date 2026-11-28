@@ -17,6 +17,17 @@ export default async function MatchPage({ searchParams }: { searchParams: Promis
   const active = groups.find((g) => g.id === groupId);
   const groupCapitalCents = active ? active.members.reduce((t, m) => t + m.totalCents, 0) : 0;
   const groupName = active?.name ?? null;
+  // A vote the group has open (owner 28/11/26): every member should see it here.
+  let openVote: { id: string; voted: boolean } | null = null;
+  if (groupId && process.env.DATABASE_URL) {
+    const { prisma } = await import('@stawi/db');
+    const { myMembershipIds } = await import('@/lib/group-access');
+    const [open, mine] = await Promise.all([
+      prisma.ideaShortlist.findFirst({ where: { groupId, closedAt: null }, orderBy: { createdAt: 'desc' }, select: { id: true, votes: { select: { membershipId: true } } } }),
+      myMembershipIds(groupId),
+    ]);
+    if (open) openVote = { id: open.id, voted: open.votes.some((v) => mine.includes(v.membershipId)) };
+  }
   return (
     <main className="pillar-2" style={{ maxWidth: 920, margin: '0 auto', padding: '28px 24px 80px' }}>
       <BackLink fallback="/dashboard" />
@@ -39,6 +50,15 @@ export default async function MatchPage({ searchParams }: { searchParams: Promis
         see the strongest ideas from every industry. Save three, then let Stawi research and rank them
         before the group decides.
       </p>
+      {openVote && groupId && (
+        <a
+          href={`/match/compare?vote=${encodeURIComponent(openVote.id)}&group=${encodeURIComponent(groupId)}`}
+          style={{ display: 'block', marginTop: 16, padding: 14, borderRadius: 14, background: 'var(--forest-deep)', color: 'var(--bone)', textDecoration: 'none' }}
+        >
+          <strong style={{ fontSize: 16 }}>{openVote.voted ? 'Your group is voting. You have voted.' : 'Your group is voting on its business. Vote now.'}</strong>
+          <span style={{ display: 'block', fontSize: 13, opacity: 0.9, marginTop: 4 }}>See the ranked ideas, the reasons, and how members are voting.</span>
+        </a>
+      )}
       <BusinessMatch groupId={groupId ?? null} groupCapitalCents={groupCapitalCents} groupName={groupName} />
       <p className="mr-meta" style={{ marginTop: 10 }}>
         Chosen your business and need more money than your savings? Tap <strong>Write the funding proposal</strong> on it in your shortlist, or <a href={`/proposal${groupId ? `?group=${encodeURIComponent(groupId)}` : ''}`}>write one for any business</a>.
