@@ -12,8 +12,8 @@
  */
 import { revalidatePath } from 'next/cache';
 import {
-  assertClean, bizEntryProblem, closeDay, costOfSale, dayIsLocked, balancesOf, journal,
-  EXPENSE_CATEGORIES, type BizChannel, type BizEntry, type BizKind, type BizLevel, type ExpenseCategory, type BizOpening,
+  assertClean, bizEntryProblem, closeDay, costOfSale, crossedRedLine, dayIsLocked, balancesOf, itemPositions, journal, phoneKey, restockMessage, restockMoveProblem, whatsappLink,
+  EXPENSE_CATEGORIES, type RestockStatus, type BizChannel, type BizEntry, type BizKind, type BizLevel, type ExpenseCategory, type BizOpening,
 } from '@stawi/core';
 import { dbEnabled } from '@/lib/data';
 import { bizAccessFor, ensureBranches, loadBizBooks } from '@/lib/biz';
@@ -105,12 +105,16 @@ export async function recordBizEntryAction(input: RecordInput): Promise<Result> 
   let itemId: string | undefined;
   let costCents: number | undefined;
   let amountCents = Math.round(Number(input.amountCents));
+  let redLineCheck: { name: string; unit: string; reorderAt: number; before: number } | null = null;
   if (input.itemId) {
-    const item = await prisma.bizItem.findFirst({ where: { id: input.itemId, businessId, archivedAt: null }, select: { id: true, service: true } });
+    const item = await prisma.bizItem.findFirst({ where: { id: input.itemId, businessId, archivedAt: null }, select: { id: true, service: true, name: true, unit: true, reorderAt: true } });
     if (!item) return { ok: false, error: 'That item is not in your list.' };
     if (!qty) return { ok: false, error: 'Enter how many.' };
     itemId = item.id;
     const before = await branchEntries(prisma, businessId, input.branchId);
+    if ((input.kind === 'SALE' || input.kind === 'STOCK_LOSS') && !item.service && item.reorderAt > 0) {
+      redLineCheck = { name: item.name, unit: item.unit, reorderAt: item.reorderAt, before: itemPositions(before, { branchId: input.branchId }).get(item.id)?.qty ?? 0 };
+    }
     if (input.kind === 'SALE' && !item.service) costCents = costOfSale(before, item.id, qty, input.branchId, input.day);
     if (input.kind === 'STOCK_LOSS') amountCents = costOfSale(before, item.id, qty, input.branchId, input.day);
     if (input.kind === 'STOCK_LOSS' && amountCents <= 0) return { ok: false, error: 'This item has no cost in the books yet. Write the goods you bought first.' };
@@ -135,6 +139,18 @@ export async function recordBizEntryAction(input: RecordInput): Promise<Result> 
     select: { id: true },
   });
   done(input.groupId);
+  // Red line (owner 28/11/26): the sale that takes an item to its red line alerts the owner's phone.
+  if (redLineCheck && qty && crossedRedLine(redLineCheck.before, redLineCheck.before - qty, redLineCheck.reorderAt)) {
+    const left = Math.max(0, redLineCheck.before - qty);
+    const branch = c.branches.find((b) => b.id === input.branchId)?.name ?? '';
+    const { alertBusinessOfficials } = await import('@/lib/group-alerts');
+    void alertBusinessOfficials(input.groupId, {
+      title: `${redLineCheck.name} is at its red line`,
+      body: `${left} ${redLineCheck.unit} left${c.branches.length > 1 ? ` at ${branch}` : ''}. Tap to ask your supplier to bring more.`,
+      url: `/business?group=${encodeURIComponent(input.groupId)}&tab=restock`,
+      tag: `redline-${itemId}`,
+    });
+  }
   return { ok: true, id: row.id };
 }
 
@@ -193,7 +209,7 @@ export async function closeBizDayAction(input: { groupId: string; branchId: stri
 }
 
 /** Add or change an item (name, unit, price, warning level). Owner and officials. */
-export async function saveBizItemAction(input: { groupId: string; id?: string; name: string; unit: string; priceCents: number; reorderAt: number; service?: boolean; archive?: boolean }): Promise<Result> {
+export async function saveBizItemAction(input: { groupId: string; id?: string; name: string; unit: string; priceCents: number; reorderAt: number; service?: boolean; archive?: boolean; supplierId?: string | null }): Promise<Result> {
   const c = await context(input.groupId);
   if ('error' in c) return { ok: false, error: c.error };
   const { prisma, businessId, access } = c;
@@ -206,7 +222,13 @@ export async function saveBizItemAction(input: { groupId: string; id?: string; n
   const priceCents = Math.round(Number(input.priceCents));
   const reorderAt = Math.max(0, Math.round(Number(input.reorderAt) || 0));
   if (!Number.isFinite(priceCents) || priceCents < 0) return { ok: false, error: 'Check the selling price.' };
-  const data = { name: name.value, unit: unit.value ?? 'piece', priceCents, reorderAt, service: !!input.service };
+  let supplierId: string | null = null;
+  if (input.supplierId) {
+    const sup = await prisma.bizSupplier.findFirst({ where: { id: input.supplierId, businessId, archivedAt: null }, select: { id: true } });
+    if (!sup) return { ok: false, error: 'That supplier is not in your list.' };
+    supplierId = sup.id;
+  }
+  const data = { name: name.value, unit: unit.value ?? 'piece', priceCents, reorderAt, service: !!input.service, supplierId };
   if (input.id) {
     const found = await prisma.bizItem.findFirst({ where: { id: input.id, businessId }, select: { id: true } });
     if (!found) return { ok: false, error: 'That item is not in your list.' };
@@ -300,4 +322,113 @@ export async function setBizLevelAction(input: { groupId: string; level: BizLeve
 /** Re-read the books (after a change, or when the live channel says so). */
 export async function reloadBizBooksAction(groupId: string) {
   return loadBizBooks(groupId);
+}
+
+// ───────────────────────────── Suppliers and restocking (owner 28/11/26) ─────────────────────────────
+
+const SITE = (process.env.NEXT_PUBLIC_APP_URL || 'https://getstawi.com').replace(/\/$/, '');
+const REQUESTS_PER_DAY = 30;
+
+/** Add or change a supplier (name, phone, days to deliver). Owner and officials. */
+export async function saveBizSupplierAction(input: { groupId: string; id?: string; name: string; phone: string; leadDays: number; archive?: boolean }): Promise<Result> {
+  const c = await context(input.groupId);
+  if ('error' in c) return { ok: false, error: c.error };
+  const { prisma, businessId, access } = c;
+  if (!access.manage) return { ok: false, error: 'Only the owner changes suppliers.' };
+  if (input.id && input.archive) {
+    const found = await prisma.bizSupplier.findFirst({ where: { id: input.id, businessId }, select: { id: true } });
+    if (!found) return { ok: false, error: 'That supplier is not in your list.' };
+    await prisma.bizSupplier.update({ where: { id: found.id }, data: { archivedAt: new Date() } });
+    done(input.groupId);
+    return { ok: true };
+  }
+  const name = clean(input.name, 60);
+  if (!name.ok) return { ok: false, error: name.error };
+  if (!name.value) return { ok: false, error: 'Write the supplier’s name.' };
+  const key = phoneKey(input.phone ?? '');
+  if (!key) return { ok: false, error: 'Write the supplier’s full phone number.' };
+  const leadDays = Math.min(30, Math.max(0, Math.round(Number(input.leadDays) || 0)));
+  const data = { name: name.value, phone: input.phone.trim().slice(0, 20), phoneKey: key, leadDays };
+  if (input.id) {
+    const found = await prisma.bizSupplier.findFirst({ where: { id: input.id, businessId }, select: { id: true } });
+    if (!found) return { ok: false, error: 'That supplier is not in your list.' };
+    await prisma.bizSupplier.update({ where: { id: found.id }, data });
+    done(input.groupId);
+    return { ok: true, id: found.id };
+  }
+  if ((await prisma.bizSupplier.count({ where: { businessId, archivedAt: null } })) >= 200) return { ok: false, error: 'A business can list up to 200 suppliers.' };
+  const row = await prisma.bizSupplier.create({ data: { ...data, businessId, groupId: input.groupId }, select: { id: true } });
+  done(input.groupId);
+  return { ok: true, id: row.id };
+}
+
+/**
+ * Ask a supplier to bring more (owner 28/11/26). Owner and officials only: a
+ * request commits the business to buy. Saved in Stawi (the supplier sees it if
+ * they use Stawi and gets a phone alert), and returns a WhatsApp link with the
+ * message ready so the owner can also send it there with one more tap.
+ */
+export async function sendRestockRequestAction(input: { groupId: string; branchId: string; supplierId: string; lines: { itemId: string; qty: number | null }[]; note?: string; lang?: 'en' | 'sw' }): Promise<Result & { whatsapp?: string | null; onStawi?: boolean }> {
+  const c = await context(input.groupId);
+  if ('error' in c) return { ok: false, error: c.error };
+  const { prisma, businessId, access, branches, me } = c;
+  if (!access.manage) return { ok: false, error: 'Only the owner asks suppliers for goods.' };
+  if (!access.branchIds.includes(input.branchId)) return { ok: false, error: 'Choose one of your branches.' };
+  const supplier = await prisma.bizSupplier.findFirst({ where: { id: input.supplierId, businessId, archivedAt: null } });
+  if (!supplier) return { ok: false, error: 'Choose one of your suppliers.' };
+  const note = clean(input.note, 200);
+  if (!note.ok) return { ok: false, error: note.error };
+  const wanted = (input.lines ?? []).slice(0, 40);
+  if (wanted.length === 0) return { ok: false, error: 'Choose at least one item.' };
+  const items = await prisma.bizItem.findMany({ where: { businessId, id: { in: wanted.map((l) => l.itemId) } }, select: { id: true, name: true, unit: true } });
+  const lines = wanted.flatMap((l) => {
+    const it = items.find((i) => i.id === l.itemId);
+    if (!it) return [];
+    const qty = l.qty === null || l.qty === undefined ? null : Math.round(Number(l.qty) * 1000) / 1000;
+    if (qty !== null && !(qty > 0 && qty < 1_000_000)) return [];
+    return [{ itemId: it.id, name: it.name, unit: it.unit, qty }];
+  });
+  if (lines.length === 0) return { ok: false, error: 'Check the quantities.' };
+  const since = new Date(Date.now() - 86_400_000);
+  if ((await prisma.bizRestockRequest.count({ where: { businessId, createdAt: { gte: since } } })) >= REQUESTS_PER_DAY) return { ok: false, error: 'That is many requests today. Try again tomorrow.' };
+  const biz = await prisma.business.findUnique({ where: { id: businessId }, select: { name: true, group: { select: { countryCode: true } } } });
+  const branch = branches.find((b) => b.id === input.branchId)!;
+  const row = await prisma.bizRestockRequest.create({
+    data: {
+      businessId, groupId: input.groupId, branchId: branch.id, supplierId: supplier.id, supplierPhoneKey: supplier.phoneKey, supplierName: supplier.name,
+      shopName: biz?.name ?? 'A shop', branchLabel: [branch.name, branch.town].filter(Boolean).join(', '), lines, note: note.value ?? null,
+      createdByMembershipId: me.id, createdByName: me.name,
+    },
+    select: { id: true },
+  });
+  const link = `${SITE}/orders/${row.id}`;
+  const text = restockMessage({ supplierName: supplier.name, shopName: biz?.name ?? 'A shop', branch: branch.name, town: branch.town, lines, note: note.value, link, lang: input.lang });
+  const { alertByPhoneKey } = await import('@/lib/group-alerts');
+  const onStawi = (await prisma.authPin.count({ where: { phone: { endsWith: supplier.phoneKey } } })) > 0;
+  void alertByPhoneKey(supplier.phoneKey, {
+    title: `Order request from ${biz?.name ?? 'a shop'}`,
+    body: `${lines.length} item${lines.length > 1 ? 's' : ''} wanted${branch.town ? ` in ${branch.town}` : ''}. Tap to see and confirm.`,
+    url: `/orders/${row.id}`,
+    tag: `restock-${row.id}`,
+  });
+  done(input.groupId);
+  return { ok: true, id: row.id, onStawi, whatsapp: whatsappLink(supplier.phone, text, biz?.group.countryCode ?? 'KE') };
+}
+
+/** The shop cancels a request, or says the goods arrived. Owner and officials. */
+export async function updateRestockByShopAction(input: { groupId: string; requestId: string; to: RestockStatus }): Promise<Result> {
+  const c = await context(input.groupId);
+  if ('error' in c) return { ok: false, error: c.error };
+  if (!c.access.manage) return { ok: false, error: 'Only the owner changes a request.' };
+  const req = await c.prisma.bizRestockRequest.findFirst({ where: { id: input.requestId, businessId: c.businessId } });
+  if (!req) return { ok: false, error: 'That request is not in these books.' };
+  const problem = restockMoveProblem(req.status as RestockStatus, input.to, 'SHOP');
+  if (problem) return { ok: false, error: problem };
+  await c.prisma.bizRestockRequest.update({ where: { id: req.id }, data: { status: input.to } });
+  if (input.to === 'CANCELLED') {
+    const { alertByPhoneKey } = await import('@/lib/group-alerts');
+    void alertByPhoneKey(req.supplierPhoneKey, { title: `${req.shopName} cancelled a request`, body: 'No need to deliver that order.', url: `/orders/${req.id}`, tag: `restock-${req.id}` });
+  }
+  done(input.groupId);
+  return { ok: true };
 }
