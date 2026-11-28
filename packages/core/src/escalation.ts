@@ -125,7 +125,7 @@ export function addDays(iso: string, days: number): string {
 }
 
 /** A country's own clock decides what "today" is (standing rule 9). */
-const COUNTRY_TIME_ZONE: Record<string, string> = {
+export const COUNTRY_TIME_ZONE: Record<string, string> = {
   KE: 'Africa/Nairobi', UG: 'Africa/Kampala', TZ: 'Africa/Dar_es_Salaam', RW: 'Africa/Kigali',
   NG: 'Africa/Lagos', GH: 'Africa/Accra', ZA: 'Africa/Johannesburg', ZM: 'Africa/Lusaka',
 };
