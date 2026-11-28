@@ -5,6 +5,7 @@ import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
 import { AppTabs } from '@/components/AppTabs';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://getstawi.com'),
   title: 'Stawi — Save · Grow · Thrive',
   description:
     'One trusted platform for every savings group, entrepreneur and enterprise — group records and contributions, minutes, month-end statements, business matching and professional-grade accounting, adapted to your currency, language, tax and registration rules.',

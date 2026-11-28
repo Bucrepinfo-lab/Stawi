@@ -1,4 +1,7 @@
+import type { Metadata } from 'next';
 import { BackLink } from '@/components/BackLink';
+
+export const metadata: Metadata = { alternates: { canonical: '/terms' } };
 
 const SECTIONS: { h: string; b: string }[] = [
   { h: '1. Software, not a bank', b: 'Stawi is a software service — not a bank, SACCO, money-services business, investment/tax adviser, or law firm. Calculations, venture matches, tax/levy estimates and formalization guidance are informational only and are not financial, legal, or tax advice.' },
