@@ -130,6 +130,28 @@ export function roundTotals(turns: (RoundTurn & TurnRecord)[], today: Date | str
   };
 }
 
+/** Key under which a sent reminder is remembered, so nobody is reminded twice. */
+export const roundReminderKey = (turnId: string) => `round_return:${turnId}`;
+
+/**
+ * Turns whose money is due back TOMORROW: given, not yet returned, return day
+ * is the day after `today` (YYYY-MM-DD in the group's own time zone).
+ */
+export function roundRemindersDue<T extends Pick<RoundTurn, 'returnOn'> & TurnRecord>(turns: T[], today: string): T[] {
+  const tomorrow = addDays(today.slice(0, 10), 1);
+  return turns.filter((t) => Boolean(t.givenAt) && !t.returnedAt && t.returnOn.slice(0, 10) === tomorrow);
+}
+
+/** The reminder, in plain words. Record only: it asks nobody to pay Stawi anything. */
+export function roundReminderText(input: { name: string; returnOn: string; givenCents: number; returnCents: number }): string {
+  const d = input.returnOn;
+  const day = `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(2, 4)}`;
+  const kes = (c: number) => `KES ${(c / 100).toLocaleString('en-KE', { maximumFractionDigits: 0 })}`;
+  const profit = input.returnCents - input.givenCents;
+  const made = profit > 0 ? ` (${kes(input.givenCents)} taken plus ${kes(profit)} profit)` : '';
+  return `Table banking round reminder for ${input.name}: tomorrow, ${day}, ${kes(input.returnCents)} comes back to the table${made}. Treasurer: write it as returned in the round book when you receive it.`;
+}
+
 /** Who may write in the round book (server-enforced; the group's treasurer keeps the money). */
 export function roundRecordProblem(input: { role: string | null; recorderIds: string[]; turnMembershipId: string }): string | null {
   const receivesIt = input.recorderIds.includes(input.turnMembershipId);
