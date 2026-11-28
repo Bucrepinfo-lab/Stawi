@@ -159,7 +159,8 @@ export function itemInsights(entries: BizEntry[], items: BizItem[], today: strin
     // Pace from the last 14 days, so a change of season shows quickly.
     const recentFrom = addBizDays(today, -13);
     const recentUnits = sales.filter((e) => e.day >= recentFrom).reduce((s, e) => s + (e.qty ?? 0), 0);
-    const perDay = recentUnits / Math.min(14, Math.max(1, age || 14));
+    // At least a week, so one busy first day does not look like the normal pace (live check 28/11/26).
+    const perDay = recentUnits / Math.min(14, Math.max(7, age || 14));
     const daysLeft = item.service || perDay <= 0 ? null : Math.floor(qty / perDay);
     const daysSinceSale = lastSale ? bizDaysBetween(lastSale, today) : null;
     const span = Math.min(windowDays, Math.max(1, age || windowDays));
