@@ -30,6 +30,8 @@ export default async function GroupWorkspacePage({ params, searchParams }: { par
   const canEdit = dbEnabled()
     ? viewer === 'SUPER_ADMIN' || (!!groupRole && RECORD_EDITOR_ROLES.has(groupRole))
     : viewer === 'OFFICIAL' || viewer === 'SUPER_ADMIN';
+  // The member list: the secretary, or the chairperson standing in (owner 28/11/26).
+  const canRoster = dbEnabled() ? viewer === 'SUPER_ADMIN' || (await import('@stawi/core')).canEditRoster(groupRole) : canEdit;
   // Minutes: the secretary only, or the stand-in the chair named (owner 27/11/26).
   const access = await (await import('@/lib/minutes-access')).minutesAccess(id);
   const minutes = {
@@ -77,7 +79,7 @@ export default async function GroupWorkspacePage({ params, searchParams }: { par
       <WriteForMeLink groupId={cockpit.groupId} />
       {dbEnabled() && modules.money && <MoneyTrustCard groupId={cockpit.groupId} alerts={moneyAlerts} />}
       <div style={{ marginTop: 22 }}>
-        <GroupCockpit cockpit={shown} canEdit={canEdit} minutes={minutes} saccoPlus={saccoPlusEnabled() && modules.savings_credit} initialTab={tab} initialMonth={month} modules={modules} />
+        <GroupCockpit cockpit={shown} canEdit={canEdit} canRoster={canRoster} minutes={minutes} saccoPlus={saccoPlusEnabled() && modules.savings_credit} initialTab={tab} initialMonth={month} modules={modules} />
       </div>
       {(modules.money || modules.books) && <MoneySummary groupId={cockpit.groupId} />}
       {!booksOnly(modules) && <DocumentHouse groupId={cockpit.groupId} />}

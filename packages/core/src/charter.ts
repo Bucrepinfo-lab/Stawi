@@ -206,3 +206,44 @@ export function charterCompleteness(c: GroupCharter): {
     nextPrompt: missing[0]?.prompt,
   };
 }
+
+// ───────────────────────────── Who keeps the member list (owner 28/11/26) ─────────────────────────────
+
+/**
+ * The register of members is kept by the secretary (chama and co-operative
+ * rules: the secretary keeps the records and strikes names off the register),
+ * with the chairperson able to stand in. The treasurer keeps the money records
+ * but does not add, change or remove members. Enforced on the server.
+ */
+export const ROSTER_ROLES: readonly string[] = ['SECRETARY', 'CHAIRMAN'];
+
+export function canEditRoster(role: string | null | undefined): boolean {
+  return !!role && ROSTER_ROLES.includes(role.trim().toUpperCase());
+}
+
+/** Rows with neither a name nor a phone are left out (an empty "Add member" row is not a member). */
+export function cleanRoster(members: CharterMember[]): CharterMember[] {
+  return members
+    .filter((m) => (m.fullName ?? '').trim() || (m.phone ?? '').trim())
+    .map((m, i) => ({ ...m, fullName: (m.fullName ?? '').trim(), phone: (m.phone ?? '').trim(), serial: i + 1 }));
+}
+
+const rosterKey = (m: CharterMember) => `${m.id}|${m.fullName.trim().toLowerCase()}|${m.designation}|${m.phone.replace(/\D/g, '')}`;
+
+/** True when two rosters list the same people with the same roles and phones. */
+export function sameRoster(a: CharterMember[], b: CharterMember[]): boolean {
+  const x = cleanRoster(a).map(rosterKey).sort();
+  const y = cleanRoster(b).map(rosterKey).sort();
+  return x.length === y.length && x.every((k, i) => k === y[i]);
+}
+
+/** A plain reason a new or changed member cannot be saved, or null. */
+export function rosterMemberProblem(m: { fullName: string; phone: string }, others: CharterMember[]): string | null {
+  const name = m.fullName.trim();
+  if (name.length < 2) return 'Write the member’s full name.';
+  const digits = m.phone.replace(/\D/g, '');
+  if (digits.length < 9) return 'Write the member’s full phone number. It is how they sign in.';
+  const key = digits.slice(-9);
+  if (others.some((o) => o.phone.replace(/\D/g, '').slice(-9) === key)) return 'This phone number is already on the list.';
+  return null;
+}
