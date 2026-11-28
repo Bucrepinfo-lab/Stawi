@@ -107,6 +107,7 @@ model Group {
   joinCodes     JoinCode[]
   contributionWitnesses ContributionWitness[]
   minutesStandIns MinutesStandIn[]
+  tableRounds   TableRound[]
   contributionChecks    ContributionCheck[]
   corrections           ContributionCorrection[]
   correctionDecisions   CorrectionDecision[]
@@ -782,4 +783,46 @@ model MinutesStandIn {
   endedAt           DateTime?
 
   @@index([groupId, until])
+}
+
+// ───────── Table banking round (owner 28/11/26) ─────────
+// A record book only: at each meeting one member takes the agreed amount and
+// brings it back at the next meeting with the agreed profit. Stawi never moves
+// or offers money here. Amounts are whole cents.
+model TableRound {
+  id                    String    @id @default(cuid())
+  group                 Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId               String
+  amountCents           Int
+  profitCents           Int       @default(0)
+  everyDays             Int       @default(7)
+  startsOn              DateTime
+  createdByMembershipId String
+  createdAt             DateTime  @default(now())
+  closedAt              DateTime?
+
+  turns TableRoundTurn[]
+
+  @@index([groupId, closedAt])
+}
+
+model TableRoundTurn {
+  id                     String     @id @default(cuid())
+  round                  TableRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId                String
+  groupId                String // repeated for the per-group row rule (rls.sql)
+  turn                   Int
+  membershipId           String
+  givenOn                DateTime
+  returnOn               DateTime
+  givenCents             Int
+  returnCents            Int
+  givenAt                DateTime?
+  givenByMembershipId    String?
+  returnedAt             DateTime?
+  returnedCents          Int?
+  returnedByMembershipId String?
+
+  @@unique([roundId, turn])
+  @@index([groupId])
 }

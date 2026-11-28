@@ -872,3 +872,72 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 .share-bar .share-btn { width: 100%; justify-content: center; text-align: center; padding: 10px 8px; white-space: nowrap; }
 .share-bar > button.share-btn:first-of-type { grid-column: 1 / -1; order: 1; }
 .share-bar > p, .share-bar > label { order: 2; }
+
+/* Table banking round: the roster (owner 28/11/26) */
+.tr-sums { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 22px; }
+.tr-sums > div { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 2px; min-width: 0; }
+.tr-sums span { font-size: 12.5px; color: var(--dim); font-weight: 600; }
+.tr-sums b { font-size: 18px; color: var(--forest-deep); }
+.tr-sums small { font-size: 12px; color: var(--dim); }
+.tr-next { margin-top: 14px; font-size: 15px; color: var(--ink-2); }
+.tr-late { color: var(--danger); font-weight: 700; }
+.tr-count { color: var(--dim); }
+.tr-roster { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; }
+.tr-turn { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 4px 12px; background: var(--paper); border: 1px solid var(--line); border-left: 5px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+.tr-turn.is-due_out { border-left-color: var(--gold); }
+.tr-turn.is-out { border-left-color: var(--forest); }
+.tr-turn.is-late { border-left-color: var(--danger); }
+.tr-turn.is-back { border-left-color: var(--good); }
+.tr-turn.is-mine { background: color-mix(in srgb, var(--gold) 9%, var(--paper)); }
+.tr-no { grid-row: 1 / span 2; align-self: start; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--bone-2); font-weight: 600; color: var(--forest-deep); }
+.tr-who { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; }
+.tr-who b { font-size: 16px; overflow-wrap: anywhere; }
+.tr-who em { font-style: normal; font-weight: 600; color: var(--gold-deep); }
+.tr-state { font-size: 12.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--bone-2); color: var(--ink-2); }
+.tr-state.is-due_out { background: color-mix(in srgb, var(--gold) 28%, var(--paper)); color: var(--ink); }
+.tr-state.is-out { background: color-mix(in srgb, var(--forest) 16%, var(--paper)); color: var(--forest-deep); }
+.tr-state.is-late { background: color-mix(in srgb, var(--danger) 14%, var(--paper)); color: var(--danger); }
+.tr-state.is-back { background: color-mix(in srgb, var(--good) 16%, var(--paper)); color: var(--good); }
+.tr-facts { grid-column: 2; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 6px 0 0; }
+.tr-facts > div { min-width: 0; }
+.tr-facts dt { font-size: 12px; color: var(--dim); font-weight: 600; }
+.tr-facts dd { margin: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.tr-facts dd.tr-day { font-weight: 500; color: var(--ink-2); font-size: 13px; }
+.tr-act, .tr-own { grid-column: 2; margin-top: 8px; }
+.tr-act { display: flex; flex-wrap: wrap; gap: 8px; }
+.tr-own { font-size: 13px; color: var(--dim); }
+.tr-close { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
+.tr-note { margin-top: 22px; font-size: 13px; color: var(--dim); max-width: 620px; }
+.tr-start { margin-top: 22px; background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: grid; gap: 12px; }
+.tr-start h2 { font-size: 22px; font-weight: 600; }
+.tr-start h3 { font-size: 15px; margin-top: 4px; }
+.tr-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.tr-fields label { display: grid; gap: 6px; font-size: 14px; font-weight: 600; }
+.tr-order { margin: 0; padding: 0 0 0 22px; display: grid; gap: 6px; }
+.tr-order li { padding: 4px 0; }
+.tr-order li > span:first-child { font-weight: 600; overflow-wrap: anywhere; }
+.tr-order li.is-out > span:first-child { text-decoration: line-through; color: var(--dim); }
+.tr-order-btns { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-left: 10px; }
+.tr-order-btns .mr-btn { min-height: 34px; padding: 0 10px; font-size: 13px; }
+.tr-problem { color: var(--danger); font-weight: 600; font-size: 14px; }
+.tr-preview { font-size: 14px; color: var(--ink-2); background: var(--bone-2); border-radius: 12px; padding: 10px 12px; }
+.tr-start > .mr-btn.go { justify-self: start; min-height: 46px; padding: 0 22px; }
+@media (max-width: 520px) {
+  .tr-facts { grid-column: 1 / -1; }
+  .tr-act, .tr-own { grid-column: 1 / -1; }
+}
+/* Landing: table banking round banner */
+.tr-banner { margin: 18px 0; border-radius: 18px; padding: 22px; background: #14352a; color: #f7f3ea; display: grid; gap: 14px; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; }
+.tr-banner h2 { font-size: clamp(22px, 4.6vw, 30px); font-weight: 600; line-height: 1.15; text-wrap: balance; color: #f7f3ea; }
+.tr-banner p { margin-top: 8px; color: #e4ddcd; font-size: 15px; }
+.tr-banner a.tr-cta { display: inline-flex; align-items: center; min-height: 46px; padding: 0 20px; margin-top: 14px; border-radius: 12px; background: var(--gold); color: #16261f; font-weight: 800; text-decoration: none; }
+.tr-banner a.tr-cta:hover { filter: brightness(1.06); }
+.tr-banner a.tr-cta:focus-visible { outline: 3px solid #f7f3ea; outline-offset: 2px; }
+.tr-banner ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; background: var(--paper); color: var(--ink); border-radius: 14px; padding: 12px; font-size: 13.5px; }
+.tr-banner li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: baseline; padding: 4px 0; border-bottom: 1px dashed var(--line); }
+.tr-banner li:last-child { border-bottom: 0; }
+.tr-banner li b { overflow-wrap: anywhere; }
+.tr-banner li span { color: var(--dim); }
+.tr-banner li i { font-style: normal; font-weight: 700; color: var(--forest); }
+.tr-banner .tr-eg { font-size: 12px; color: #e4ddcd; margin: 0 0 6px; }
+@media (max-width: 720px) { .tr-banner { grid-template-columns: minmax(0, 1fr); } }
