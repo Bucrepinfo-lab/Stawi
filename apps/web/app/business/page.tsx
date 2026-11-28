@@ -6,6 +6,9 @@ import { getModulesMap } from '@/lib/modules';
 import { splitGroups } from '@/lib/business';
 import { Picture, type PictureName } from '@/components/Pictures';
 import { ValueBanners } from '@/components/ValueBanners';
+import { dbEnabled } from '@/lib/data';
+import { loadBizBooks } from '@/lib/biz';
+import { BizBooks } from './BizBooks';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Stawi' };
@@ -58,8 +61,23 @@ export default async function BusinessPage({ searchParams }: { searchParams: Pro
     );
   }
 
-  const booksByGroup = await getBusinessMap(businesses.map((g) => g.id));
   const activeId = pickAllowedId(sp.group, businesses.map((g) => g.id));
+  // The full books (owner 28/11/26) when live records are connected; the sample books otherwise.
+  const view = dbEnabled() ? await loadBizBooks(activeId).catch((e) => { console.error('[business] load', e instanceof Error ? e.message : e); return null; }) : null;
+  if (view) {
+    return (
+      <main className="pillar-3" style={{ maxWidth: 960, margin: '0 auto', padding: '20px 16px 110px' }}>
+        {businesses.length > 1 && (
+          <nav className="bk-switch" aria-label="My businesses">
+            {businesses.map((b) => <a key={b.id} href={`/business?group=${encodeURIComponent(b.id)}`} aria-current={b.id === activeId ? 'page' : undefined}>{b.name}</a>)}
+          </nav>
+        )}
+        <BizBooks key={activeId} view={view} />
+        <p className="biz-note"><a href="/groups/new?start=books_only">＋ Add another business</a></p>
+      </main>
+    );
+  }
+  const booksByGroup = await getBusinessMap(businesses.map((g) => g.id));
   return (
     <main className="pillar-3" style={{ maxWidth: 960, margin: '0 auto', padding: '24px 16px 110px' }}>
       <BooksClient groups={businesses} booksByGroup={booksByGroup} initialId={activeId} initialPeriod={parsePeriod(sp.period)} modulesById={modulesById} kicker="My business" />

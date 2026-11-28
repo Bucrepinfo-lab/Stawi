@@ -256,6 +256,14 @@ model Business {
   stockItems StockItem[]
   entries    LedgerEntry[]
   createdAt  DateTime @default(now())
+  /// SIMPLE | GROWING | BUSY (owner 28/11/26): how much of the books the screens show.
+  level      String   @default("SIMPLE")
+
+  bizBranches BizBranch[]
+  bizItems    BizItem[]
+  bizEntries  BizEntry[]
+  bizCloses   BizDayClose[]
+  bizStaff    BizStaff[]
 }
 
 model SavedVenture {
@@ -824,5 +832,101 @@ model TableRoundTurn {
   returnedByMembershipId String?
 
   @@unique([roundId, turn])
+  @@index([groupId])
+}
+
+// ───────── Business books (owner 28/11/26) ─────────
+// Plain entries become double-entry books in @stawi/core (biz-books.ts).
+// Nothing is deleted: a mistake is corrected by a reversing entry. Every row
+// carries groupId for the per-group row rule (rls.sql). Amounts in cents.
+
+model BizBranch {
+  id         String    @id @default(cuid())
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId String
+  groupId    String
+  name       String
+  town       String?
+  createdAt  DateTime  @default(now())
+  archivedAt DateTime?
+
+  @@index([businessId])
+  @@index([groupId])
+}
+
+model BizItem {
+  id         String    @id @default(cuid())
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId String
+  groupId    String
+  name       String
+  unit       String    @default("piece")
+  priceCents Int       @default(0)
+  reorderAt  Int       @default(0)
+  service    Boolean   @default(false)
+  barcode    String?
+  createdAt  DateTime  @default(now())
+  archivedAt DateTime?
+
+  @@index([businessId])
+  @@index([groupId])
+}
+
+model BizEntry {
+  id                     String   @id @default(cuid())
+  business               Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId             String
+  groupId                String
+  branchId               String
+  kind                   String // BizKind
+  amountCents            Int
+  channel                String // CASH | MPESA | BANK | CREDIT
+  toChannel              String?
+  day                    String // YYYY-MM-DD, the business's own day
+  itemId                 String?
+  qty                    Float?
+  costCents              Int?
+  party                  String?
+  category               String?
+  opening                String?
+  note                   String?
+  etims                  Boolean  @default(false)
+  reversesId             String?  @unique
+  recordedByMembershipId String
+  recordedByName         String
+  recordedAt             DateTime @default(now())
+
+  @@index([businessId, day])
+  @@index([groupId])
+}
+
+model BizDayClose {
+  id                   String   @id @default(cuid())
+  business             Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId           String
+  groupId              String
+  branchId             String
+  day                  String
+  expected             Json
+  counted              Json
+  closedByMembershipId String
+  closedByName         String
+  closedAt             DateTime @default(now())
+
+  @@unique([branchId, day])
+  @@index([groupId])
+}
+
+/// A staff member who records for one branch only (least privilege, owner rule 02/11/26).
+model BizStaff {
+  id           String   @id @default(cuid())
+  business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId   String
+  groupId      String
+  membershipId String
+  branchId     String
+  createdAt    DateTime @default(now())
+
+  @@unique([businessId, membershipId])
   @@index([groupId])
 }
