@@ -97,3 +97,29 @@ export async function confirmIdeaChoiceAction(shortlistId: string, title: string
   revalidatePath('/match/compare');
   return { ok: true };
 }
+
+export async function closeIdeaVoteAction(shortlistId: string): Promise<Result> {
+  if (!process.env.DATABASE_URL) return { ok: false, error: 'Voting opens when your group’s live records are connected.' };
+  const list = await loadOpen(shortlistId);
+  if (!list) return { ok: false, error: 'This vote was not found.' };
+  const { closeVoteProblem } = await import('@stawi/core');
+  const { role, membershipId, userId } = await ctx(list.groupId);
+  if (!membershipId) return { ok: false, error: 'Only members of this group can do this.' };
+  const problem = closeVoteProblem({ role, open: !list.closedAt });
+  if (problem) return { ok: false, error: problem };
+  const { prisma } = await import('@stawi/db');
+  // Votes cast stay in the record; only the list is closed, with no choice.
+  const done = await prisma.ideaShortlist.updateMany({ where: { id: list.id, closedAt: null }, data: { closedAt: new Date() } });
+  if (done.count === 0) return { ok: false, error: 'This vote is already closed.' };
+  const group = await prisma.group.findUnique({ where: { id: list.groupId }, select: { name: true } });
+  const { alertGroupMembers } = await import('@/lib/group-alerts');
+  void alertGroupMembers(list.groupId, {
+    title: `${group?.name ?? 'Your group'}: the business vote was closed`,
+    body: 'It closed without a choice. An official can open a new vote when the group is ready.',
+    url: `/match?group=${list.groupId}`,
+    tag: `idea-vote-${list.groupId}`,
+  }, userId);
+  revalidatePath('/match');
+  revalidatePath('/match/compare');
+  return { ok: true };
+}

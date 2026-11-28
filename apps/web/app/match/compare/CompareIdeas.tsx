@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BEFORE_YOU_DECIDE, IDEA_CRITERIA, confirmNote, formatMoney, type IdeaComparison, type IdeaStudy, type IdeaTally } from '@stawi/core';
 import { researchIdeasOnWebAction } from '../actions';
-import { castIdeaVoteAction, confirmIdeaChoiceAction, presentIdeasForVoteAction } from '../vote-actions';
+import { castIdeaVoteAction, closeIdeaVoteAction, confirmIdeaChoiceAction, presentIdeasForVoteAction } from '../vote-actions';
 import type { WebResearch } from '@/lib/idea-research-ai';
 
 const VERDICT: Record<IdeaStudy['verdict'], { label: string; tone: string; ink: string }> = {
@@ -21,9 +21,13 @@ export interface VoteView {
   chosenBy: string | null;
   /** Closed by a newer list, with no choice. */
   replaced: boolean;
+  /** Closed with no choice (by an official, or replaced). */
+  closedNoChoice: boolean;
   tally: IdeaTally;
   myTitle: string | null;
   canConfirm: boolean;
+  /** Officials who may open a vote may also close it without a choice. */
+  canClose: boolean;
 }
 
 const ddmmyy = (iso: string | null) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(2, 4)}` : '');
@@ -55,6 +59,7 @@ export function CompareIdeas({
   const router = useRouter();
   const [chosen, setChosen] = useState<string | null>(vote?.chosenTitle ?? null);
   const [busy, setBusy] = useState('');
+  const [askClose, setAskClose] = useState(false);
   const [voteError, setVoteError] = useState('');
   const [pick, setPick] = useState<string>(vote?.tally.leader ?? studies[0]?.venture.title ?? '');
   const [web, setWeb] = useState<WebResearch | null>(null);
@@ -116,6 +121,17 @@ export function CompareIdeas({
     setBusy('');
     if (!out.ok) return setVoteError(out.error);
     setChosen(pick);
+    router.refresh();
+  }
+
+  async function closeVote() {
+    if (!vote) return;
+    setBusy('close');
+    setVoteError('');
+    const out = await closeIdeaVoteAction(vote.id).catch(() => ({ ok: false as const, error: 'That did not go through. Try again.' }));
+    setBusy('');
+    setAskClose(false);
+    if (!out.ok) return setVoteError(out.error);
     router.refresh();
   }
 
@@ -290,6 +306,8 @@ export function CompareIdeas({
           </div>
         ) : vote?.replaced ? (
           <p className="ci-note">This vote was replaced by a newer list. Open the latest vote from the alert or the Ideas page.</p>
+        ) : vote?.closedNoChoice ? (
+          <p className="ci-note">This vote was closed without a choice. {vote.tally.voted} of {vote.tally.memberCount} members had voted; those votes stay in the record. An official can open a new vote when the group is ready.</p>
         ) : vote?.open ? (
           <div className="ci-vote">
             <h3 className="display">Vote: which business should we start?</h3>
@@ -331,6 +349,18 @@ export function CompareIdeas({
                 </button>
               </div>
             )}
+            {vote.canClose && !askClose && (
+              <button type="button" className="ci-linkbtn" onClick={() => setAskClose(true)}>Close this vote without choosing</button>
+            )}
+            {askClose && (
+              <div className="ci-ask" role="alertdialog" aria-labelledby="close-q">
+                <p id="close-q"><b>Close this vote without choosing?</b> Members can no longer vote on it. The {vote.tally.voted} vote{vote.tally.voted === 1 ? '' : 's'} cast stay in the record, and you can open a new vote any time.</p>
+                <div className="ci-actions">
+                  <button type="button" className="mr-btn go" disabled={busy === 'close'} onClick={closeVote}>{busy === 'close' ? 'Closing…' : 'Yes, close it'}</button>
+                  <button type="button" className="mr-btn" onClick={() => setAskClose(false)}>Keep it open</button>
+                </div>
+              </div>
+            )}
             {voteError && <p className="ci-err" role="alert">{voteError}</p>}
           </div>
         ) : (
@@ -344,14 +374,14 @@ export function CompareIdeas({
           <div className="ci-path">
             <h3>{vote?.open ? 'Bring in every member' : `Present the ${n} ideas to the group`}</h3>
             <p>{vote?.open ? 'Send the vote to members on WhatsApp so nobody is left out.' : canPresent ? 'Open a vote in Stawi: every member gets an alert, reads the reasons and taps a choice.' : 'Send this page to every member so they read the reasons before the meeting, then decide together.'}</p>
-            {canPresent && !vote && (
+            {canPresent && (!vote || vote.closedNoChoice) && (
               <>
                 <button type="button" className="mr-btn go" disabled={!!busy} onClick={openVote}>{busy === 'present' ? 'Opening…' : 'Open a vote in Stawi'}</button>
                 {openVoteId && <small className="mr-meta">This replaces the vote that is open now.</small>}
                 {voteError && <small className="ci-err" role="alert">{voteError}</small>}
               </>
             )}
-            <a className={`mr-btn${canPresent && !vote ? '' : ' go'}`} href="https://wa.me/" target="_blank" rel="noopener noreferrer" onClick={(e) => { (e.currentTarget as HTMLAnchorElement).href = `https://wa.me/?text=${encodeURIComponent(shareText())}`; }}>
+            <a className={`mr-btn${canPresent && (!vote || vote.closedNoChoice) ? '' : ' go'}`} href="https://wa.me/" target="_blank" rel="noopener noreferrer" onClick={(e) => { (e.currentTarget as HTMLAnchorElement).href = `https://wa.me/?text=${encodeURIComponent(shareText())}`; }}>
               Send on WhatsApp
             </a>
             <button type="button" className="mr-btn" onClick={copyLink}>{copied ? 'Copied' : 'Copy the message'}</button>
@@ -490,4 +520,7 @@ const css = `
 .ci-confirm-box{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
 .ci-confirm-box h4{margin:0 0 8px;font-size:15px}
 .ci-chosen{background:rgba(31,77,58,.06)}
+.ci-linkbtn{margin-top:12px;background:none;border:none;padding:6px 0;color:var(--ink-2);text-decoration:underline;text-underline-offset:3px;font:inherit;font-size:13.5px;cursor:pointer}
+.ci-ask{margin-top:10px;padding:12px;border-radius:12px;border:1px solid var(--gold);background:rgba(224,163,46,.1);font-size:13.5px}
+.ci-ask p{margin:0}
 `;
