@@ -157,7 +157,6 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
     background: "var(--forest-deep)",
     cursor: "pointer",
   };
-  const linkStyle: React.CSSProperties = { background: "none", border: 0, color: "var(--ink-2)", fontSize: 13, textDecoration: "underline", cursor: "pointer", padding: 4, fontFamily: "inherit" };
   const four = (v: string) => v.replace(/\D/g, "").slice(0, 4);
 
   const phoneField = (
@@ -200,7 +199,7 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
         <button type="submit" disabled={loading || code.replace(/\D/g, "").length < 6} style={{ ...btnStyle, opacity: loading || code.replace(/\D/g, "").length < 6 ? 0.6 : 1 }}>
           {loading ? "Checking…" : "Continue"}
         </button>
-        <button type="button" onClick={() => switchTo("pin")} style={linkStyle}>I already have a PIN</button>
+        <button type="button" onClick={() => switchTo("pin")} className="soft-pill wide">I already have a PIN</button>
       </form>
     );
   }
@@ -235,8 +234,8 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
         <button type="submit" disabled={loading || pin.length < 4 || pin2.length < 4} style={{ ...btnStyle, opacity: loading || pin.length < 4 || pin2.length < 4 ? 0.6 : 1 }}>
           {opening ? "Opening your account…" : loading ? "Opening…" : "Open my account"}
         </button>
-        <button type="button" onClick={() => switchTo("code")} style={linkStyle}>My group added me — I have a joining code</button>
-        <button type="button" onClick={() => switchTo("pin")} style={linkStyle}>I already have a PIN</button>
+        <button type="button" onClick={() => switchTo("code")} className="soft-pill wide">My group added me — I have a joining code</button>
+        <button type="button" onClick={() => switchTo("pin")} className="soft-pill wide">I already have a PIN</button>
       </form>
     );
   }
@@ -266,8 +265,8 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
       <button type="submit" disabled={loading || pin.length < 4} style={{ ...btnStyle, opacity: loading || pin.length < 4 ? 0.6 : 1 }}>
         {opening ? "Opening your groups…" : loading ? "Checking…" : "Sign in"}
       </button>
-      <button type="button" onClick={() => switchTo("code")} style={linkStyle}>Your group added you, or forgot your PIN? Use the code your group official gave you</button>
-      <button type="button" onClick={() => switchTo("start")} style={linkStyle}>New to Stawi? Open an account (phone + PIN, no code)</button>
+      <button type="button" onClick={() => switchTo("code")} className="soft-pill wide">Your group added you, or forgot your PIN? Use the code your group official gave you</button>
+      <button type="button" onClick={() => switchTo("start")} className="soft-pill wide">New to Stawi? Open an account (phone + PIN, no code)</button>
     </form>
   );
 }

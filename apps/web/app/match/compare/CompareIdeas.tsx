@@ -520,7 +520,7 @@ const css = `
 .ci-confirm-box{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
 .ci-confirm-box h4{margin:0 0 8px;font-size:15px}
 .ci-chosen{background:rgba(31,77,58,.06)}
-.ci-linkbtn{margin-top:12px;background:none;border:none;padding:6px 0;color:var(--ink-2);text-decoration:underline;text-underline-offset:3px;font:inherit;font-size:13.5px;cursor:pointer}
+.ci-linkbtn{margin-top:12px;display:inline-flex;align-items:center;min-height:36px;padding:6px 14px;border-radius:999px;border:1px solid rgba(196,69,47,.25);background:rgba(196,69,47,.07);color:var(--danger);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;transition:transform .14s ease}.ci-linkbtn:active{transform:scale(.96)}
 .ci-ask{margin-top:10px;padding:12px;border-radius:12px;border:1px solid var(--gold);background:rgba(224,163,46,.1);font-size:13.5px}
 .ci-ask p{margin:0}
 `;

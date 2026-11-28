@@ -5,6 +5,7 @@ import { getMyGroups } from '@/lib/data';
 import { pickAllowedId } from '@stawi/core';
 
 import { BackLink } from '@/components/BackLink';
+import { TapCards } from '@/components/TapCards';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,9 +61,10 @@ export default async function MatchPage({ searchParams }: { searchParams: Promis
         </a>
       )}
       <BusinessMatch groupId={groupId ?? null} groupCapitalCents={groupCapitalCents} groupName={groupName} />
-      <p className="mr-meta" style={{ marginTop: 10 }}>
-        Chosen your business and need more money than your savings? Tap <strong>Write the funding proposal</strong> on it in your shortlist, or <a href={`/proposal${groupId ? `?group=${encodeURIComponent(groupId)}` : ''}`}>write one for any business</a>.
-      </p>
+      <TapCards
+        label="Funding proposal"
+        cards={[{ href: `/proposal${groupId ? `?group=${encodeURIComponent(groupId)}` : ''}`, pic: 'page', title: 'Write a funding proposal', help: 'Need more money than your savings? Stawi writes it for any business' }]}
+      />
       {groupId && <DocumentHouse groupId={groupId} focus="start_business" />}
       <ValueBanners pillars={[2]} startCollapsed />
     </main>

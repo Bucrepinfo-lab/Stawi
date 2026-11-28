@@ -76,8 +76,8 @@ export function GroupSwitcher({ groups, activeId, onSwitch }: Props) {
             );
           })}
           <div className="sw-foot">
-            <a href="/profile#join" role="menuitem">＋ Join another chama (joining code)</a>
-            <a href="/groups/new" role="menuitem">＋ Start a new group</a>
+            <a href="/profile#join" role="menuitem" className="soft-pill wide">Join another chama (with a joining code)</a>
+            <a href="/groups/new" role="menuitem" className="soft-pill wide">Start a new group</a>
           </div>
         </div>
       )}
