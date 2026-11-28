@@ -1236,3 +1236,22 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 .cb-zone { border-color: color-mix(in srgb, var(--danger) 35%, var(--line)); margin-top: 12px; }
 .cb-form { display: grid; gap: 10px; }
 .cb-closed { margin-top: 14px; }
+
+/* Tap cards (owner 28/11/26): links people can feel — a picture, plain words, an arrow, press feedback. */
+.tapcards { display: grid; gap: 10px; margin-top: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+.tapcard { position: relative; display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 14px; border-radius: 16px; background: linear-gradient(135deg, var(--paper) 0%, var(--bone) 100%); border: 1px solid var(--line); color: var(--ink); text-decoration: none; box-shadow: 0 1px 0 rgba(255, 255, 255, .7) inset, 0 6px 16px -12px rgba(22, 56, 42, .45); transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+.tapcard::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--forest); border-radius: 16px 0 0 16px; }
+.tapcard.hot::before { background: var(--gold); }
+.tapcard-pic { flex: none; display: grid; place-items: center; width: 50px; height: 50px; border-radius: 14px; background: var(--paper); border: 1px solid var(--line); box-shadow: 0 4px 10px -8px rgba(22, 56, 42, .6); }
+.tapcard-text { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.tapcard-text strong { font-size: 15.5px; color: var(--forest-deep); line-height: 1.25; }
+.tapcard-text span { font-size: 13px; color: var(--ink-2); line-height: 1.4; }
+.tapcard-go { flex: none; color: var(--forest); padding: 6px; width: 32px; height: 32px; border-radius: 999px; background: rgba(31, 77, 58, .08); transition: transform .16s ease, background .16s ease; }
+.tapcard:hover, .tapcard:focus-visible { transform: translateY(-2px); border-color: var(--gold); box-shadow: 0 14px 28px -16px rgba(22, 56, 42, .55); }
+.tapcard:hover .tapcard-go, .tapcard:focus-visible .tapcard-go { transform: translateX(3px); background: var(--gold); color: var(--forest-deep); }
+.tapcard:active { transform: scale(.975); box-shadow: 0 2px 6px -4px rgba(22, 56, 42, .5); background: var(--bone-2); }
+.tapcard:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .tapcard, .tapcard-go { transition: none; } .tapcard:hover, .tapcard:focus-visible, .tapcard:active { transform: none; } }
+/* The how-to cards' "go" words become a small button too. */
+.money-how-text em { justify-self: start; margin-top: 6px; padding: 5px 12px; border-radius: 999px; background: var(--forest-deep); color: var(--bone); font-size: 13px; }
+.money-how-card:active { transform: scale(.98); }
