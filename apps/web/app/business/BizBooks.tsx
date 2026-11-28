@@ -14,6 +14,7 @@ import { RecordSheet } from './RecordSheet';
 import { Reports } from './Reports';
 import { AccountantPanel, BranchesPanel, DailyBook, ItemsPanel, OwedPanel } from './Panels';
 import { RestockPanel } from './RestockPanel';
+import { CloseBusiness } from './CloseBusiness';
 import { KIND, MAIN_KINDS, MORE_KINDS, OWNER_ONLY_KINDS, kes, type Lang } from './biz-ui';
 
 type Tab = 'today' | 'reports' | 'items' | 'restock' | 'owed' | 'branches' | 'accountant' | 'book' | 'settings';
@@ -182,6 +183,7 @@ export function BizBooks({ view }: { view: BizBooksView }) {
       {tab === 'accountant' && <AccountantPanel entries={entries} branches={branches} today={today} name={view.name} />}
       {tab === 'book' && <DailyBook groupId={view.groupId} entries={branchId ? entries.filter((e) => e.branchId === branchId) : entries} items={items} branches={branches} today={today} manage={access.manage} lang={lang} onDone={done} />}
       {tab === 'settings' && <LevelPicker groupId={view.groupId} level={level} lang={lang} onDone={done} />}
+      {tab === 'settings' && access.owner && <CloseBusiness groupId={view.groupId} name={view.name} />}
     </div>
   );
 }

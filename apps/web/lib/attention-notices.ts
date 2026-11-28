@@ -31,7 +31,7 @@ export async function runAttentionNotices(now: Date = new Date()): Promise<Atten
   const run: AttentionRun = { groups: 0, due: 0, sent: 0, capped: false, sms: on ? 'on' : 'off' };
   const { prisma } = await import('@stawi/db');
   const groups = await prisma.group.findMany({
-    where: { charter: { isNot: null } },
+    where: { charter: { isNot: null }, closedAt: null },
     select: { id: true, type: true, modules: true },
     orderBy: { id: 'asc' },
     take: GROUPS_PER_RUN,

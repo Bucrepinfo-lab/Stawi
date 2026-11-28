@@ -92,6 +92,8 @@ model Group {
   // Which sections this group or business uses (owner 20/11/26). Null = the default for its type.
   // { meetings, agendas, officials, money, ideas, books, savings_credit } — see @stawi/core modules.ts
   modules     Json?
+  /// Closed by its owner (owner 28/11/26): hidden from lists and reminders; records kept; can be reopened.
+  closedAt    DateTime?
 
   members       Membership[]
   contributions Contribution[]

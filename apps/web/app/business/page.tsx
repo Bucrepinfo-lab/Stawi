@@ -7,7 +7,8 @@ import { splitGroups } from '@/lib/business';
 import { Picture, type PictureName } from '@/components/Pictures';
 import { ValueBanners } from '@/components/ValueBanners';
 import { dbEnabled } from '@/lib/data';
-import { loadBizBooks } from '@/lib/biz';
+import { loadBizBooks, myClosedBusinesses } from '@/lib/biz';
+import { ClosedBusinesses } from './CloseBusiness';
 import { BizBooks } from './BizBooks';
 
 export const dynamic = 'force-dynamic';
@@ -30,6 +31,7 @@ export default async function BusinessPage({ searchParams }: { searchParams: Pro
   const modulesById = await getModulesMap(all.map((g) => g.id));
   const { businesses, groups } = splitGroups(all, modulesById);
   const sp = await searchParams;
+  const closed = dbEnabled() ? await myClosedBusinesses().catch(() => []) : [];
 
   if (businesses.length === 0) {
     return (
@@ -56,6 +58,7 @@ export default async function BusinessPage({ searchParams }: { searchParams: Pro
             Looking for your group&rsquo;s books? They are inside <a href="/dashboard">My group</a>.
           </p>
         )}
+        <ClosedBusinesses list={closed} />
         <ValueBanners pillars={[3]} startCollapsed />
       </main>
     );
@@ -74,6 +77,7 @@ export default async function BusinessPage({ searchParams }: { searchParams: Pro
         )}
         <BizBooks key={activeId} view={view} />
         <p className="biz-note"><a href="/groups/new?start=books_only">＋ Add another business</a></p>
+        <ClosedBusinesses list={closed} />
       </main>
     );
   }
