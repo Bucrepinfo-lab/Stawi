@@ -28,7 +28,7 @@ export default async function ProfilePage() {
 
       <section className="pf-card" aria-labelledby="pf-pay">
         <h2 id="pf-pay">My chamas &amp; payments</h2>
-        <p className="mr-meta">One phone number and PIN open all of them. Switch between them with &ldquo;Switch chama&rdquo; on the home screen, or open one here.</p>
+        <p className="mr-meta">One phone number and Stawi PIN open all of them. Switch between them with &ldquo;Switch chama&rdquo; on the home screen, or open one here.</p>
         {profile.groups.length === 0 ? (
           <p className="mr-empty">You are not in a group yet. <a href="/dashboard">Join the demo chama or start one</a>.</p>
         ) : (
