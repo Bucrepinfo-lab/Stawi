@@ -1,5 +1,8 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { PhoneAuth } from '@/components/phone-auth';
+
+export const metadata: Metadata = { alternates: { canonical: '/sign-up' } };
 
 /**
  * Join Stawi with a phone number and a 4-digit PIN — no email, no SMS (owner

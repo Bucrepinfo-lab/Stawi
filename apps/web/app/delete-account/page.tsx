@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { LegalPage, LegalSection, CONTACT_EMAIL } from '@/components/LegalPage';
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/delete-account" },
   title: 'Delete your Stawi account',
   description: 'How to delete your Stawi account and personal data, in the app or by email.',
 };

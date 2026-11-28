@@ -1,6 +1,9 @@
+import type { Metadata } from 'next';
 import { Landing } from './Landing';
 import { saccoPlusEnabled } from '@/lib/features';
 import { daysLeft, foundingUntil } from '@stawi/core';
+
+export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 // Read the SACCO_PLUS_ENABLED flag per request (runtime env), not at build.
 export const dynamic = 'force-dynamic';

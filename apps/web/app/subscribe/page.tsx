@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { cookies, headers } from 'next/headers';
 import { PLAY_APP_COOKIE, PLAY_APP_PURCHASE_UNAVAILABLE, planPurchasesAllowed } from '@stawi/core';
 import { SubscribeGate } from './SubscribeGate';
@@ -5,8 +6,11 @@ import { ValueBanners } from '@/components/ValueBanners';
 import { ShareBar } from '@/components/ShareBar';
 import { CountdownBadge } from '@/components/CountdownBadge';
 import { daysLeft, foundingUntil } from '@stawi/core';
-import { saccoPlusEnabled } from '@/lib/features';
+import { saccoPlusEnabled } from '@/lib/features';
+
 import { BackLink } from '@/components/BackLink';
+
+export const metadata: Metadata = { alternates: { canonical: '/subscribe' } };
 
 // Flags and the founding-price date are read per request, never baked in at build.
 export const dynamic = 'force-dynamic';

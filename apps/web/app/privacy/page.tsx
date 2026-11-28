@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { LegalPage, LegalSection, CONTACT_EMAIL } from '@/components/LegalPage';
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/privacy" },
   title: 'Privacy Policy — Stawi',
   description: 'How Telpen Systems Ltd collects, uses, shares, keeps and deletes personal data in Stawi.',
 };
