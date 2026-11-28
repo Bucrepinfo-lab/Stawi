@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addMember, canEditRoster, cleanRoster, removeMember, rosterMemberProblem, sameRoster } from '../src/charter';
+import { addMember, canEditRoster, cleanRoster, removeMember, rosterAccessChanges, rosterMemberProblem, sameRoster } from '../src/charter';
 
 const base = addMember(addMember([], { fullName: 'Amina Wanjiru', designation: 'Chairperson', phone: '0712345678' }), { fullName: 'Grace Otieno', designation: 'Treasurer', phone: '0722000111' });
 
@@ -26,4 +26,13 @@ describe('who keeps the member list (owner 28/11/26)', () => {
     expect(rosterMemberProblem({ fullName: 'Joseph Kamau', phone: '+254 712 345 678' }, base)).toMatch(/already/);
     expect(rosterMemberProblem({ fullName: 'Joseph Kamau', phone: '0700111222' }, base)).toBeNull();
   });
+});
+
+it('taking a member off the list means they leave; putting them back gives access again', () => {
+  const off = removeMember(base, base[1]!.id);
+  expect(rosterAccessChanges(base, off)).toEqual({ left: ['722000111'], onList: ['712345678'] });
+  expect(rosterAccessChanges(off, base).left).toEqual([]);
+  expect(rosterAccessChanges(off, base).onList).toContain('722000111');
+  // A blank row or a changed name is not someone leaving.
+  expect(rosterAccessChanges(base, addMember(base)).left).toEqual([]);
 });

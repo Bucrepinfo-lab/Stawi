@@ -247,3 +247,16 @@ export function rosterMemberProblem(m: { fullName: string; phone: string }, othe
   if (others.some((o) => o.phone.replace(/\D/g, '').slice(-9) === key)) return 'This phone number is already on the list.';
   return null;
 }
+
+const key9 = (phone: string) => phone.replace(/\D/g, '').slice(-9);
+
+/**
+ * Who leaves and who stays when the list changes (owner 28/11/26): phone keys
+ * (last nine digits) on the old list but not the new one have left the group;
+ * every key on the new list has (or regains) access.
+ */
+export function rosterAccessChanges(before: CharterMember[], after: CharterMember[]): { left: string[]; onList: string[] } {
+  const now = new Set(cleanRoster(after).map((m) => key9(m.phone)).filter((k) => k.length === 9));
+  const was = cleanRoster(before).map((m) => key9(m.phone)).filter((k) => k.length === 9);
+  return { left: [...new Set(was.filter((k) => !now.has(k)))], onList: [...now] };
+}

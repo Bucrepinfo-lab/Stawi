@@ -488,13 +488,21 @@ export async function saveCharterAction(input: {
   if (deniedCharter) return { ok: false, persisted: false, error: deniedCharter };
   // The member list is the secretary's (or the chairperson's) to change (owner 28/11/26).
   // Any other official saving the charter keeps the stored list exactly as it is.
+  let rosterBefore: any[] | null = null;
   {
     const { myGroupRole } = await import('@/lib/group-access');
     const { canEditRoster, cleanRoster } = await import('@stawi/core');
     const { prisma, getGroupCharter } = await import('@stawi/db');
     const stored = await getGroupCharter(prisma, input.groupId);
     const storedMembers = Array.isArray(stored?.members) ? (stored!.members as any[]) : [];
-    c.members = canEditRoster(await myGroupRole(input.groupId)) ? cleanRoster(Array.isArray(c.members) ? c.members : []) : storedMembers;
+    if (canEditRoster(await myGroupRole(input.groupId))) {
+      c.members = cleanRoster(Array.isArray(c.members) ? c.members : []);
+      const leave = await rosterLeaveProblem(input.groupId, storedMembers, c.members);
+      if (leave) return { ok: false, persisted: false, error: leave };
+      rosterBefore = storedMembers;
+    } else {
+      c.members = storedMembers;
+    }
   }
   try {
     const { prisma, upsertGroupCharter, provisionRosterMemberships } = await import('@stawi/db');
@@ -522,6 +530,7 @@ export async function saveCharterAction(input: {
         .map((m: any) => ({ fullName: m.fullName, phone: m.phone, designation: m.designation }));
       if (roster.length) await provisionRosterMemberships(prisma, { groupId: input.groupId, tenantId: await tenantId(), roster });
     } catch { /* non-fatal */ }
+    if (rosterBefore) await applyRosterAccess(input.groupId, rosterBefore, c.members);
     publishEvent({ type: 'charter', channel: groupChannel(input.groupId) });
     return { ok: true, persisted: true };
   } catch (e) {
@@ -777,6 +786,9 @@ export async function saveRosterAction(input: { groupId: string; members: unknow
   try {
     const { prisma, getGroupCharter, upsertGroupCharter, provisionRosterMemberships } = await import('@stawi/db');
     const stored = await getGroupCharter(prisma, input.groupId);
+    const before = Array.isArray(stored?.members) ? (stored!.members as any[]) : [];
+    const leave = await rosterLeaveProblem(input.groupId, before, members);
+    if (leave) return { ok: false, error: leave };
     const group = stored ? null : await prisma.group.findUnique({ where: { id: input.groupId }, select: { name: true, countryCode: true } });
     const t = await tenantId();
     await upsertGroupCharter(prisma, {
@@ -798,9 +810,38 @@ export async function saveRosterAction(input: { groupId: string; members: unknow
     });
     const roster = members.filter((m: any) => m.phone && m.fullName).map((m: any) => ({ fullName: m.fullName, phone: m.phone, designation: m.designation }));
     if (roster.length) await provisionRosterMemberships(prisma, { groupId: input.groupId, tenantId: t, roster }).catch(() => undefined);
+    await applyRosterAccess(input.groupId, before, members);
     publishEvent({ type: 'charter', channel: groupChannel(input.groupId) });
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Not saved. Try again.' };
   }
+}
+
+/**
+ * Leaving and returning (owner 28/11/26). Before a list change is saved: the
+ * person saving cannot take themselves off, and the chairperson cannot be
+ * taken off until someone else holds that role. After it is saved: members no
+ * longer on the list are marked as left (no access; records stay), and anyone
+ * on the list regains access.
+ */
+async function rosterLeaveProblem(groupId: string, before: unknown[], after: unknown[]): Promise<string | null> {
+  const { rosterAccessChanges } = await import('@stawi/core');
+  const { left } = rosterAccessChanges(before as any[], after as any[]);
+  if (!left.length) return null;
+  const { getUserPhone } = await import('@/lib/auth');
+  const mine = (await getUserPhone().catch(() => null))?.replace(/\D/g, '').slice(-9);
+  if (mine && left.includes(mine)) return 'You cannot take yourself off the list. Ask the chairperson or the secretary.';
+  const { prisma } = await import('@stawi/db');
+  const chairs = await prisma.membership.findMany({ where: { groupId, leftAt: null, role: 'CHAIRMAN' }, select: { phone: true } });
+  if (chairs.some((c) => c.phone && left.includes(c.phone.replace(/\D/g, '').slice(-9)))) return 'The chairperson cannot be taken off the list. Make someone else chairperson first.';
+  return null;
+}
+
+async function applyRosterAccess(groupId: string, before: unknown[], after: unknown[]): Promise<void> {
+  const { rosterAccessChanges } = await import('@stawi/core');
+  const { left, onList } = rosterAccessChanges(before as any[], after as any[]);
+  const { prisma } = await import('@stawi/db');
+  for (const k of left) await prisma.membership.updateMany({ where: { groupId, phone: { endsWith: k }, leftAt: null }, data: { leftAt: new Date() } });
+  if (onList.length) await prisma.membership.updateMany({ where: { groupId, leftAt: { not: null }, OR: onList.map((k) => ({ phone: { endsWith: k } })) }, data: { leftAt: null } });
 }

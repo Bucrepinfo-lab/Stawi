@@ -10,7 +10,7 @@ const last9 = (raw: string) => raw.replace(/\D/g, '').replace(/^0+/, '').slice(-
 
 async function groupMembers(groupId: string): Promise<{ groupName: string; members: (AlertMember & { name: string })[] } | null> {
   const { prisma } = await import('@stawi/db');
-  const group = await prisma.group.findUnique({ where: { id: groupId }, select: { name: true, members: { select: { id: true, clerkUserId: true, phone: true, role: true, fullName: true } } } });
+  const group = await prisma.group.findUnique({ where: { id: groupId }, select: { name: true, members: { where: { leftAt: null }, select: { id: true, clerkUserId: true, phone: true, role: true, fullName: true } } } });
   if (!group) return null;
   const keys = group.members.filter((m) => m.clerkUserId.startsWith('pending:') && m.phone).map((m) => last9(m.phone!)).filter((k) => k.length === 9);
   const pins = keys.length ? await prisma.authPin.findMany({ where: { OR: keys.map((k) => ({ phone: { endsWith: k } })) }, select: { userId: true, phone: true } }) : [];
