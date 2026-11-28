@@ -157,12 +157,13 @@ export const VALUE_PROPS: ValueProp[] = [
     },
     source: { label: 'Innovations for Poverty Action', url: 'https://poverty-action.org/unlocking-potential-savings-groups-through-group-loans-and-digital-records-insights-our-baseline' },
     solution: {
-      en: 'Speak your meeting in your own language and Stawi will write it down.',
-      sw: 'Zungumza mkutano wako kwa lugha yako na Stawi itaandika.',
+      en: 'Tap the microphone and say it in Kiswahili or English. Stawi writes it as proper minutes, a notice or a letter for you to check, print or share.',
+      sw: 'Gusa maikrofoni useme kwa Kiswahili au Kiingereza. Stawi huiandika kama kumbukumbu rasmi, tangazo au barua ili uikague, uichapishe au uitume.',
     },
-    status: 'coming',
-    href: '/dashboard',
-    cta: { en: 'Open your group', sw: 'Fungua kikundi chako' },
+    // Live since 26/11/26 ("Write it for me" and "Speak the minutes"); owner 28/11/26: stop saying "Coming soon".
+    status: 'live',
+    href: '/write?kind=minutes&speak=1',
+    cta: { en: 'Speak it now', sw: 'Ongea sasa' },
   },
 
   // ── Pillar 2 — the business idea ────────────────────────────────────────
@@ -213,12 +214,12 @@ export const VALUE_PROPS: ValueProp[] = [
     },
     source: { label: 'US Chamber of Commerce', url: 'https://www.uschamber.com/co/start/strategy/why-small-businesses-fail' },
     solution: {
-      en: 'A simple buyer check before you commit: who will buy, how many are near you, and what they pay today.',
-      sw: 'Ukaguzi rahisi wa wanunuzi kabla ya kuanza: nani atanunua, wako wangapi karibu, na wanalipa kiasi gani leo.',
+      en: 'Before you choose, Stawi scores buyers and competition for each idea and lists the checks to do near you: who buys, how many sell the same thing, and their prices today.',
+      sw: 'Kabla ya kuchagua, Stawi hupima wanunuzi na ushindani kwa kila wazo na kukupa ukaguzi wa kufanya karibu nawe: nani hununua, wangapi huuza kitu hicho, na bei zao leo.',
     },
-    status: 'coming',
+    status: 'live',
     href: '/match',
-    cta: { en: 'See ideas now', sw: 'Ona mawazo sasa' },
+    cta: { en: 'Compare our ideas', sw: 'Linganisha mawazo yetu' },
   },
 
   // ── Pillar 3 — the books ────────────────────────────────────────────────
@@ -287,12 +288,12 @@ export const VALUE_PROPS: ValueProp[] = [
     },
     source: { label: 'US Chamber of Commerce', url: 'https://www.uschamber.com/co/start/strategy/why-small-businesses-fail' },
     solution: {
-      en: 'A separate business purse in Stawi, with what the owner takes out recorded on its own.',
-      sw: 'Mfuko tofauti wa biashara ndani ya Stawi, na anachochukua mwenye biashara kikirekodiwa kivyake.',
+      en: 'Stawi Business keeps the business money apart. What the owner takes home is written as “I took money out”, so you see what the business really earned.',
+      sw: 'Stawi Business hutenganisha pesa za biashara. Anachochukua mwenye biashara kwenda nyumbani huandikwa “Nimechukua pesa”, ili uone biashara ilipata kiasi gani kweli.',
     },
-    status: 'coming',
-    href: '/books',
-    cta: { en: 'Open my books', sw: 'Fungua hesabu zangu' },
+    status: 'live',
+    href: '/business',
+    cta: { en: 'Open business books', sw: 'Fungua hesabu za biashara' },
   },
 
   // ── Pillar 4 — savings and loans (shown only when SACCO+ is on) ─────────
@@ -343,12 +344,12 @@ export const VALUE_PROPS: ValueProp[] = [
     },
     source: { label: 'Youth Enterprise Development Fund', url: 'https://www.youthfund.go.ke/constituency-based-loan/' },
     solution: {
-      en: 'One tap to gather your minutes, member list and statements into a single loan folder.',
-      sw: 'Bonyeza mara moja kukusanya kumbukumbu, orodha ya wanachama na taarifa kwenye faili moja la mkopo.',
+      en: 'One tap gathers your minutes, member list, statements and business books into one papers pack to print or save, and shows what is still missing.',
+      sw: 'Bonyeza mara moja kukusanya kumbukumbu, orodha ya wanachama, taarifa na hesabu za biashara kwenye kifurushi kimoja cha kuchapisha au kuhifadhi, na kuonyesha kinachokosekana.',
     },
-    status: 'coming',
-    href: '/sacco',
-    cta: { en: 'Open savings and loans', sw: 'Fungua akiba na mikopo' },
+    status: 'live',
+    href: '/papers?for=funding',
+    cta: { en: 'Open the papers pack', sw: 'Fungua kifurushi cha karatasi' },
   },
 ];
 

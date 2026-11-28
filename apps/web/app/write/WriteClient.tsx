@@ -41,7 +41,7 @@ async function readOnPhone(dataUrl: string): Promise<string> {
 
 type Step = 'choose' | 'working' | 'done';
 
-export function WriteClient({ groups, groupId, initialKind, aiOn }: { groups: { id: string; name: string }[]; groupId: string | null; initialKind: string | null; aiOn: boolean }) {
+export function WriteClient({ groups, groupId, initialKind, aiOn, speakFirst = false }: { groups: { id: string; name: string }[]; groupId: string | null; initialKind: string | null; aiOn: boolean; speakFirst?: boolean }) {
   const [kind, setKind] = useState<FormalKind>(FORMAL_KINDS.some((k) => k.id === initialKind) ? (initialKind as FormalKind) : 'letter');
   const [group, setGroup] = useState(groupId ?? '');
   const [notes, setNotes] = useState('');
@@ -128,7 +128,16 @@ export function WriteClient({ groups, groupId, initialKind, aiOn }: { groups: { 
       </section>
 
       <section className="pf-card no-print" aria-labelledby="wr-in">
-        <h2 id="wr-in">2. Give Stawi your points</h2>
+        <h2 id="wr-in">{speakFirst ? '2. Say your points' : '2. Give Stawi your points'}</h2>
+        {/* Owner 28/11/26: members who cannot write come here from "Speak it now": the microphone comes first. */}
+        {speakFirst && (
+          <div className="wr-speak-first">
+            <p className="mr-meta" style={{ margin: '0 0 8px' }}>Tap <b>Tap and speak</b>, then say it in your own words, in Kiswahili or English. Stawi writes it properly; you check it before printing or sharing.</p>
+            <DictateBox value={notes} onChange={setNotes} rows={5} placeholder="e.g. Tulikutana Jumamosi saa nane, tulikuwa kumi na wawili. Kila mtu alileta mia tano…" />
+            <button type="button" className="mr-btn go" disabled={step === 'working' || notes.trim().length < 3} onClick={() => void fromWords()} style={{ marginTop: 8 }}>Write it for me</button>
+            <p className="mr-meta" style={{ margin: '12px 0 6px' }}>Or, if your points are on paper:</p>
+          </div>
+        )}
         <div className="wr-actions">
           <label className={`wr-photo${step === 'working' ? ' busy' : ''}`}>
             <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M4 7h3l2-2.5h6L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" /><circle cx="12" cy="12.5" r="3.6" fill="none" stroke="currentColor" strokeWidth="1.8" /></svg>
@@ -140,11 +149,13 @@ export function WriteClient({ groups, groupId, initialKind, aiOn }: { groups: { 
             <input type="file" accept="image/*" hidden disabled={step === 'working'} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; void fromPhoto(f); }} />
           </label>
         </div>
+        {!speakFirst && (
         <details className="wr-type" open>
           <summary>Or speak it, or type it (Kiswahili or English)</summary>
           <DictateBox value={notes} onChange={setNotes} rows={5} placeholder="e.g. meeting saturday 2pm chief camp, everybody bring 500, we discuss buying tents" />
           <button type="button" className="mr-btn go" disabled={step === 'working' || notes.trim().length < 3} onClick={() => void fromWords()}>Write it for me</button>
         </details>
+        )}
         {step === 'working' && <p className="wr-status" role="status"><span className="wr-dot" aria-hidden />{status}</p>}
         <p className="mr-meta">
           {aiOn

@@ -25,8 +25,14 @@ describe('value banners: every claim is verifiable (owner 20/11/26)', () => {
     for (const p of VALUE_PROPS) {
       expect(banned.test(`${p.pain.en} ${p.solution.en} ${p.cta.en}`), p.id).toBe(false);
     }
+    // Owner 28/11/26: every tool these banners name is built, so none may say "Coming soon".
     const coming = VALUE_PROPS.filter((p) => p.status === 'coming').map((p) => p.id);
-    expect(coming).toEqual(['p1-speak', 'p2-demand', 'p3-mixed-money', 'p4-papers']);
+    expect(coming).toEqual([]);
+  });
+
+  it('every banner button opens a page that exists', () => {
+    const routes = new Set(['/dashboard', '/formalize', '/match', '/books', '/business', '/sacco', '/write', '/papers']);
+    for (const p of VALUE_PROPS) expect(routes.has(p.href.split('?')[0]!), `${p.id} -> ${p.href}`).toBe(true);
   });
 
   it('every pillar has at least two live banners', () => {
@@ -41,9 +47,12 @@ describe('value banners: every claim is verifiable (owner 20/11/26)', () => {
     expect(valuePropsFor(4, { saccoPlus: true }).length).toBeGreaterThan(0);
     expect(valuePillars()).toEqual([1, 2, 3]);
     expect(valuePillars({ saccoPlus: true })).toEqual([1, 2, 3, 4]);
-    const p1 = valuePropsFor(1);
-    expect(p1[p1.length - 1]?.status).toBe('coming');
-    expect(p1[0]?.status).toBe('live');
+    for (const pillar of [1, 2, 3, 4] as const) {
+      const list = valuePropsFor(pillar, { saccoPlus: true });
+      const firstComing = list.findIndex((p) => p.status === 'coming');
+      if (firstComing >= 0) expect(list.slice(firstComing).every((p) => p.status === 'coming')).toBe(true);
+      expect(list[0]?.status).toBe('live');
+    }
   });
 
   it('no lending or interest words outside pillar 4', () => {
