@@ -86,14 +86,14 @@ export async function researchIdeasOnWeb(userId: string, ideas: Venture[], capit
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    const tools = [
-      {
-        type: 'web_search_20250305',
-        name: 'web_search',
-        max_uses: Math.min(10, Number(process.env.IDEA_RESEARCH_MAX_SEARCHES) || 6),
-        user_location: { type: 'approximate', country: 'KE', timezone: 'Africa/Nairobi' },
-      },
-    ];
+    const search: Record<string, unknown> = {
+      type: 'web_search_20250305',
+      name: 'web_search',
+      max_uses: Math.min(10, Number(process.env.IDEA_RESEARCH_MAX_SEARCHES) || 6),
+      user_location: { type: 'approximate', country: 'KE', city: 'Nairobi', timezone: 'Africa/Nairobi' },
+    };
+    const tools = [search];
+    let triedWithoutPlace = false;
     const messages: { role: 'user' | 'assistant'; content: unknown }[] = [{ role: 'user', content: ideaResearchPrompt(ideas, capitalCents) }];
     // A long search turn can pause; send it back as it came, at most twice.
     for (let round = 0; round < 3; round++) {
@@ -104,7 +104,16 @@ export async function researchIdeasOnWeb(userId: string, ideas: Venture[], capit
         signal: controller.signal,
       });
       if (!res.ok) {
-        console.warn('[ideas] research answered', res.status);
+        // Log the API's own reason (never the key) so a refusal is clear in the Fly logs.
+        const why = await res.json().then((b: { error?: { type?: string; message?: string } }) => `${b.error?.type ?? ''}: ${b.error?.message ?? ''}`.slice(0, 240)).catch(() => '');
+        console.warn('[ideas] research answered', res.status, why);
+        // The search location is optional; some country codes are refused with a 400. Try once without it.
+        if (res.status === 400 && !triedWithoutPlace && 'user_location' in search) {
+          triedWithoutPlace = true;
+          delete search.user_location;
+          round--;
+          continue;
+        }
         return null;
       }
       const body = (await res.json()) as Parameters<typeof readResearchAnswer>[0] & { stop_reason?: string };
