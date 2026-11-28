@@ -12,7 +12,7 @@ export function JoinChama() {
     <section className="pf-card" id="join" aria-labelledby="pf-join">
       <h2 id="pf-join">Join another chama</h2>
       <p className="mr-meta">
-        In more than one chama? Use the same phone number and PIN for all of them. Ask the new chama&rsquo;s chairperson, secretary or treasurer to add your number and give you its joining code, then type it here.
+        In more than one chama? Use the same phone number and Stawi PIN for all of them. Ask the new chama&rsquo;s chairperson, secretary or treasurer to add your number and give you its joining code, then type it here.
       </p>
       <form
         className="pf-row"

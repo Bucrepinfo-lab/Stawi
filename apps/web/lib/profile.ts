@@ -30,7 +30,8 @@ export async function loadProfile() {
   const { prisma } = await import('@stawi/db');
   const [memberships, pin, photo, contact] = await Promise.all([
     prisma.membership.findMany({
-      where: myMembershipsWhere(who),
+      // Left groups and closed businesses drop off Me (owner 28/11/26: fix everywhere).
+      where: { AND: [myMembershipsWhere(who), { leftAt: null, group: { closedAt: null } }] },
       select: { id: true, fullName: true, role: true, phone: true, group: { select: { id: true, name: true } }, contributions: { where: { status: 'CONFIRMED' }, select: { amountCents: true } } },
       orderBy: { joinedAt: 'asc' },
     }),
