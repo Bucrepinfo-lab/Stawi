@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildRoster, roundProblem, roundRecordProblem, roundTotals, turnState } from '../src/table-round';
+import { buildRoster, roundProblem, roundRecordProblem, roundReminderText, roundRemindersDue, roundTotals, turnState } from '../src/table-round';
 
 const plan = { amountCents: 100_000, profitCents: 10_000, everyDays: 7, startsOn: '2026-11-29', memberIds: ['a', 'b', 'c'] };
 
@@ -52,5 +52,32 @@ describe('table banking round', () => {
     expect(roundRecordProblem({ role: 'TREASURER', recorderIds: ['t'], turnMembershipId: 't' })).toMatch(/own turn/);
     expect(roundRecordProblem({ role: 'MEMBER', recorderIds: ['m'], turnMembershipId: 'a' })).toMatch(/treasurer/);
     expect(roundRecordProblem({ role: null, recorderIds: [], turnMembershipId: 'a' })).toMatch(/treasurer/);
+  });
+});
+
+/** Owner 28/11/26 ("yes, go ahead"): a reminder the day before the money is due back. */
+describe('return reminder', () => {
+  const [first, second] = buildRoster(plan); // first returns 06/12, second 13/12
+  const out = { ...first!, givenAt: '2026-11-29T09:00:00Z' };
+
+  it('is due only the day before the return day', () => {
+    expect(roundRemindersDue([out], '2026-12-05')).toHaveLength(1);
+    expect(roundRemindersDue([out], '2026-12-04')).toHaveLength(0);
+    expect(roundRemindersDue([out], '2026-12-06')).toHaveLength(0);
+  });
+
+  it('skips money never given and money already back', () => {
+    expect(roundRemindersDue([{ ...first! }], '2026-12-05')).toHaveLength(0);
+    expect(roundRemindersDue([{ ...out, returnedAt: '2026-12-04T09:00:00Z' }], '2026-12-05')).toHaveLength(0);
+    expect(roundRemindersDue([{ ...second!, givenAt: '2026-12-06T09:00:00Z' }], '2026-12-05')).toHaveLength(0);
+  });
+
+  it('says the day, the amount and the profit, and never the word loan', () => {
+    const text = roundReminderText({ name: 'Wanjiru', returnOn: out.returnOn, givenCents: out.givenCents, returnCents: out.returnCents });
+    expect(text).toContain('Wanjiru');
+    expect(text).toContain('06/12/26');
+    expect(text).toContain('KES 1,100');
+    expect(text).toContain('KES 100 profit');
+    expect(text.toLowerCase()).not.toContain('loan');
   });
 });

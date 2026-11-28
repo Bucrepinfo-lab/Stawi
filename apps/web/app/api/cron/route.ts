@@ -18,6 +18,9 @@ export const runtime = 'nodejs';
  *  4. attention — stalled group work is told to the officials it concerns in
  *     the group's own Messages, once per matter, person and level (owner
  *     20/11/26: no SMS). Off with ATTENTION_SMS=off (name kept for old secrets).
+ *  5. round     — table banking round: the day before money is due back, one
+ *     reminder in the group's own Messages (the member's private thread with
+ *     the officials). No SMS, no money moved. Off with ROUND_REMINDERS=off.
  */
 async function run(req: Request) {
   const url = new URL(req.url);
@@ -60,6 +63,15 @@ async function run(req: Request) {
   } catch (e) {
     console.error('[cron] attention failed', e instanceof Error ? e.message : e);
     out.attention = 'failed';
+  }
+
+  // 5) Table banking round: return reminders. A failure here never fails the other jobs.
+  try {
+    const { runRoundReminders } = await import('@/lib/round-reminders');
+    out.round = await runRoundReminders(now);
+  } catch (e) {
+    console.error('[cron] round reminders failed', e instanceof Error ? e.message : e);
+    out.round = 'failed';
   }
 
   return NextResponse.json({ ok: true, ranAt: now.toISOString(), ...out });
