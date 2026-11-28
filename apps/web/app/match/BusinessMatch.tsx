@@ -64,6 +64,8 @@ export function BusinessMatch({
   const [ready, setReady] = useState(false);
   // An empty shortlist slot points to the ☆ on the ideas above (owner 27/11/26: "not clickable").
   const [nudge, setNudge] = useState(false);
+  // Owner 28/11/26: a clear way to empty the shortlist and try again, asked once in the page.
+  const [confirmClear, setConfirmClear] = useState(false);
   function pointToStars() {
     document.getElementById('idea-grid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setNudge(true);
@@ -136,11 +138,23 @@ export function BusinessMatch({
     run(s);
   }
   function reset() {
+    // With ideas saved, ask first (in the page) instead of wiping them silently.
+    if (saved.length > 0) {
+      setConfirmClear(true);
+      document.getElementById('shortlist')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    startOver();
+  }
+  function startOver() {
     setSaved([]);
+    setConfirmClear(false);
+    if (groupCapital) setCapital(groupCapital);
     const s = Math.floor(Math.random() * 1e6);
     setSeed(s);
     run(s);
-    flash('Re-rolled · shortlist cleared');
+    flash('Shortlist cleared. Fresh ideas are below: tap ☆ to save up to three.');
+    setTimeout(pointToStars, 150);
   }
 
   function flash(msg: string) {
@@ -222,7 +236,7 @@ export function BusinessMatch({
             Re-roll
           </button>
           <button onClick={reset} style={btnGhost}>
-            Reset
+            Start over
           </button>
         </div>
 
@@ -312,8 +326,9 @@ export function BusinessMatch({
                 key={i}
                 style={{
                   display: 'flex',
+                  flexWrap: 'wrap',
                   alignItems: 'center',
-                  gap: 12,
+                  gap: 10,
                   padding: '11px 14px',
                   borderRadius: 11,
                   border: `1px ${v ? 'solid' : 'dashed'} var(--line)`,
@@ -338,22 +353,26 @@ export function BusinessMatch({
                 </span>
                 {v ? (
                   <>
-                    <span style={{ flex: 1, fontWeight: 600, fontSize: 13.5 }}>{v.title}</span>
-                    <span className="mono" style={{ fontSize: 13, color: 'var(--ink-2)' }}>
-                      KES {formatMoney(v.startupCents)}
+                    <span style={{ flex: 1, minWidth: 0, display: 'grid', gap: 2 }}>
+                      <span style={{ fontWeight: 700, fontSize: 14.5 }}>{v.title}</span>
+                      <span className="mono" style={{ fontSize: 12.5, color: 'var(--ink-2)' }}>
+                        KES {formatMoney(v.startupCents)} to start
+                      </span>
                     </span>
                     {/* The group chose this one: write the funding proposal from it (owner 26/11/26). */}
                     <a
-                      className="mr-btn go"
-                      style={{ minHeight: 34, fontSize: 12.5, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
+                      className="mr-btn"
+                      style={{ minHeight: 34, fontSize: 12.5, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', order: 3, flexBasis: '100%', justifyContent: 'center' }}
                       href={`/proposal?${new URLSearchParams({ title: v.title, industry: v.industry, startup: String(v.startupCents), margin: String(v.marginPct), risk: v.risk, desc: v.description })}`}
                     >
                       Write the funding proposal
                     </a>
                     <button
                       onClick={() => toggleSave(v)}
-                      aria-label="Remove"
+                      aria-label={`Take ${v.title} off the shortlist`}
                       style={{
+                        minWidth: 40,
+                        minHeight: 40,
                         border: 'none',
                         background: 'transparent',
                         color: 'var(--faint)',
@@ -394,9 +413,28 @@ export function BusinessMatch({
             </a>
           </div>
         )}
+        {saved.length > 0 && !confirmClear && (
+          <button type="button" onClick={() => setConfirmClear(true)} style={{ ...btnGhost, marginTop: 12, width: '100%' }}>
+            Clear the shortlist and start again
+          </button>
+        )}
+        {confirmClear && (
+          <div role="alertdialog" aria-labelledby="clear-q" style={{ marginTop: 12, padding: 14, borderRadius: 12, border: '1px solid var(--gold)', background: 'rgba(224,163,46,.1)' }}>
+            <p id="clear-q" style={{ margin: 0, fontWeight: 700, fontSize: 14.5 }}>
+              Clear {saved.length === 1 ? 'the saved idea' : `all ${saved.length} saved ideas`} and start again?
+            </p>
+            <p style={{ margin: '4px 0 10px', fontSize: 13, color: 'var(--ink-2)' }}>
+              They come off this phone only. The group&rsquo;s money and records do not change.
+            </p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button type="button" onClick={startOver} style={btnPrimary}>Yes, clear and start again</button>
+              <button type="button" onClick={() => setConfirmClear(false)} style={btnGhost}>Keep them</button>
+            </div>
+          </div>
+        )}
         <p style={{ marginTop: 10, fontSize: 12.5, color: 'var(--dim)', lineHeight: 1.5 }}>
-          Your shortlist stays on this phone when you open other tabs. To change it, tap × to take an idea off
-          and ☆ on another to add it. To change the name, the cost or the plan, tap Write the funding proposal:
+          Your shortlist stays on this phone when you open other tabs. To change it, tap × to take one idea off
+          and ☆ on another to add it, or clear the shortlist to start again. To change the name, the cost or the plan, tap Write the funding proposal:
           everything there can be edited.
         </p>
       </div>
