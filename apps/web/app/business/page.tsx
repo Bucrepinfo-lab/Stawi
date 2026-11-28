@@ -10,6 +10,7 @@ import { dbEnabled } from '@/lib/data';
 import { loadBizBooks, myClosedBusinesses } from '@/lib/biz';
 import { ClosedBusinesses } from './CloseBusiness';
 import { BizBooks } from './BizBooks';
+import { TapCards } from '@/components/TapCards';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Stawi' };
@@ -54,9 +55,7 @@ export default async function BusinessPage({ searchParams }: { searchParams: Pro
           ))}
         </ul>
         {groups.length > 0 && (
-          <p className="biz-note">
-            Looking for your group&rsquo;s books? They are inside <a href="/dashboard">My group</a>.
-          </p>
+          <TapCards label="Group books" cards={[{ href: '/dashboard', pic: 'agenda', title: 'Your group’s books', help: 'Contributions, minutes and earnings are inside My group' }]} />
         )}
         <ClosedBusinesses list={closed} />
         <ValueBanners pillars={[3]} startCollapsed />

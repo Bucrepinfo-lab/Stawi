@@ -3,6 +3,7 @@ import { dbEnabled } from '@/lib/data';
 import { myGroupRole, myMembershipIds } from '@/lib/group-access';
 import { LiveRefresh } from '@/components/LiveRefresh';
 import { RoundBook } from './RoundBook';
+import { TapCards } from '@/components/TapCards';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +38,7 @@ export default async function RoundPage({ params }: { params: Promise<{ id: stri
       <p style={{ color: 'var(--ink-2)', marginTop: 6, maxWidth: 620 }}>
         Whose turn it is, how much they took, the day it comes back, and the profit. Your group&rsquo;s own money and your own rules; Stawi only keeps the record.
       </p>
-      <p style={{ marginTop: 10 }}><a href={`/groups/${id}/earnings`} style={{ fontWeight: 700, color: 'var(--forest-deep)' }}>See what the group has earned from rounds and fines</a></p>
+      <TapCards label="Group earnings" cards={[{ href: `/groups/${id}/earnings`, pic: 'growth', title: 'Group earnings', help: 'What the group earned from rounds and fines, every shilling traced', hot: true }]} />
       <RoundBook groupId={id} round={data.round} members={data.members} past={data.past} myIds={mine} canWrite={role === 'TREASURER' || role === 'CHAIRMAN'} />
     </main>
   );

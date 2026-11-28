@@ -1255,3 +1255,33 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 /* The how-to cards' "go" words become a small button too. */
 .money-how-text em { justify-self: start; margin-top: 6px; padding: 5px 12px; border-radius: 999px; background: var(--forest-deep); color: var(--bone); font-size: 13px; }
 .money-how-card:active { transform: scale(.98); }
+
+/* Soft pills (owner 28/11/26): every small text link becomes something you can feel when you tap it. */
+.bk-link, .pf-link, .wr-pick, .msg-report, .soft-pill {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 36px; padding: 6px 14px; border-radius: 999px;
+  border: 1px solid rgba(31, 77, 58, .18); background: rgba(31, 77, 58, .07);
+  color: var(--forest-deep); font: inherit; font-size: 13.5px; font-weight: 700;
+  text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: transform .14s ease, background .14s ease, border-color .14s ease, box-shadow .14s ease;
+}
+.bk-link:hover, .pf-link:hover, .wr-pick:hover, .msg-report:hover, .soft-pill:hover { background: rgba(224, 163, 46, .2); border-color: var(--gold); }
+.bk-link:active, .pf-link:active, .wr-pick:active, .msg-report:active, .soft-pill:active { transform: scale(.96); box-shadow: inset 0 2px 4px rgba(22, 56, 42, .18); }
+.bk-link:focus-visible, .pf-link:focus-visible, .wr-pick:focus-visible, .msg-report:focus-visible, .soft-pill:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.pf-link { color: var(--danger); border-color: rgba(196, 69, 47, .25); background: rgba(196, 69, 47, .07); }
+.msg-report { min-height: 30px; padding: 3px 10px; font-size: 12px; margin-left: 8px; color: var(--ink-2); }
+.soft-pill.wide { display: flex; width: 100%; text-align: center; line-height: 1.35; padding: 10px 14px; white-space: normal; }
+@media (prefers-reduced-motion: reduce) { .bk-link, .pf-link, .wr-pick, .msg-report, .soft-pill { transition: none; } .bk-link:active, .pf-link:active, .wr-pick:active, .msg-report:active, .soft-pill:active { transform: none; } }
+/* Colour (owner 28/11/26: "make them colourful"): warm gold pills, and each tap card in a row gets its own accent. */
+.bk-link, .wr-pick, .soft-pill { background: linear-gradient(180deg, #fffaf0 0%, #f6e6c2 100%); border-color: rgba(185, 126, 21, .45); box-shadow: 0 1px 0 rgba(255, 255, 255, .8) inset, 0 4px 10px -8px rgba(122, 82, 10, .7); }
+.soft-pill.wide { border-radius: 16px; }
+.tapcard:nth-child(4n+2)::before { background: var(--gold); }
+.tapcard:nth-child(4n+3)::before { background: #c4452f; }
+.tapcard:nth-child(4n+4)::before { background: #2b6c8f; }
+.tapcard:nth-child(4n+1) .tapcard-pic { background: #eef6f0; }
+.tapcard:nth-child(4n+2) .tapcard-pic { background: #fff5dd; }
+.tapcard:nth-child(4n+3) .tapcard-pic { background: #fdeee9; }
+.tapcard:nth-child(4n+4) .tapcard-pic { background: #eaf3f8; }
+.tapcard.hot::before { background: var(--gold); }
+html.dark .tapcard-pic { background: var(--paper) !important; }
+html.dark .bk-link, html.dark .wr-pick, html.dark .soft-pill { background: rgba(224, 163, 46, .14); color: var(--ink); }
