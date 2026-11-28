@@ -101,7 +101,7 @@ export async function researchIdeasOnWeb(userId: string, ideas: Venture[], capit
       const res = await fetch(URL_MESSAGES, {
         method: 'POST',
         headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY!.trim(), 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-        body: JSON.stringify({ model: process.env.IDEA_RESEARCH_MODEL?.trim() || IDEA_RESEARCH_MODEL, max_tokens: 2500, messages, tools }),
+        body: JSON.stringify({ model: process.env.IDEA_RESEARCH_MODEL?.trim() || IDEA_RESEARCH_MODEL, max_tokens: Math.min(16000, Number(process.env.IDEA_RESEARCH_MAX_TOKENS) || 12000), messages, tools }),
         signal: controller.signal,
       });
       if (!res.ok) {
@@ -123,7 +123,7 @@ export async function researchIdeasOnWeb(userId: string, ideas: Venture[], capit
         continue;
       }
       const out = readResearchAnswer(body);
-      if (!out) console.warn('[ideas] research came back empty', body.stop_reason ?? '');
+      if (!out) console.warn("[ideas] research came back empty", body.stop_reason ?? "", (body.content ?? []).map((b) => b.type).join(","));
       return out;
     }
     return null;
