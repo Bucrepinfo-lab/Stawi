@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toE164 } from "@stawi/core";
+import { PinNotMpesa } from "@/components/PinNotMpesa";
 
 /**
  * Phone number, then the person's own 4-digit PIN — no SMS (owner 20/11/26).
@@ -218,13 +219,14 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
         )}
         {phoneField}
         <label style={{ fontSize: 13, color: "var(--ink-2)" }}>
-          Choose a 4-digit PIN
+          Choose a 4-digit Stawi PIN
           <input type={showPin ? "text" : "password"} inputMode="numeric" autoComplete="new-password" maxLength={4} value={pin} onChange={(e) => setPin(four(e.target.value))} style={{ ...pinStyle, marginTop: 6 }} />
         </label>
         <label style={{ fontSize: 13, color: "var(--ink-2)" }}>
           Repeat the PIN
           <input type={showPin ? "text" : "password"} inputMode="numeric" autoComplete="new-password" maxLength={4} value={pin2} onChange={(e) => setPin2(four(e.target.value))} style={{ ...pinStyle, marginTop: 6 }} />
         </label>
+        <PinNotMpesa compact />
         {errorLine}
         <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--ink-2)" }}>
           <input type="checkbox" checked={showPin} onChange={(e) => setShowPin(e.target.checked)} /> Show PIN
@@ -243,7 +245,7 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
     <form onSubmit={signIn} style={{ display: "grid", gap: 12, textAlign: "left" }}>
       {phoneField}
       <label style={{ fontSize: 13, color: "var(--ink-2)" }}>
-        Your 4-digit PIN
+        Your 4-digit Stawi PIN
         <input
           type="password"
           inputMode="numeric"
@@ -259,6 +261,7 @@ export function PhoneAuth({ afterAuthUrl = "/dashboard", initialMode = "pin" }: 
       <p style={{ fontSize: 12.5, color: "var(--ink-2)", margin: 0 }}>
         Use the number your group registered you with. It is also your M-Pesa number for contributions.
       </p>
+      <PinNotMpesa compact />
       {errorLine}
       <button type="submit" disabled={loading || pin.length < 4} style={{ ...btnStyle, opacity: loading || pin.length < 4 ? 0.6 : 1 }}>
         {opening ? "Opening your groups…" : loading ? "Checking…" : "Sign in"}

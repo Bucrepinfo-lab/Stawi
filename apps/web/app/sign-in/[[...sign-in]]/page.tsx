@@ -12,7 +12,7 @@ export default function SignInPage() {
       <div style={{ textAlign: 'center', maxWidth: 380, width: '100%' }}>
         <div className="display" style={{ fontSize: 30, fontWeight: 600, color: 'var(--forest-deep)' }}>Welcome back to Stawi</div>
         <p style={{ color: 'var(--ink-2)', marginTop: 8, marginBottom: 22, fontSize: 14.5 }}>
-          Enter your <b>phone number</b> and your <b>PIN</b>. Your groups appear automatically.
+          Enter your <b>phone number</b> and your <b>Stawi PIN</b> (not your M-Pesa PIN). Your groups appear automatically.
         </p>
         <Suspense>
           <PhoneAuth />

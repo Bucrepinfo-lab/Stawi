@@ -169,7 +169,7 @@ function EntryRow({ e, canCorrect, busy, onCorrect }: { e: MoneyEntry; canCorrec
           <label><span className="mr-meta">Why — every member will read this</span>
             <textarea className="mr-input" rows={2} value={reason} onChange={(ev) => setReason(ev.target.value)} required minLength={10} /></label>
           <div className="mr-actions">
-            <label className="mr-meta">Your PIN <input className="mr-input mr-pin mono" type="password" inputMode="numeric" autoComplete="off" maxLength={4} value={pin} onChange={(ev) => setPin(ev.target.value.replace(/\D/g, ''))} required /></label>
+            <label className="mr-meta">Your Stawi PIN (not M-Pesa) <input className="mr-input mr-pin mono" type="password" inputMode="numeric" autoComplete="off" maxLength={4} value={pin} onChange={(ev) => setPin(ev.target.value.replace(/\D/g, ''))} required /></label>
             <button type="button" className="mr-btn" onClick={() => setOpen(false)}>Cancel</button>
             <button type="submit" className="mr-btn go" disabled={busy}>{busy ? 'Sending…' : 'Ask the five to approve'}</button>
           </div>
@@ -243,7 +243,7 @@ function ApproveTask({ c, busy, onDecide }: { c: MoneyCorrection; busy: boolean;
       <div className="mr-meta">Asked by {c.requestedBy} on {dmy(c.createdAt)}. Reason: {c.reason}</div>
       <input className="mr-input" placeholder="A note (needed if you say no)" value={note} onChange={(ev) => setNote(ev.target.value)} />
       <div className="mr-actions">
-        <label className="mr-meta">Your PIN <input className="mr-input mr-pin mono" type="password" inputMode="numeric" autoComplete="off" maxLength={4} value={pin} onChange={(ev) => setPin(ev.target.value.replace(/\D/g, ''))} /></label>
+        <label className="mr-meta">Your Stawi PIN (not M-Pesa) <input className="mr-input mr-pin mono" type="password" inputMode="numeric" autoComplete="off" maxLength={4} value={pin} onChange={(ev) => setPin(ev.target.value.replace(/\D/g, ''))} /></label>
         <button type="button" className="mr-btn go" disabled={busy || pin.length !== 4} onClick={() => onDecide(true, pin, note)}>Approve</button>
         <button type="button" className="mr-btn stop" disabled={busy || pin.length !== 4 || !note.trim()} onClick={() => onDecide(false, pin, note)}>Say no</button>
       </div>

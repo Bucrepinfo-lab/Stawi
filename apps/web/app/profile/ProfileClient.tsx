@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FeedbackBanner, type Feedback } from '@/components/FeedbackBanner';
+import { PinNotMpesa } from '@/components/PinNotMpesa';
 import { changeMyPhoneAction, changeMyPinAction, removeMyPhotoAction, saveMyEmailAction, saveMyNameAction, saveMyPhotoAction } from './actions';
 import { hideEmail } from '@stawi/core';
 
@@ -129,14 +130,14 @@ export function ProfileClient({ initial }: { initial: { name: string; phone: str
 
       <section className="pf-card" aria-labelledby="pf-phone">
         <h2 id="pf-phone">My phone number</h2>
-        <p className="mr-meta">You sign in with it, and M-Pesa prompts for your contributions go to it.</p>
+        <p className="mr-meta">You sign in to Stawi with it. M-Pesa payment prompts for your contributions also come to this number.</p>
         {open !== 'phone' ? (
           <button type="button" className="mr-btn" onClick={() => setOpen('phone')}>Change my number</button>
         ) : (
           <form className="pf-stack" onSubmit={(e) => { e.preventDefault(); void run('phone', () => changeMyPhoneAction({ phone, pin: phonePin }), () => { setOpen(null); setPhone(''); setPhonePin(''); }); }}>
             <label><span className="mr-meta">New phone number</span>
               <input className="mr-input mono" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0712 345 678" required /></label>
-            <label><span className="mr-meta">Your current PIN</span>
+            <label><span className="mr-meta">Your current Stawi PIN</span>
               <input className="mr-input mr-pin mono" type="password" inputMode="numeric" autoComplete="current-password" value={phonePin} onChange={(e) => setPhonePin(four(e.target.value))} required /></label>
             <div className="mr-actions">
               <button type="button" className="mr-btn" onClick={() => setOpen(null)}>Cancel</button>
@@ -147,22 +148,23 @@ export function ProfileClient({ initial }: { initial: { name: string; phone: str
       </section>
 
       <section className="pf-card" aria-labelledby="pf-pin">
-        <h2 id="pf-pin">My PIN</h2>
+        <h2 id="pf-pin">My Stawi sign-in PIN</h2>
+        <PinNotMpesa />
         {open !== 'pin' ? (
-          <button type="button" className="mr-btn" onClick={() => setOpen('pin')}>Change my PIN</button>
+          <button type="button" className="mr-btn" onClick={() => setOpen('pin')}>Change my Stawi PIN</button>
         ) : (
           <form className="pf-stack" onSubmit={(e) => { e.preventDefault(); void run('pin', () => changeMyPinAction(pins), () => { setOpen(null); setPins({ current: '', next: '', repeat: '' }); }); }}>
             {(['current', 'next', 'repeat'] as const).map((k) => (
-              <label key={k}><span className="mr-meta">{k === 'current' ? 'Current PIN' : k === 'next' ? 'New 4-digit PIN' : 'New PIN again'}</span>
+              <label key={k}><span className="mr-meta">{k === 'current' ? 'Current Stawi PIN' : k === 'next' ? 'New 4-digit Stawi PIN' : 'New Stawi PIN again'}</span>
                 <input className="mr-input mr-pin mono" type="password" inputMode="numeric" autoComplete={k === 'current' ? 'current-password' : 'new-password'} value={pins[k]} onChange={(e) => setPins({ ...pins, [k]: four(e.target.value) })} required /></label>
             ))}
             <div className="mr-actions">
               <button type="button" className="mr-btn" onClick={() => setOpen(null)}>Cancel</button>
-              <button type="submit" className="mr-btn go" disabled={busy === 'pin'}>{busy === 'pin' ? 'Changing…' : 'Change my PIN'}</button>
+              <button type="submit" className="mr-btn go" disabled={busy === 'pin'}>{busy === 'pin' ? 'Changing…' : 'Change my Stawi PIN'}</button>
             </div>
           </form>
         )}
-        <p className="mr-meta" style={{ marginTop: 8 }}>Forgot it? A group official gives you a new joining code, in person or on WhatsApp.</p>
+        <p className="mr-meta" style={{ marginTop: 8 }}>Forgot your Stawi PIN? A group official gives you a new joining code, in person or on WhatsApp.</p>
       </section>
     </>
   );
