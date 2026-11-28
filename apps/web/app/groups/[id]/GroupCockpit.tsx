@@ -473,7 +473,7 @@ function CharterTab({ charter, setCharter, canEdit, canRoster, groupId }: { char
               })}
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(96px, 1fr))', gap: 12 }}>
             <div><label style={label}>From</label><input style={input} value={charter.schedule.startTime} disabled={disabled} onChange={(e) => setSched({ startTime: e.target.value })} placeholder="4:00 PM" /></div>
             <div><label style={label}>To</label><input style={input} value={charter.schedule.endTime} disabled={disabled} onChange={(e) => setSched({ endTime: e.target.value })} placeholder="6:00 PM" /></div>
             <div><label style={label}>How often</label>
@@ -1168,7 +1168,7 @@ function NotesImport({ onApply, groupId }: { onApply: (p: ReturnType<typeof pars
 
 function MinutesDocument({ doc, charter }: { doc: ProfessionalMinutes; charter: GroupCharter }) {
   return (
-    <div className="print-doc" style={{ ...card, padding: 30 }}>
+    <div className="print-doc" style={{ ...card, padding: 'clamp(14px, 4vw, 30px)', minWidth: 0 }}>
       <DocHeader charter={charter} subtitle="Official Minutes" />
       <h2 className="display" style={{ fontSize: 18, fontWeight: 600, marginTop: 18, textAlign: 'center' }}>{doc.documentTitle}</h2>
       <p style={{ textAlign: 'center', fontSize: 12.5, color: 'var(--dim)', marginTop: 4 }}>{[doc.dateLong, doc.venue, doc.timeRange].filter(Boolean).join(' · ')}</p>
@@ -1258,7 +1258,7 @@ function StatementTab({ charter, meetings, canEdit, groupId, initialMonth }: { c
   if (months.length === 0) return <div className="s-card" style={card}><p style={{ color: 'var(--ink-2)' }}>Post the minutes of at least one dated meeting to generate a month-end statement (drafts are not counted).</p></div>;
 
   return (
-    <div style={{ display: 'grid', gap: 14 }}>
+    <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'minmax(0, 1fr)' }}>
       <div className="no-print" style={{ ...card, display: 'flex', gap: 12, alignItems: 'end', flexWrap: 'wrap' }}>
         <div><label style={label}>Statement month</label>
           <select style={input} value={period} onChange={(e) => { setPeriod(e.target.value); setNarr(null); setPosted(false); setPostErr(undefined); }}>
@@ -1301,11 +1301,11 @@ function StatementDocument({ charter, st, narrative, onEditNarrative }: { charte
     }
   }
   return (
-    <div className="print-doc" style={{ ...card, padding: 30 }}>
+    <div className="print-doc" style={{ ...card, padding: 'clamp(14px, 4vw, 30px)', minWidth: 0 }}>
       <DocHeader charter={charter} subtitle="Month-End Statement" />
       <h2 className="display" style={{ fontSize: 19, fontWeight: 600, marginTop: 16, textAlign: 'center' }}>Statement for {st.period.label}</h2>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginTop: 18 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginTop: 18 }}>
         <Stat k="Meetings" v={String(st.meetingsHeld)} />
         <Stat k="Members" v={String(st.membersOnRegister)} />
         <Stat k="Avg attendance" v={`${st.avgAttendancePct}%`} />
