@@ -192,6 +192,11 @@ export function TableBanking({
             My payment history (download)
           </a>
         )}
+        {groupId && (
+          <a href={`/groups/${encodeURIComponent(groupId)}/round`} style={{ display: 'inline-block', marginTop: 10, marginLeft: 12, fontSize: 13, fontWeight: 700, color: 'var(--forest-deep)', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+            Table banking round (whose turn)
+          </a>
+        )}
       </div>
 
       {!canRecord && (

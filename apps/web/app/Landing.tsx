@@ -442,6 +442,25 @@ export function Landing({ saccoPlus, foundingDays = null }: { saccoPlus: boolean
       </div>
       <ValueBanners pillars={[1, 2, 3, 4]} saccoPlus={saccoPlus} lang={lang} />
       <OpenDoor lang={lang === 'sw' ? 'sw' : 'en'} savingsCredit={saccoPlus} />
+      {/* Table banking round: for groups with no investment idea (owner 28/11/26). A record book only. */}
+      <section className="tr-banner" aria-label={lang === 'sw' ? 'Mzunguko wa meza' : 'Table banking round'}>
+        <div>
+          <h2 className="display">{lang === 'sw' ? 'Hamna wazo la uwekezaji? Hakuna shida.' : 'No investment idea? No problem.'}</h2>
+          <p>{lang === 'sw'
+            ? 'Saidianeni mezani. Kila mkutano mwanachama mmoja huchukua kiasi mlichokubaliana na kukirudisha mkutano ujao pamoja na faida kidogo. Stawi huweka rekodi kama ratiba ya zamu, ili kila mwanachama aone ni zamu ya nani.'
+            : 'Help each other at the table. At each meeting one member takes the amount you agreed and brings it back at the next meeting with a small profit. Stawi keeps the record like a duty roster, so every member sees whose turn it is.'}</p>
+          <Link href="/sign-in?next=/dashboard" className="tr-cta">{lang === 'sw' ? 'Anzisha mzunguko wa kikundi chetu' : 'Start our group\u2019s round'}</Link>
+        </div>
+        <div>
+          <p className="tr-eg">{lang === 'sw' ? 'Mfano wa ratiba' : 'Example roster'}</p>
+          <ul>
+            <li><b>1. Wanjiru</b><span>07/12</span><i>KES 1,000 + 100</i></li>
+            <li><b>2. Otieno</b><span>14/12</span><i>KES 1,000 + 100</i></li>
+            <li><b>3. Achieng</b><span>21/12</span><i>KES 1,000 + 100</i></li>
+            <li><b>{lang === 'sw' ? 'Faida ya kikundi' : 'Group profit'}</b><span /><i>KES 300</i></li>
+          </ul>
+        </div>
+      </section>
       <ShareBar lang={lang} />
 
       {/* Vision · Mission · Values */}
