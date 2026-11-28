@@ -598,9 +598,9 @@ function RosterEditor({ members: raw, canEdit, groupId, country, onSaved }: { me
             )}
             {removing?.id === m.id && (
               <div className="ro-confirm" role="alertdialog" aria-label={`Remove ${m.fullName}`}>
-                <p>Remove <b>{m.fullName}</b> from the group? Their past payments and records stay. They can no longer open the group.</p>
+                <p>Take <b>{m.fullName}</b> off the member list? Their past payments and records stay.</p>
                 <div className="ro-act">
-                  <button type="button" className="ro-btn danger solid" disabled={busy} onClick={() => void persist(removeMember(members, m.id), `${m.fullName} removed from the group.`).then((ok) => ok && setRemoving(null))}>Yes, remove</button>
+                  <button type="button" className="ro-btn danger solid" disabled={busy} onClick={() => void persist(removeMember(members, m.id), `${m.fullName} taken off the member list.`).then((ok) => ok && setRemoving(null))}>Yes, remove</button>
                   <button type="button" className="ro-btn" disabled={busy} onClick={() => setRemoving(null)}>Keep</button>
                 </div>
               </div>
