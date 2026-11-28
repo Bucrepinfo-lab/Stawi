@@ -377,7 +377,7 @@ export function Landing({ saccoPlus, foundingDays = null }: { saccoPlus: boolean
         <nav style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
           <Link href="/dashboard" style={navLink}>Table banking</Link>
           <Link href="/match" style={navLink}>Find a business</Link>
-          <Link href="/books" style={navLink}>Books</Link>
+          <Link href="/business" style={navLink}>{lang === 'sw' ? 'Biashara' : 'Business'}</Link>
           {saccoPlus && <Link href="/sacco" style={navLink}>SACCO+</Link>}
           <select value={lang} onChange={(e) => changeLang(e.target.value as Lang)} aria-label="Language"
             style={{ padding: '7px 10px', borderRadius: 9, border: '1px solid var(--line)', background: 'var(--paper)', color: 'var(--ink)', fontFamily: 'inherit', fontSize: 13 }}>
@@ -415,6 +415,7 @@ export function Landing({ saccoPlus, foundingDays = null }: { saccoPlus: boolean
 
         <div className="hf-ctas" style={{ marginTop: 24 }}>
           <Link href="/sign-in?next=/dashboard" className="hf-btn hf-btn--gold">{lang === 'sw' ? 'Fungua kikundi changu' : 'Open my group'}</Link>
+          <Link href="/sign-in?next=/business" className="hf-btn hf-btn--forest">{lang === 'sw' ? 'Hesabu za biashara yangu' : 'Keep my business books'}</Link>
           <a href="#how" className="hf-btn">{lang === 'sw' ? 'Inavyofanya kazi' : 'How it works'}</a>
         </div>
 

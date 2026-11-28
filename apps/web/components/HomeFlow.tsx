@@ -24,7 +24,7 @@ const COPY: Record<Lang, {
       { href: '/dashboard', pic: 'moneybag', title: 'Run my chama’s money', body: 'Record contributions. Every member sees every shilling and confirms their own.' },
       { href: '/dashboard', pic: 'mic', title: 'Speak our minutes', body: 'Say what happened at the meeting in Kiswahili or English. Stawi writes the minutes.' },
       { href: '/match', pic: 'growth', title: 'Find a business to start', body: 'Ideas that fit your group’s money, and a funding proposal written for you.' },
-      { href: '/books', pic: 'shop', title: 'Keep my shop’s books', body: 'Sales, stock and money in and out, for a shop, butchery, hotel or pub.' },
+      { href: '/business', pic: 'shop', title: 'Keep my shop’s books', body: 'Sales, stock and money in and out, for a shop, butchery, hotel or pub.' },
     ],
     how: 'How it works',
     howSub: 'Four steps, all on your phone.',
@@ -46,7 +46,7 @@ const COPY: Record<Lang, {
       { href: '/dashboard', pic: 'moneybag', title: 'Simamia pesa za chama', body: 'Rekodi michango. Kila mwanachama anaona kila shilingi na kuthibitisha yake.' },
       { href: '/dashboard', pic: 'mic', title: 'Sema kumbukumbu za mkutano', body: 'Eleza yaliyotokea mkutanoni kwa Kiswahili au Kiingereza. Stawi itaandika kumbukumbu.' },
       { href: '/match', pic: 'growth', title: 'Pata biashara ya kuanza', body: 'Mawazo yanayolingana na pesa za kikundi, na pendekezo la ufadhili limeandikwa kwa ajili yenu.' },
-      { href: '/books', pic: 'shop', title: 'Weka hesabu za duka', body: 'Mauzo, bidhaa na pesa zinazoingia na kutoka, kwa duka, bucha, hoteli au baa.' },
+      { href: '/business', pic: 'shop', title: 'Weka hesabu za duka', body: 'Mauzo, bidhaa na pesa zinazoingia na kutoka, kwa duka, bucha, hoteli au baa.' },
     ],
     how: 'Inavyofanya kazi',
     howSub: 'Hatua nne, zote kwenye simu yako.',
@@ -125,8 +125,8 @@ export function HomeDock({ lang }: { lang: string }) {
   const c = COPY[lang === 'sw' ? 'sw' : 'en'];
   return (
     <nav aria-label="Quick actions" className="hf-dock">
-      <Link href="/sign-in?next=/dashboard" className="hf-btn hf-btn--gold">{c.start}</Link>
-      <a href="#how" className="hf-btn">{c.how}</a>
+      <Link href="/sign-in?next=/dashboard" className="hf-btn hf-btn--gold">{lang === 'sw' ? 'Kikundi changu' : 'My group'}</Link>
+      <Link href="/sign-in?next=/business" className="hf-btn hf-btn--forest">{lang === 'sw' ? 'Biashara yangu' : 'My business'}</Link>
     </nav>
   );
 }

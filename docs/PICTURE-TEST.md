@@ -21,6 +21,7 @@ ages, including officials and ordinary members.
 | Picture | Tab (English / Kiswahili) | Counts as right |
 |---|---|---|
 | Members round a pot | My group / Kikundi | the group, chama, members, our savings group |
+| Shop with awning, coin on the counter | Business / Biashara | a shop, my business, selling, a duka |
 | Seedling on a coin | Ideas / Mawazo | growing money, a business, something to start |
 | Open book and coins | Books / Hesabu | records, accounts, writing money down |
 | Speech bubble | Messages / Ujumbe | messages, talking, SMS, WhatsApp |
