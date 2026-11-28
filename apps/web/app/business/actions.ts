@@ -100,7 +100,7 @@ export async function recordBizEntryAction(input: RecordInput): Promise<Result> 
 
   // A day already closed for this branch is locked.
   const closes = await prisma.bizDayClose.findMany({ where: { businessId, branchId: input.branchId }, select: { branchId: true, day: true } });
-  if (dayIsLocked(closes, input.branchId, input.day)) return { ok: false, error: 'That day is closed. Write it on today’s date and say in the note which day it was for.' };
+  if (dayIsLocked(closes, input.branchId, input.day)) return { ok: false, error: 'That day is closed for this branch. Write it on the next open day (tomorrow, if today is closed) and say in the note which day it was for.' };
 
   let itemId: string | undefined;
   let costCents: number | undefined;
