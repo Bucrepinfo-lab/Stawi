@@ -264,6 +264,8 @@ model Business {
   bizEntries  BizEntry[]
   bizCloses   BizDayClose[]
   bizStaff    BizStaff[]
+  bizSuppliers BizSupplier[]
+  bizRestocks  BizRestockRequest[]
 }
 
 model SavedVenture {
@@ -865,6 +867,8 @@ model BizItem {
   reorderAt  Int       @default(0)
   service    Boolean   @default(false)
   barcode    String?
+  /// Who normally supplies it (owner 28/11/26): the red line asks this supplier.
+  supplierId String?
   createdAt  DateTime  @default(now())
   archivedAt DateTime?
 
@@ -928,5 +932,54 @@ model BizStaff {
   createdAt    DateTime @default(now())
 
   @@unique([businessId, membershipId])
+  @@index([groupId])
+}
+
+/// A supplier the business already buys from (owner 28/11/26). phoneKey (last
+/// nine digits) lets a supplier who uses Stawi see requests addressed to them.
+model BizSupplier {
+  id         String    @id @default(cuid())
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId String
+  groupId    String
+  name       String
+  phone      String
+  phoneKey   String
+  leadDays   Int       @default(1)
+  createdAt  DateTime  @default(now())
+  archivedAt DateTime?
+
+  @@index([businessId])
+  @@index([groupId])
+  @@index([phoneKey])
+}
+
+/// "Please bring more": a restock request from a shop to its supplier. Nothing
+/// is bought or paid here; the shop writes the goods in when they arrive.
+model BizRestockRequest {
+  id                    String    @id @default(cuid())
+  business              Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId            String
+  groupId               String
+  branchId              String
+  supplierId            String
+  supplierPhoneKey      String
+  supplierName          String
+  shopName              String
+  branchLabel           String
+  /// [{ itemId, name, unit, qty | null }]
+  lines                 Json
+  note                  String?
+  status                String    @default("SENT")
+  supplierNote          String?
+  deliverOn             String?
+  createdByMembershipId String
+  createdByName         String
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  seenAt                DateTime?
+
+  @@index([businessId, createdAt])
+  @@index([supplierPhoneKey, createdAt])
   @@index([groupId])
 }

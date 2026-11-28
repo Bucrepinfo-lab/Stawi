@@ -73,7 +73,7 @@ export function ItemsPanel({ groupId, entries, items, today, branchId, manage, l
           </div>
           <div className="bk-row2">
             <label className="bk-field"><span>Selling price (KES)</span><input inputMode="decimal" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value.replace(/[^\d.,]/g, '') })} /></label>
-            <label className="bk-field"><span>Warn me when only this many are left</span><input inputMode="numeric" value={form.reorderAt} onChange={(e) => setForm({ ...form, reorderAt: e.target.value.replace(/\D/g, '') })} placeholder="e.g. 5" /></label>
+            <label className="bk-field"><span>Red line: alert me when only this many are left</span><input inputMode="numeric" value={form.reorderAt} onChange={(e) => setForm({ ...form, reorderAt: e.target.value.replace(/\D/g, '') })} placeholder="e.g. 5" /></label>
           </div>
           <label className="bk-check"><input type="checkbox" checked={form.service} onChange={(e) => setForm({ ...form, service: e.target.checked })} /><span>This is a service (a haircut, a repair): no stock</span></label>
           <div className="bk-actions"><button className="bk-save" disabled={busy || !form.name.trim()}>Add item</button><button type="button" className="bk-ghost" onClick={() => setAdding(false)}>Close</button></div>

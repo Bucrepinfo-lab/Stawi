@@ -79,3 +79,34 @@ export async function alertNewMessage(input: { groupId: string; senderMembership
     console.error('[alerts] message', err instanceof Error ? err.message : err);
   }
 }
+
+/** Phone alert to a business's owner and officials (owner 28/11/26: red lines, supplier replies). Never throws. */
+export async function alertBusinessOfficials(groupId: string, alert: import('@stawi/core').GroupAlert): Promise<void> {
+  try {
+    if (!process.env.DATABASE_URL) return;
+    const g = await groupMembers(groupId);
+    if (!g) return;
+    await sendAlert(alertUserIds({ members: g.members, officialsThreadMemberId: null }), alert);
+  } catch (err) {
+    console.error('[alerts] business', err instanceof Error ? err.message : err);
+  }
+}
+
+/**
+ * Phone alert to whoever signs in with this phone (last nine digits), e.g. a
+ * supplier who uses Stawi and has been sent a restock request. Never throws.
+ */
+export async function alertByPhoneKey(key: string, alert: import('@stawi/core').GroupAlert): Promise<void> {
+  try {
+    if (!process.env.DATABASE_URL || key.length !== 9) return;
+    const { prisma } = await import('@stawi/db');
+    const [pins, rows] = await Promise.all([
+      prisma.authPin.findMany({ where: { phone: { endsWith: key } }, select: { userId: true } }),
+      prisma.membership.findMany({ where: { phone: { endsWith: key }, NOT: { clerkUserId: { startsWith: 'pending:' } } }, select: { clerkUserId: true } }),
+    ]);
+    const ids = [...new Set([...pins.map((p) => p.userId), ...rows.map((r) => r.clerkUserId)])];
+    if (ids.length) await sendAlert(ids, alert);
+  } catch (err) {
+    console.error('[alerts] phone', err instanceof Error ? err.message : err);
+  }
+}

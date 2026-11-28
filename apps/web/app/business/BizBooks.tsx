@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BIZ_LEVELS, bizBrief, bizStatement, moneyOwed, previousRange, type BizKind, type BizLevel } from '@stawi/core';
+import { BIZ_LEVELS, bizBrief, bizStatement, moneyOwed, previousRange, restockList, RESTOCK_STATUS, type BizKind, type BizLevel } from '@stawi/core';
 import { FeedbackBanner, type Feedback } from '@/components/FeedbackBanner';
 import { LiveRefresh } from '@/components/LiveRefresh';
 import { Picture } from '@/components/Pictures';
@@ -13,13 +13,15 @@ import { CloseDay } from './CloseDay';
 import { RecordSheet } from './RecordSheet';
 import { Reports } from './Reports';
 import { AccountantPanel, BranchesPanel, DailyBook, ItemsPanel, OwedPanel } from './Panels';
+import { RestockPanel } from './RestockPanel';
 import { KIND, MAIN_KINDS, MORE_KINDS, OWNER_ONLY_KINDS, kes, type Lang } from './biz-ui';
 
-type Tab = 'today' | 'reports' | 'items' | 'owed' | 'branches' | 'accountant' | 'book' | 'settings';
+type Tab = 'today' | 'reports' | 'items' | 'restock' | 'owed' | 'branches' | 'accountant' | 'book' | 'settings';
 const TAB_LABEL: Record<Tab, { en: string; sw: string }> = {
   today: { en: 'Today', sw: 'Leo' },
   reports: { en: 'Statements', sw: 'Taarifa' },
   items: { en: 'Items', sw: 'Bidhaa' },
+  restock: { en: 'Restock', sw: 'Kujaza bidhaa' },
   owed: { en: 'Money owed', sw: 'Madeni' },
   branches: { en: 'Branches', sw: 'Matawi' },
   accountant: { en: 'For the accountant', sw: 'Kwa mhasibu' },
@@ -41,7 +43,12 @@ export function BizBooks({ view }: { view: BizBooksView }) {
   const branchId = branchSel === 'all' ? undefined : branchSel;
   const writeBranch = branchId ?? branches[0]?.id ?? '';
   const [tab, setTab] = useState<Tab>('today');
-  const [sheet, setSheet] = useState<{ kind: BizKind; party?: string; amountCents?: number } | 'close' | null>(null);
+  // A red-line phone alert opens straight on Restock (?tab=restock).
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('tab');
+    if (t === 'restock' && access.seeAll) setTab('restock');
+  }, [access.seeAll]);
+  const [sheet, setSheet] = useState<{ kind: BizKind; party?: string; amountCents?: number; itemId?: string; qty?: number | null } | 'close' | null>(null);
   const [more, setMore] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const seeProfit = access.seeAll;
@@ -52,9 +59,16 @@ export function BizBooks({ view }: { view: BizBooksView }) {
   const parties = useMemo(() => [...moneyOwed(entries, 'CUSTOMERS'), ...moneyOwed(entries, 'SUPPLIERS')].map((p) => p.party), [entries]);
   const closedToday = view.closes.some((c) => c.day === today && (branchId ? c.branchId === branchId : branches.length === 1 && c.branchId === branches[0]!.id));
   const firstTime = entries.length === 0;
+  const lowCount = useMemo(() => {
+    if (!access.seeAll || !items.length) return 0;
+    const br = branchId ?? branches[0]?.id;
+    const onOrder = new Set(view.restocks.filter((r) => RESTOCK_STATUS[r.status].open && r.branchId === br).flatMap((r) => r.lines.map((l) => l.itemId)));
+    return restockList(entries, items, view.suppliers, today, br).reduce((s, g) => s + g.lines.filter((l) => !onOrder.has(l.itemId)).length, 0);
+  }, [access.seeAll, entries, items, view.suppliers, view.restocks, today, branchId, branches]);
+  const replies = view.restocks.filter((r) => RESTOCK_STATUS[r.status].open && r.status !== 'SENT').length;
 
   const tabs: Tab[] = access.seeAll
-    ? ['today', 'reports', ...(level !== 'SIMPLE' || items.length ? (['items'] as Tab[]) : []), 'owed', ...(level === 'BUSY' || branches.length > 1 ? (['branches'] as Tab[]) : []), 'book', 'accountant', 'settings']
+    ? ['today', 'reports', ...(level !== 'SIMPLE' || items.length ? (['items', 'restock'] as Tab[]) : []), 'owed', ...(level === 'BUSY' || branches.length > 1 ? (['branches'] as Tab[]) : []), 'book', 'accountant', 'settings']
     : ['today', 'book'];
   const kinds = (list: BizKind[]) => list.filter((k) => access.manage || !OWNER_ONLY_KINDS.includes(k));
 
@@ -62,7 +76,7 @@ export function BizBooks({ view }: { view: BizBooksView }) {
     setFeedback({ tone, title: tone === 'success' ? 'Saved' : 'Not saved', detail: message });
     if (tone === 'success') { setSheet(null); router.refresh(); }
   };
-  const open = (kind: BizKind, preset?: { party?: string; amountCents?: number }) => {
+  const open = (kind: BizKind, preset?: { party?: string; amountCents?: number; itemId?: string; qty?: number | null }) => {
     track('cta', `biz-${kind.toLowerCase()}`);
     setSheet({ kind, ...preset });
     setMore(false);
@@ -93,12 +107,12 @@ export function BizBooks({ view }: { view: BizBooksView }) {
       {sheet === 'close' ? (
         <CloseDay groupId={view.groupId} branches={branches} branchId={writeBranch} entries={entries} day={today} closedDays={view.closes} lang={lang} onDone={done} onCancel={() => setSheet(null)} />
       ) : sheet ? (
-        <RecordSheet key={`${sheet.kind}-${sheet.party ?? ''}`} groupId={view.groupId} kind={sheet.kind} branches={branches} branchId={writeBranch} items={items}
+        <RecordSheet key={`${sheet.kind}-${sheet.party ?? ''}-${sheet.itemId ?? ''}`} groupId={view.groupId} kind={sheet.kind} branches={branches} branchId={writeBranch} items={items}
           parties={parties} today={today} canPickDay={access.manage} lang={lang} preset={sheet} onDone={done} onCancel={() => setSheet(null)} />
       ) : null}
 
       <nav className="bk-tabs" aria-label="Books">
-        {tabs.map((t) => <button key={t} type="button" aria-current={tab === t ? 'page' : undefined} onClick={() => setTab(t)}>{TAB_LABEL[t][lang]}</button>)}
+        {tabs.map((t) => <button key={t} type="button" aria-current={tab === t ? 'page' : undefined} onClick={() => setTab(t)}>{TAB_LABEL[t][lang]}{t === 'restock' && lowCount > 0 ? <b className="rs-badge">{lowCount}</b> : null}</button>)}
       </nav>
 
       {tab === 'today' && (
@@ -118,6 +132,12 @@ export function BizBooks({ view }: { view: BizBooksView }) {
             </section>
           )}
 
+          {lowCount > 0 && (
+            <button type="button" className="rs-alarm" onClick={() => setTab('restock')}>
+              <Picture name="box" size={34} />
+              <span><strong>{lowCount} item{lowCount > 1 ? 's' : ''} at the red line, not yet asked for</strong><small>Tap to ask your supplier to bring more{replies ? ` · ${replies} supplier repl${replies > 1 ? 'ies' : 'y'}` : ''}</small></span>
+            </button>
+          )}
           <section className="bk-today" aria-label="Today">
             <div className="bk-kpis">
               <div><span>{lang === 'sw' ? 'Mauzo leo' : 'Sales today'}</span><b className="mono">{kes(st.salesCents)}</b></div>
@@ -156,6 +176,7 @@ export function BizBooks({ view }: { view: BizBooksView }) {
           closedDays={view.closes} seeProfit={seeProfit} vatRegistered={view.vatRegistered} lang={lang} />
       )}
       {tab === 'items' && <ItemsPanel groupId={view.groupId} entries={entries} items={items} today={today} branchId={branchId} manage={access.manage} lang={lang} onDone={done} />}
+      {tab === 'restock' && <RestockPanel view={view} branchId={branchId} lang={lang} onDone={done} onWriteIn={(itemId, qty) => open('STOCK_IN', { itemId, qty })} />}
       {tab === 'owed' && <OwedPanel entries={entries} today={today} branchId={branchId} onPay={(side, party, cents) => open(side === 'in' ? 'DEBT_PAID_IN' : 'DEBT_PAID_OUT', { party, amountCents: cents })} />}
       {tab === 'branches' && <BranchesPanel groupId={view.groupId} entries={entries} branches={branches} closes={view.closes} staff={view.staff} today={today} owner={access.owner} lang={lang} onDone={done} />}
       {tab === 'accountant' && <AccountantPanel entries={entries} branches={branches} today={today} name={view.name} />}

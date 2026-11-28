@@ -5,7 +5,7 @@
  * everything. Older records (the first "Books" screen) are shown as entries of
  * the main branch so nothing written before is lost.
  */
-import { bizAccess, bizToday, COUNTRY_TIME_ZONE, type BizAccess, type BizBranch, type BizEntry, type BizItem, type BizLevel } from '@stawi/core';
+import { bizAccess, bizToday, COUNTRY_TIME_ZONE, type BizAccess, type BizBranch, type BizEntry, type BizLevel, type BizSupplier, type RestockItem, type RestockStatus } from '@stawi/core';
 import { myGroupRole, myMembershipIds } from './group-access';
 
 export interface BizBooksView {
@@ -17,8 +17,11 @@ export interface BizBooksView {
   today: string;
   access: BizAccess;
   branches: BizBranch[];
-  items: BizItem[];
+  items: RestockItem[];
   entries: BizEntry[];
+  suppliers: BizSupplier[];
+  restocks: { id: string; supplierId: string; supplierName: string; branchId: string; lines: { itemId: string; name: string; unit: string; qty: number | null }[]; status: RestockStatus; deliverOn: string | null; supplierNote: string | null; createdAt: string }[];
+  country: string;
   closes: { branchId: string; day: string; closedByName: string }[];
   staff: { membershipId: string; name: string; phone: string | null; branchId: string }[];
   myName: string;
@@ -57,7 +60,8 @@ export async function loadBizBooks(groupId: string): Promise<BizBooksView | null
   const { access, membershipIds } = who;
   const seen = access.seeAll ? undefined : { in: access.branchIds };
 
-  const [items, rows, old, closes, staffRows, me] = await Promise.all([
+  const none = '__staff_none__';
+  const [items, rows, old, closes, staffRows, me, suppliers, restocks] = await Promise.all([
     prisma.bizItem.findMany({ where: { businessId: biz.id, archivedAt: null }, orderBy: { name: 'asc' } }),
     prisma.bizEntry.findMany({ where: { businessId: biz.id, ...(seen ? { branchId: seen } : {}) }, orderBy: [{ day: 'asc' }, { recordedAt: 'asc' }] }),
     // Staff never receive the older whole-business records (they belong to no branch).
@@ -65,6 +69,9 @@ export async function loadBizBooks(groupId: string): Promise<BizBooksView | null
     prisma.bizDayClose.findMany({ where: { businessId: biz.id, ...(seen ? { branchId: seen } : {}) }, select: { branchId: true, day: true, closedByName: true } }),
     prisma.bizStaff.findMany({ where: { businessId: access.seeAll ? biz.id : '__staff_none__' } }),
     prisma.membership.findFirst({ where: { id: { in: membershipIds } }, select: { fullName: true } }),
+    // Suppliers and restock requests belong to the owner side only.
+    prisma.bizSupplier.findMany({ where: { businessId: access.seeAll ? biz.id : none, archivedAt: null }, orderBy: { name: 'asc' } }),
+    prisma.bizRestockRequest.findMany({ where: { businessId: access.seeAll ? biz.id : none }, orderBy: { createdAt: 'desc' }, take: 60 }),
   ]);
   const staffMembers = staffRows.length ? await prisma.membership.findMany({ where: { id: { in: staffRows.map((s) => s.membershipId) } }, select: { id: true, fullName: true, phone: true } }) : [];
   const main = branches[0]!.id;
@@ -115,8 +122,15 @@ export async function loadBizBooks(groupId: string): Promise<BizBooksView | null
     today: bizToday(new Date(), tz),
     access,
     branches: access.seeAll ? branches : branches.filter((b) => access.branchIds.includes(b.id)),
-    items: items.map((i) => ({ id: i.id, name: i.name, unit: i.unit, priceCents: i.priceCents, reorderAt: i.reorderAt, service: i.service })),
+    items: items.map((i) => ({ id: i.id, name: i.name, unit: i.unit, priceCents: i.priceCents, reorderAt: i.reorderAt, service: i.service, supplierId: access.seeAll ? i.supplierId : null })),
     entries,
+    suppliers: suppliers.map((s) => ({ id: s.id, name: s.name, phone: s.phone, leadDays: s.leadDays })),
+    restocks: restocks.map((r) => ({
+      id: r.id, supplierId: r.supplierId, supplierName: r.supplierName, branchId: r.branchId,
+      lines: (r.lines as { itemId: string; name: string; unit: string; qty: number | null }[]) ?? [],
+      status: r.status as RestockStatus, deliverOn: r.deliverOn, supplierNote: r.supplierNote, createdAt: r.createdAt.toISOString(),
+    })),
+    country: (biz.group.countryCode ?? 'KE').toUpperCase(),
     closes,
     staff: staffRows.map((s) => {
       const m = staffMembers.find((x) => x.id === s.membershipId);

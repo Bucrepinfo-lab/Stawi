@@ -21,15 +21,15 @@ export function RecordSheet({ groupId, kind, branches, branchId, items, parties,
   today: string;
   canPickDay: boolean;
   lang: Lang;
-  preset?: { party?: string; amountCents?: number };
+  preset?: { party?: string; amountCents?: number; itemId?: string; qty?: number | null };
   onDone: (message: string) => void;
   onCancel: () => void;
 }) {
   const k = KIND[kind];
   const moneyOnly = !CAN_BE_CREDIT.includes(kind);
   const [branch, setBranch] = useState(branchId);
-  const [itemId, setItemId] = useState('');
-  const [qty, setQty] = useState('1');
+  const [itemId, setItemId] = useState(preset?.itemId ?? '');
+  const [qty, setQty] = useState(preset?.qty ? String(preset.qty) : '1');
   const [amount, setAmount] = useState(preset?.amountCents ? String(preset.amountCents / 100) : '');
   const [touchedAmount, setTouchedAmount] = useState(!!preset?.amountCents);
   const [channel, setChannel] = useState<BizChannel>('CASH');

@@ -74,7 +74,7 @@ export function costOfSale(entries: BizEntry[], itemId: string, qty: number, bra
 // ───────────────────────────── ItemMovement and risk ─────────────────────────────
 
 export type ItemMovement = 'fast' | 'steady' | 'slow' | 'stagnant' | 'new' | 'none';
-export type ItemRisk = 'running_out' | 'out_of_stock' | 'below_cost' | 'thin_margin' | 'losses' | 'money_stuck';
+export type ItemRisk = 'red_line' | 'running_out' | 'out_of_stock' | 'below_cost' | 'thin_margin' | 'losses' | 'money_stuck';
 
 export const ITEM_MOVEMENT_LABEL: Record<ItemMovement, { en: string; sw: string; tip: string }> = {
   fast: { en: 'Fast-going', sw: 'Inauzika haraka', tip: 'Sells on most days. Never let it run out.' },
@@ -86,6 +86,7 @@ export const ITEM_MOVEMENT_LABEL: Record<ItemMovement, { en: string; sw: string;
 };
 
 export const RISK_LABEL: Record<ItemRisk, { en: string; sw: string; tip: string }> = {
+  red_line: { en: 'At its red line', sw: 'Imefika mstari mwekundu', tip: 'Down to the level you set. Ask your supplier now.' },
   out_of_stock: { en: 'Out of stock', sw: 'Imeisha', tip: 'Customers are asking and you have none. Restock first.' },
   running_out: { en: 'Running out', sw: 'Inakaribia kuisha', tip: 'At today’s pace it finishes in a few days. Order now.' },
   below_cost: { en: 'Sold below cost', sw: 'Inauzwa chini ya bei ya kununua', tip: 'You lose money on every one sold. Raise the price.' },
@@ -110,6 +111,8 @@ export interface ItemInsight {
   daysSinceSale: number | null;
   /** At the recent pace, days until stock runs out (null: no pace yet). */
   daysLeft: number | null;
+  /** Units sold per day at the recent pace (last 14 days). */
+  perDay: number;
   unitsLost: number;
   movement: ItemMovement;
   risks: ItemRisk[];
@@ -173,9 +176,10 @@ export function itemInsights(entries: BizEntry[], items: BizItem[], today: strin
     const marginPct = salesCents === 0 ? 0 : Math.round((profitCents / salesCents) * 1000) / 10;
     const risks: ItemRisk[] = [];
     if (!item.service) {
-      if (qty === 0 && (movement === 'fast' || movement === 'steady')) risks.push('out_of_stock');
+      // The owner's own red line comes first: it is the level they chose to reorder at.
+      if (item.reorderAt > 0 && qty > 0 && qty <= item.reorderAt) risks.push('red_line');
+      if (qty === 0 && (movement === 'fast' || movement === 'steady' || item.reorderAt > 0)) risks.push('out_of_stock');
       else if (daysLeft !== null && daysLeft < runOutDays && (movement === 'fast' || movement === 'steady')) risks.push('running_out');
-      else if (item.reorderAt > 0 && qty > 0 && qty <= item.reorderAt) risks.push('running_out');
     }
     const avgCost = pos?.avgCostCents ?? 0;
     if (avgCost > 0 && item.priceCents > 0 && item.priceCents < avgCost) risks.push('below_cost');
@@ -188,7 +192,7 @@ export function itemInsights(entries: BizEntry[], items: BizItem[], today: strin
     return {
       item, qty, avgCostCents: avgCost, stockValueCents: item.service ? 0 : Math.max(0, pos?.valueCents ?? 0),
       unitsSold, salesCents, profitCents, marginPct, salesSharePct: totalSales ? Math.round((salesCents / totalSales) * 1000) / 10 : 0,
-      daysWithSales, lastSale, daysSinceSale, daysLeft, unitsLost: lost, movement, risks, advice,
+      daysWithSales, lastSale, daysSinceSale, daysLeft, perDay: Math.round(perDay * 100) / 100, unitsLost: lost, movement, risks, advice,
     };
   });
   return out.sort((a, b) => b.risks.length - a.risks.length || b.salesCents - a.salesCents);
@@ -218,7 +222,7 @@ export function dayHighlights(entries: BizEntry[], items: BizItem[], day: string
   return {
     day,
     busiest: [...byItem.entries()].map(([id, v]) => ({ name: names.get(id) ?? 'Item', ...v })).sort((a, b) => b.salesCents - a.salesCents).slice(0, 5),
-    runningOut: insights.filter((i) => i.risks.includes('running_out') || i.risks.includes('out_of_stock')).map((i) => i.item.name),
+    runningOut: insights.filter((i) => i.risks.includes('red_line') || i.risks.includes('running_out') || i.risks.includes('out_of_stock')).map((i) => i.item.name),
     notMoving: insights.filter((i) => i.movement === 'stagnant' && i.qty > 0).map((i) => ({ name: i.item.name, days: i.daysSinceSale ?? 0, valueCents: i.stockValueCents })).sort((a, b) => b.valueCents - a.valueCents).slice(0, 5),
     belowCost: insights.filter((i) => i.risks.includes('below_cost')).map((i) => i.item.name),
   };
