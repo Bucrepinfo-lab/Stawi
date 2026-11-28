@@ -33,7 +33,7 @@ export async function runRoundReminders(now: Date = new Date()): Promise<RoundRe
     where: {
       givenAt: { not: null },
       returnedAt: null,
-      round: { closedAt: null },
+      round: { closedAt: null, group: { closedAt: null } },
       returnOn: { gte: new Date(now.getTime() - WINDOW_DAYS * 86_400_000), lte: new Date(now.getTime() + WINDOW_DAYS * 86_400_000) },
     },
     select: { id: true, groupId: true, membershipId: true, returnOn: true, givenCents: true, returnCents: true, givenAt: true, returnedAt: true },

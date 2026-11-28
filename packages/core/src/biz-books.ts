@@ -713,3 +713,14 @@ export function bizAccess(role: string | null, staffBranchIds: string[], allBran
   if (r && mine.length) return { seeAll: false, branchIds: mine, manage: false, owner: false };
   return null;
 }
+
+/**
+ * Closing a business (owner 28/11/26): the owner types its name to confirm.
+ * Nothing is deleted; it leaves the lists and reminders and can be reopened.
+ */
+export function closeBusinessProblem(input: { owner: boolean; name: string; typed: string }): string | null {
+  if (!input.owner) return 'Only the owner closes the business.';
+  const norm = (s: string) => s.trim().replace(/\s+/g, ' ').toLowerCase();
+  if (norm(input.typed) !== norm(input.name)) return 'Type the business name exactly as it is shown to confirm.';
+  return null;
+}

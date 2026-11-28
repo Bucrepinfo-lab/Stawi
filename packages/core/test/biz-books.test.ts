@@ -319,3 +319,10 @@ it('the brief warns when money shows below zero (a missing starting balance)', (
   const st = bizStatement([e({ kind: 'SALE', amountCents: 500_00 }), e({ kind: 'STOCK_IN', amountCents: 2_000_00, channel: 'MPESA' })], { from: '2026-11-02', to: '2026-11-02' });
   expect(bizBrief(st, null, 'day').some((l) => /M-Pesa below zero/.test(l.text) && /What I have today/.test(l.text))).toBe(true);
 });
+
+it('closing a business needs the owner and the name typed back', async () => {
+  const { closeBusinessProblem } = await import('../src/biz-books');
+  expect(closeBusinessProblem({ owner: true, name: 'Mama Njeri Shop', typed: ' mama  njeri shop ' })).toBeNull();
+  expect(closeBusinessProblem({ owner: true, name: 'Mama Njeri Shop', typed: 'Mama Njeri' })).toMatch(/Type the business name/);
+  expect(closeBusinessProblem({ owner: false, name: 'Mama Njeri Shop', typed: 'Mama Njeri Shop' })).toMatch(/owner/);
+});

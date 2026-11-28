@@ -432,3 +432,27 @@ export async function updateRestockByShopAction(input: { groupId: string; reques
   done(input.groupId);
   return { ok: true };
 }
+
+/** Close the business (the owner only, name typed to confirm). Nothing is deleted; it can be reopened. */
+export async function closeBusinessAction(input: { groupId: string; typedName: string }): Promise<Result> {
+  const c = await context(input.groupId);
+  if ('error' in c) return { ok: false, error: c.error };
+  const { closeBusinessProblem } = await import('@stawi/core');
+  const biz = await c.prisma.business.findUnique({ where: { id: c.businessId }, select: { name: true } });
+  const problem = closeBusinessProblem({ owner: c.access.owner, name: biz?.name ?? '', typed: input.typedName ?? '' });
+  if (problem) return { ok: false, error: problem };
+  await c.prisma.group.update({ where: { id: input.groupId }, data: { closedAt: new Date() } });
+  revalidatePath('/business');
+  revalidatePath('/dashboard');
+  return { ok: true };
+}
+
+/** Reopen a closed business (the owner only). */
+export async function reopenBusinessAction(input: { groupId: string }): Promise<Result> {
+  const c = await context(input.groupId);
+  if ('error' in c) return { ok: false, error: c.error };
+  if (!c.access.owner) return { ok: false, error: 'Only the owner reopens the business.' };
+  await c.prisma.group.update({ where: { id: input.groupId }, data: { closedAt: null } });
+  revalidatePath('/business');
+  return { ok: true };
+}

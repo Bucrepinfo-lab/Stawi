@@ -139,3 +139,18 @@ export async function loadBizBooks(groupId: string): Promise<BizBooksView | null
     myName: me?.fullName ?? 'Me',
   };
 }
+
+/** Businesses this person owns that are closed (owner 28/11/26), for "Reopen". */
+export async function myClosedBusinesses(): Promise<{ groupId: string; name: string }[]> {
+  if (!process.env.DATABASE_URL) return [];
+  const { getUserId } = await import('./auth');
+  const userId = await getUserId();
+  if (!userId) return [];
+  const { prisma } = await import('@stawi/db');
+  const rows = await prisma.membership.findMany({
+    where: { clerkUserId: userId, role: 'CHAIRMAN', leftAt: null, group: { closedAt: { not: null }, business: { isNot: null } } },
+    select: { group: { select: { id: true, name: true } } },
+    take: 50,
+  });
+  return rows.map((r) => ({ groupId: r.group.id, name: r.group.name }));
+}

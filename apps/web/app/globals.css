@@ -1233,3 +1233,6 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 .ro-ok { color: var(--good); font-weight: 700; font-size: 14px; }
 .ro-err { color: var(--danger); font-weight: 700; font-size: 14px; }
 @media (max-width: 420px) { .ro-list > li { grid-template-columns: 32px minmax(0, 1fr); } .ro-list > li > .ro-act { grid-column: 2; } }
+.cb-zone { border-color: color-mix(in srgb, var(--danger) 35%, var(--line)); margin-top: 12px; }
+.cb-form { display: grid; gap: 10px; }
+.cb-closed { margin-top: 14px; }
