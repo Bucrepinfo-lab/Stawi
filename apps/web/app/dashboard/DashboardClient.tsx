@@ -114,6 +114,7 @@ export function DashboardClient({ groups, initialId, modulesById = {}, demoAvail
           {(mods?.books ?? true) && <a href={`/books?group=${encodeURIComponent(active.id)}`}><Picture name="books" size={34} /><span>Group books</span></a>}
           <a href={`/groups/${encodeURIComponent(active.id)}`}><Picture name="clipboard" size={34} /><span>Records</span></a>
           {showMoney && <a href={`/groups/${encodeURIComponent(active.id)}/round`}><Picture name="cash" size={34} /><span>Round</span></a>}
+          {showMoney && <a href={`/groups/${encodeURIComponent(active.id)}/earnings`}><Picture name="growth" size={34} /><span>Earnings</span></a>}
         </nav>
       )}
       <AlertsCard />

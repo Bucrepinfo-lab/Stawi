@@ -37,6 +37,7 @@ export default async function RoundPage({ params }: { params: Promise<{ id: stri
       <p style={{ color: 'var(--ink-2)', marginTop: 6, maxWidth: 620 }}>
         Whose turn it is, how much they took, the day it comes back, and the profit. Your group&rsquo;s own money and your own rules; Stawi only keeps the record.
       </p>
+      <p style={{ marginTop: 10 }}><a href={`/groups/${id}/earnings`} style={{ fontWeight: 700, color: 'var(--forest-deep)' }}>See what the group has earned from rounds and fines</a></p>
       <RoundBook groupId={id} round={data.round} members={data.members} past={data.past} myIds={mine} canWrite={role === 'TREASURER' || role === 'CHAIRMAN'} />
     </main>
   );

@@ -945,7 +945,7 @@ body.has-app-tabs .return-bar { bottom: calc(86px + env(safe-area-inset-bottom, 
 /* Business tab and "inside my group" doors (owner 28/11/26) */
 .hf-btn--forest { background: #14352a; border-color: #14352a; color: #f7f3ea; }
 .welcome-hero .house-go.welcome-biz { background: #fffdf8; color: #16382a; box-shadow: inset 0 -4px 0 var(--gold); }
-.group-doors { display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); gap: 8px; margin-top: 14px; }
+.group-doors { display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap: 8px; margin-top: 14px; }
 .group-doors a { display: grid; justify-items: center; gap: 6px; padding: 10px 6px; min-height: 76px; border-radius: 14px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-weight: 700; font-size: 13px; text-align: center; text-decoration: none; transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease; min-width: 0; }
 .group-doors a:hover { border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 10px 18px -14px rgba(22, 56, 42, .6); }
 .group-doors a:active { transform: scale(.97); }

@@ -78,3 +78,4 @@ export * from './biz-items';
 export * from './biz-brief';
 export * from './biz-restock';
 export * from './venture-research';
+export * from './group-earnings';
