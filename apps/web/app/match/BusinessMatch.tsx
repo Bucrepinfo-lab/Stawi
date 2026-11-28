@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import {
+  ideaToParam,
   generateVentures,
   canAddToShortlist,
   readSavedMatch,
@@ -294,7 +295,7 @@ export function BusinessMatch({
       </div>
 
       {/* Shortlist */}
-      <div style={{ ...card, marginTop: 18 }}>
+      <div id="shortlist" style={{ ...card, marginTop: 18 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h2 className="display" style={{ fontWeight: 600, fontSize: 20 }}>
             Shortlist to discuss
@@ -372,10 +373,26 @@ export function BusinessMatch({
             );
           })}
         </div>
-        {saved.length >= 3 && (
-          <p style={{ marginTop: 12, fontSize: 13, color: 'var(--good)', fontWeight: 600 }}>
-            ✓ Three ideas saved — ready to book a group discussion to decide.
-          </p>
+        {/* Owner 28/11/26: research the saved ideas side by side, rank them, then decide. */}
+        {saved.length >= 2 && (
+          <div style={{ marginTop: 14, padding: 14, borderRadius: 12, background: 'var(--forest-deep)', color: 'var(--bone)' }}>
+            <p style={{ margin: 0, fontWeight: 700, fontSize: 15 }}>
+              {saved.length >= 3 ? 'Three ideas saved. Which one should the group start?' : 'Two ideas saved. Compare them now, or save one more.'}
+            </p>
+            <p style={{ margin: '4px 0 10px', fontSize: 13, opacity: 0.9, lineHeight: 1.45 }}>
+              Stawi checks profit, time to earn the money back, risk, the papers you need, buyers and competition, and how each can grow, then ranks them.
+            </p>
+            <a
+              href={`/match/compare?${new URLSearchParams([
+                ...saved.map((v) => ['i', ideaToParam(v)] as [string, string]),
+                ['cap', String(parseCapital(capital) * 100)],
+                ...(groupId ? ([['group', groupId]] as [string, string][]) : []),
+              ])}`}
+              style={{ ...btnPrimary, background: 'var(--gold)', color: 'var(--forest-deep)', display: 'inline-block', textDecoration: 'none' }}
+            >
+              Research and compare {saved.length >= 3 ? 'these 3 ideas' : 'these 2 ideas'}
+            </a>
+          </div>
         )}
         <p style={{ marginTop: 10, fontSize: 12.5, color: 'var(--dim)', lineHeight: 1.5 }}>
           Your shortlist stays on this phone when you open other tabs. To change it, tap × to take an idea off
