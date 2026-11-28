@@ -74,6 +74,25 @@ export const VALUE_PROPS: ValueProp[] = [
     cta: { en: 'See your group money', sw: 'Ona pesa za kikundi' },
   },
   {
+    // Owner 28/11/26: the money that starts quarrels is the group's own earnings.
+    id: 'p1-earnings',
+    pillar: 1,
+    icon: '💵',
+    pain: { en: 'Where did the fines and the table banking extra go?', sw: 'Faini na faida ya table banking zilienda wapi?' },
+    fact: {
+      en: 'Most chamas collapse within their first two years, and a leading reason is that the group cannot account for all its money.',
+      sw: 'Chama nyingi huvunjika ndani ya miaka miwili ya kwanza, na sababu kubwa ni kwamba kikundi hakiwezi kueleza pesa zake zote.',
+    },
+    source: { label: 'Money254', url: 'https://money254.co.ke/post/chama-revolution-what-successful-chamas-know-do-why-many-fail' },
+    solution: {
+      en: 'Group earnings shows every shilling the group earns, from each fine to each extra brought back, with who, when and why. Every member can see it.',
+      sw: 'Mapato ya kikundi huonyesha kila shilingi kikundi kinachopata, kila faini na kila faida iliyorudishwa, na nani, lini na kwa nini. Kila mwanachama anaweza kuona.',
+    },
+    status: 'live',
+    href: '/dashboard',
+    cta: { en: 'See your group earnings', sw: 'Ona mapato ya kikundi' },
+  },
+  {
     id: 'p1-minutes',
     pillar: 1,
     icon: '📝',

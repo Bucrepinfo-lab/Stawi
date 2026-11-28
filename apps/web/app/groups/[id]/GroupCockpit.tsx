@@ -931,6 +931,7 @@ function MinutesForm({ meeting, charter, groupId, onCancel, onCommit }: { meetin
           })}
         </div>
         <FinesEditor roster={roster} fines={m.tableBanking.fines} onChange={(fines) => setTB({ fines })} />
+        <p style={{ fontSize: 12.5, color: 'var(--ink-2)', margin: '6px 0 0' }}>Fines are group earnings. They show in <a href={`/groups/${groupId}/earnings`}>Group earnings</a> once these minutes are posted.</p>
         <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 8, alignItems: 'end', marginTop: 14 }}>
           <div><label style={label}>Merry-go-round payout to</label>
             <select style={input} value={m.tableBanking.payoutRecipient ?? ''} onChange={(e) => setTB({ payoutRecipient: e.target.value || undefined })}>
