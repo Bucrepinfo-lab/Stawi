@@ -65,7 +65,7 @@ export function readResearchAnswer(body: { content?: Block[]; usage?: { server_t
     .map((b) => b.text!)
     .join('')
     .trim();
-  if (!text.includes('## ')) return null;
+  if (text.length < 200) return null;
   const seen = new Set<string>();
   const sources: WebResearch['sources'] = [];
   for (const b of blocks) {
@@ -76,7 +76,8 @@ export function readResearchAnswer(body: { content?: Block[]; usage?: { server_t
     }
   }
   // Drop any preamble before the first heading ("I'll search for…").
-  return { text: text.slice(text.indexOf('## ')).slice(0, 8000), sources: sources.slice(0, 20), searches: body.usage?.server_tool_use?.web_search_requests ?? 0 };
+  const start = text.indexOf('## ');
+  return { text: (start >= 0 ? text.slice(start) : text).slice(0, 8000), sources: sources.slice(0, 20), searches: body.usage?.server_tool_use?.web_search_requests ?? 0 };
 }
 
 /** null = could not research this time; 'limit' = today's cap reached. */
@@ -90,7 +91,7 @@ export async function researchIdeasOnWeb(userId: string, ideas: Venture[], capit
       type: 'web_search_20250305',
       name: 'web_search',
       max_uses: Math.min(10, Number(process.env.IDEA_RESEARCH_MAX_SEARCHES) || 6),
-      user_location: { type: 'approximate', country: 'KE', city: 'Nairobi', timezone: 'Africa/Nairobi' },
+      // No user_location: the API refuses country code KE (Fly log 28/11/26). The prompt names Kenya.
     };
     const tools = [search];
     let triedWithoutPlace = false;
@@ -121,7 +122,9 @@ export async function researchIdeasOnWeb(userId: string, ideas: Venture[], capit
         messages.push({ role: 'assistant', content: body.content });
         continue;
       }
-      return readResearchAnswer(body);
+      const out = readResearchAnswer(body);
+      if (!out) console.warn('[ideas] research came back empty', body.stop_reason ?? '');
+      return out;
     }
     return null;
   } catch (err) {

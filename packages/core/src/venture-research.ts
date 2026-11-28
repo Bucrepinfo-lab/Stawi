@@ -20,7 +20,7 @@
  * insurance for transport. Legal lists are indicative: check with the county
  * and the named office.
  */
-import type { Industry, Venture } from './match';
+import { generateVentures, type Industry, type Venture } from './match';
 
 export type Level = 1 | 2 | 3 | 4 | 5;
 
@@ -503,6 +503,52 @@ export function ideasFromParams(params: string[]): Venture[] {
     if (!RISK_SET.has(risk) || !INDUSTRY_SET.has(industry)) continue;
     if (out.some((o) => o.title === title)) continue;
     out.push({ title, description: '', startupCents: s, marginPct: m, risk: risk as Venture['risk'], industry: industry as Industry });
+  }
+  return out;
+}
+
+export interface BestFit {
+  venture: Venture;
+  /** Stawi's 8-point score, 0–100. */
+  total: number;
+  /** Its two strongest points, in plain words. */
+  strengths: string[];
+}
+
+const ALL_INDUSTRIES: Industry[] = ['agri', 'retail', 'services', 'manufacturing', 'digital', 'transport'];
+
+/**
+ * "Find our best fits" (owner 28/11/26): every idea in every industry, sized
+ * to the group's money, scored on the same eight points, best first. At most
+ * two from one industry, so the group sees real choices.
+ */
+export function bestFits(capitalCents: number, opts: { count?: number; seed?: number } = {}): BestFit[] {
+  if (!(capitalCents > 0)) return [];
+  const count = opts.count ?? 4;
+  const seed = opts.seed ?? 1;
+  const scored: BestFit[] = [];
+  for (const industry of ALL_INDUSTRIES) {
+    for (const v of generateVentures({ industry, capitalCents, count: 10, seed })) {
+      const p = profileFor(v.title);
+      if (!p) continue;
+      const r = study(v, p, capitalCents);
+      // Every drawn idea is sized to fit the money, so that point tells members nothing here.
+      const strengths = IDEA_CRITERIA.filter((c) => c.key !== 'capital')
+        .sort((a, b) => r.scores[b.key] * b.weight - r.scores[a.key] * a.weight)
+        .slice(0, 2)
+        .map((c) => c.label.toLowerCase());
+      scored.push({ venture: v, total: r.total, strengths });
+    }
+  }
+  scored.sort((a, b) => b.total - a.total || a.venture.title.localeCompare(b.venture.title));
+  const out: BestFit[] = [];
+  const per = new Map<Industry, number>();
+  for (const f of scored) {
+    if (out.length >= count) break;
+    const n = per.get(f.venture.industry) ?? 0;
+    if (n >= 2) continue;
+    per.set(f.venture.industry, n + 1);
+    out.push(f);
   }
   return out;
 }

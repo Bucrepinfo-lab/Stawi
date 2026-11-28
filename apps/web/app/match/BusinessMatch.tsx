@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ideaToParam,
+  bestFits,
+  type BestFit,
   generateVentures,
   canAddToShortlist,
   readSavedMatch,
@@ -66,6 +68,10 @@ export function BusinessMatch({
   const [nudge, setNudge] = useState(false);
   // Owner 28/11/26: a clear way to empty the shortlist and try again, asked once in the page.
   const [confirmClear, setConfirmClear] = useState(false);
+  // Owner 28/11/26: "Generate ventures" was a dead button (the industry and the amount already redraw).
+  // Its job now: the best fits for the group's money across ALL industries, ranked by the 8-point check.
+  const [mode, setMode] = useState<'industry' | 'best'>('industry');
+  const [fits, setFits] = useState<Record<string, BestFit>>({});
   function pointToStars() {
     document.getElementById('idea-grid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setNudge(true);
@@ -73,21 +79,28 @@ export function BusinessMatch({
   }
 
   const run = useCallback(
-    (nextSeed: number) => {
-      const capCents = parseCapital(capital) * 100;
+    (nextSeed: number, m: 'industry' | 'best' = 'industry', capCentsIn?: number) => {
+      const capCents = capCentsIn ?? parseCapital(capital) * 100;
       if (capCents <= 0) {
         setVentures([]);
-        setNote('Enter a capital amount to generate ventures.');
+        setNote('Enter the amount the group has to see ideas.');
         return;
       }
-      setVentures(generateVentures({ industry, capitalCents: capCents, seed: nextSeed }));
+      if (m === 'best') {
+        const list = bestFits(capCents, { count: 4, seed: nextSeed });
+        setFits(Object.fromEntries(list.map((f) => [f.venture.title, f])));
+        setVentures(list.map((f) => f.venture));
+      } else {
+        setVentures(generateVentures({ industry, capitalCents: capCents, seed: nextSeed }));
+      }
       setNote(null);
     },
     [industry, capital],
   );
 
-  // Generate on first mount and whenever industry changes.
+  // Draw on first mount and whenever the industry changes (back to one industry).
   useEffect(() => {
+    setMode('industry');
     run(seed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [industry]);
@@ -124,18 +137,23 @@ export function BusinessMatch({
 
   function applyGroupCapital() {
     setCapital(groupCapital);
-    const capCents = groupCapitalCents;
-    setVentures(generateVentures({ industry, capitalCents: capCents, seed }));
-    setNote(null);
+    run(seed, mode, groupCapitalCents);
   }
 
-  function generate() {
-    run(seed);
+  function redraw() {
+    run(seed, mode);
+  }
+  function findBestFits() {
+    setMode('best');
+    run(seed, 'best');
+    const cap = parseCapital(capital);
+    if (cap > 0) flash(`The 4 best fits for KES ${formatMoney(cap * 100)}, from every industry, best first.`);
+    setTimeout(() => document.getElementById('idea-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
   }
   function reroll() {
     const s = seed + 1;
     setSeed(s);
-    run(s);
+    run(s, mode);
   }
   function reset() {
     // With ideas saved, ask first (in the page) instead of wiping them silently.
@@ -152,7 +170,8 @@ export function BusinessMatch({
     if (groupCapital) setCapital(groupCapital);
     const s = Math.floor(Math.random() * 1e6);
     setSeed(s);
-    run(s);
+    setMode('industry');
+    run(s, 'industry', groupCapital ? groupCapitalCents : undefined);
     flash('Shortlist cleared. Fresh ideas are below: tap ☆ to save up to three.');
     setTimeout(pointToStars, 150);
   }
@@ -207,7 +226,7 @@ export function BusinessMatch({
             <input
               value={capital}
               onChange={(e) => setCapital(e.target.value)}
-              onBlur={generate}
+              onBlur={redraw}
               inputMode="numeric"
               className="mono"
               style={inputStyle}
@@ -229,11 +248,11 @@ export function BusinessMatch({
         ) : null}
 
         <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
-          <button onClick={generate} style={btnPrimary}>
-            ⟲ Generate ventures
+          <button onClick={findBestFits} style={btnPrimary} aria-pressed={mode === 'best'}>
+            Find our best fits
           </button>
           <button onClick={reroll} style={btnGhost}>
-            Re-roll
+            Show other ideas
           </button>
           <button onClick={reset} style={btnGhost}>
             Start over
@@ -245,6 +264,19 @@ export function BusinessMatch({
             {note}
           </div>
         )}
+
+        <p style={{ marginTop: 14, marginBottom: 0, fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.45 }}>
+          {mode === 'best' ? (
+            <>
+              <strong>Best fits from every industry</strong>, ranked by Stawi&rsquo;s 8-point check of profit, money back, risk and more.{' '}
+              <button type="button" onClick={() => { setMode('industry'); run(seed, 'industry'); }} style={{ ...btnGhost, padding: '4px 10px', fontSize: 12.5 }}>
+                Back to {INDUSTRIES.find((i) => i.value === industry)?.label}
+              </button>
+            </>
+          ) : (
+            <>Ideas in <strong>{INDUSTRIES.find((i) => i.value === industry)?.label}</strong>. Not sure which industry? Tap <strong>Find our best fits</strong>.</>
+          )}
+        </p>
 
         {/* Venture grid */}
         <div
@@ -288,9 +320,17 @@ export function BusinessMatch({
               >
                 {isSaved(v) ? '★' : '☆'}
               </button>
+              {mode === 'best' && fits[v.title] && (
+                <div style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--gold-deep)', marginBottom: 4, paddingRight: 44 }}>
+                  {ventures.indexOf(v) + 1}. Fit {fits[v.title]!.total}/100 · {INDUSTRIES.find((i) => i.value === v.industry)?.label}
+                </div>
+              )}
               <div style={{ fontWeight: 700, fontSize: 14.5, paddingRight: 44 }}>{v.title}</div>
               <div style={{ fontSize: 12, color: 'var(--dim)', margin: '5px 0 10px', minHeight: 34 }}>
                 {v.description}
+                {mode === 'best' && fits[v.title] && (
+                  <span style={{ display: 'block', marginTop: 4, color: 'var(--forest)' }}>Strong on {fits[v.title]!.strengths.join(' and ')}.</span>
+                )}
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 <span style={{ ...tag, background: 'rgba(31,77,58,.10)', color: 'var(--forest)' }}>
