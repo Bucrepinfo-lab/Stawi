@@ -130,6 +130,9 @@ model Membership {
   photoUrl    String?
   role        MemberRole @default(MEMBER)
   rotationOrder Int      @default(0)
+  /// Taken off the member list by the secretary or chairperson (owner 28/11/26).
+  /// The row and its money records stay; a left member cannot open the group.
+  leftAt      DateTime?
 
   contributions Contribution[]
 

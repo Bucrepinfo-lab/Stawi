@@ -57,6 +57,7 @@ export async function getMemberGroups(
   const memberships = await prisma.membership.findMany({
     where: {
       clerkUserId,
+      leftAt: null, // left the group: no longer listed among their groups
       ...(tenantId ? { group: { tenantId } } : {}),
     },
     include: {
@@ -880,7 +881,7 @@ export async function getGroupsByPhone(prisma: PrismaClient, phone: string, tena
   const key = phoneKey(phone);
   if (!key) return [];
   const memberships = await prisma.membership.findMany({
-    where: { phone: { endsWith: key }, ...(tenantId ? { group: { tenantId } } : {}) },
+    where: { phone: { endsWith: key }, leftAt: null, ...(tenantId ? { group: { tenantId } } : {}) },
     include: { group: { include: { members: { include: { contributions: { where: { status: 'CONFIRMED' } } }, orderBy: { rotationOrder: 'asc' } } } } },
   });
   return memberships.map((m) => {
