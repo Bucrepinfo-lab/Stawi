@@ -19,7 +19,7 @@ interface Props {
   initialPeriod?: Period;
 }
 
-export function BooksClient({ groups, booksByGroup, initialId, initialPeriod, modulesById = {} }: Props & { modulesById?: Record<string, GroupModules> }) {
+export function BooksClient({ groups, booksByGroup, initialId, initialPeriod, modulesById = {}, kicker = 'Books' }: Props & { modulesById?: Record<string, GroupModules>; kicker?: string }) {
   const [activeId, setActiveIdState] = useState(
     initialId || (groups.find((g) => booksByGroup[g.id])?.id ?? groups[0]?.id ?? ''),
   );
@@ -48,7 +48,7 @@ export function BooksClient({ groups, booksByGroup, initialId, initialPeriod, mo
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <p style={{ fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--gold-deep)', fontWeight: 700 }}>
-          Pillar 3 · Accounting
+          {kicker}
         </p>
         <GroupSwitcher groups={groups} activeId={activeId} onSwitch={setActiveId} />
       </div>

@@ -17,7 +17,9 @@ describe('main tabs use our own drawn pictures (standing rule 19, 24/11/26)', ()
   });
   it('keeps a word under every picture, in English and Kiswahili', () => {
     const labels = [...tabs.matchAll(/label: \{ en: '([^']+)', sw: '([^']+)' \}/g)];
-    expect(labels.length).toBe(4);
+    // 28/11/26 (owner): My group, Business, Ideas. Messages and Books moved inside "My group".
+    expect(labels.length).toBe(3);
+    expect(tabs).toMatch(/label: \{ en: 'Business', sw: 'Biashara' \}/);
     // 26/11/26: Share moved into "Me" (five tabs at most); Me and Search keep words in both languages.
     expect(tabs).toMatch(/ME_LABEL[^\n]*en: 'Me', sw: 'Mimi'/);
     expect(tabs).toMatch(/SEARCH_LABEL[^\n]*en: 'Search', sw: 'Tafuta'/);

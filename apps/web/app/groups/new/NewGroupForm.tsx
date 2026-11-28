@@ -42,7 +42,7 @@ export function NewGroupForm({ initialStart }: { initialStart?: string }) {
     track('cta', `start-${start.replace(/_/g, '-')}`);
     const r = await createGroupAction({ name, start });
     setBusy(false);
-    if (r.ok && r.groupId) router.push(r.booksOnly ? `/books?group=${encodeURIComponent(r.groupId)}` : `/groups/${r.groupId}`);
+    if (r.ok && r.groupId) router.push(r.booksOnly ? `/business?group=${encodeURIComponent(r.groupId)}` : `/groups/${r.groupId}`);
     else setErr(r.error ?? T.fail[lang]);
   }
 

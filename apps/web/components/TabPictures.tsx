@@ -10,7 +10,7 @@
  * and filled, in the hand-drawn spirit research found works best for people
  * who read little (Medhi et al., Microsoft Research India).
  */
-export type TabPictureName = 'group' | 'ideas' | 'books' | 'messages' | 'share' | 'me' | 'search';
+export type TabPictureName = 'group' | 'business' | 'ideas' | 'books' | 'messages' | 'share' | 'me' | 'search';
 
 export const INK = '#16261f';
 export const FOREST = '#1f4d3a';
@@ -37,6 +37,21 @@ export function Group() {
       <path d='M11.2 23c0-2.6 2.1-4.1 4.8-4.1s4.8 1.5 4.8 4.1c0 2.7-2.1 4.5-4.8 4.5s-4.8-1.8-4.8-4.5z' fill={CLAY} {...outline} />
       <rect x='12.2' y='16.8' width='7.6' height='2.2' rx='1.1' fill={CLAY} {...outline} />
       <circle cx='16' cy='23.2' r='1.7' fill={GOLD} {...outline} />
+    </>
+  );
+}
+
+export function Business() {
+  // A shop with its striped awning, an open door and a coin on the counter:
+  // any business, from a duka to a salon (owner 28/11/26).
+  return (
+    <>
+      <rect x='5.6' y='13.4' width='20.8' height='13.8' rx='1' fill={PAGE} {...outline} />
+      <path d='M3.6 6.4h24.8l1.4 6.4c0 1.5-1.4 2.6-3.1 2.6s-3.1-1.1-3.1-2.6c0 1.5-1.4 2.6-3.1 2.6s-3.1-1.1-3.1-2.6c0 1.5-1.4 2.6-3.1 2.6s-3.1-1.1-3.1-2.6c0 1.5-1.4 2.6-3.1 2.6s-3.1-1.1-3.1-2.6z' fill={CLAY} {...outline} />
+      <path d='M9.8 6.4l-.6 6.4M16 6.4v6.4M22.2 6.4l.6 6.4' stroke={PAGE} strokeWidth='1.3' strokeLinecap='round' />
+      <rect x='8.4' y='18.2' width='6.2' height='9' fill={FOREST} {...outline} />
+      <rect x='17' y='18.2' width='7' height='4.8' fill={SKY} {...outline} />
+      <circle cx='20.5' cy='25' r='1.9' fill={GOLD} {...outline} />
     </>
   );
 }
@@ -117,7 +132,7 @@ export function Search() {
   );
 }
 
-const DRAWINGS: Record<TabPictureName, () => JSX.Element> = { group: Group, ideas: Ideas, books: Books, messages: Messages, share: Share, me: Me, search: Search };
+const DRAWINGS: Record<TabPictureName, () => JSX.Element> = { group: Group, business: Business, ideas: Ideas, books: Books, messages: Messages, share: Share, me: Me, search: Search };
 
 export const TAB_PICTURE_NAMES = Object.keys(DRAWINGS) as TabPictureName[];
 
