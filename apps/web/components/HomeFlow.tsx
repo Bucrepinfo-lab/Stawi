@@ -37,7 +37,7 @@ const COPY: Record<Lang, {
     start: 'Open my group',
     demo: 'Try the demo chama',
     help: 'Need help?',
-    helpBody: 'Write to telpeninfo@gmail.com and tell us what you tapped. We answer the same day.',
+    helpBody: 'Write to telpeninfo@gmail.com (Telpen Systems, the makers of Stawi) and tell us what you tapped. We answer the same day.',
   },
   sw: {
     choose: 'Ungependa kufanya nini?',
@@ -59,7 +59,7 @@ const COPY: Record<Lang, {
     start: 'Fungua kikundi changu',
     demo: 'Jaribu chama cha mfano',
     help: 'Unahitaji msaada?',
-    helpBody: 'Tuandikie telpeninfo@gmail.com utuambie ulibonyeza nini. Tunajibu siku hiyo hiyo.',
+    helpBody: 'Tuandikie telpeninfo@gmail.com (Telpen Systems, watengenezaji wa Stawi) utuambie ulibonyeza nini. Tunajibu siku hiyo hiyo.',
   },
 };
 

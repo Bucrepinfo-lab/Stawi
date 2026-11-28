@@ -54,6 +54,7 @@ export default async function ProfilePage() {
       <section className="pf-card" aria-labelledby="pf-help">
         <h2 id="pf-help">Something not working?</h2>
         <p className="mr-meta">Tell us what you tapped and what happened, with a screenshot if you can. We reply on the same day.</p>
+        <p className="mr-meta">Stawi is made by Telpen Systems Ltd, so our help email carries the Telpen name.</p>
         <p className="pf-contact">
           Email: <span className="mono" style={{ userSelect: 'all' }}>telpeninfo@gmail.com</span>{' '}
           <a className="mr-btn" href="mailto:telpeninfo@gmail.com?subject=Stawi%20problem">Write an email</a>
