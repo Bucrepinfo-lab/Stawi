@@ -486,6 +486,16 @@ export async function saveCharterAction(input: {
   }
   const deniedCharter = await requireGroupRole(input.groupId, 'records');
   if (deniedCharter) return { ok: false, persisted: false, error: deniedCharter };
+  // The member list is the secretary's (or the chairperson's) to change (owner 28/11/26).
+  // Any other official saving the charter keeps the stored list exactly as it is.
+  {
+    const { myGroupRole } = await import('@/lib/group-access');
+    const { canEditRoster, cleanRoster } = await import('@stawi/core');
+    const { prisma, getGroupCharter } = await import('@stawi/db');
+    const stored = await getGroupCharter(prisma, input.groupId);
+    const storedMembers = Array.isArray(stored?.members) ? (stored!.members as any[]) : [];
+    c.members = canEditRoster(await myGroupRole(input.groupId)) ? cleanRoster(Array.isArray(c.members) ? c.members : []) : storedMembers;
+  }
   try {
     const { prisma, upsertGroupCharter, provisionRosterMemberships } = await import('@stawi/db');
     await upsertGroupCharter(prisma, {
@@ -745,4 +755,52 @@ export async function endStandInAction(input: { groupId: string }): Promise<{ ok
   await prisma.minutesStandIn.updateMany({ where: { groupId: input.groupId, endedAt: null }, data: { endedAt: new Date() } });
   publishEvent({ type: 'charter', channel: groupChannel(input.groupId) });
   return { ok: true };
+}
+
+/**
+ * Save the member list straight away (owner 28/11/26: "Add member" must open a
+ * form and save; only the secretary or the chairperson adds, changes or
+ * removes members). Everything else in the charter stays as stored.
+ */
+export async function saveRosterAction(input: { groupId: string; members: unknown }): Promise<{ ok: boolean; error?: string }> {
+  if (!dbEnabled()) return { ok: true };
+  const { myGroupRole } = await import('@/lib/group-access');
+  const { canEditRoster, cleanRoster, duplicateRosterPhones } = await import('@stawi/core');
+  if (!canEditRoster(await myGroupRole(input.groupId))) return { ok: false, error: 'Only the secretary or the chairperson adds, changes or removes members.' };
+  const members = cleanRoster(Array.isArray(input.members) ? (input.members as any[]) : []);
+  if (members.length > 500) return { ok: false, error: 'A group can list up to 500 members.' };
+  for (const m of members) {
+    const clean = await assertCleanSafe(String(m.fullName ?? ''));
+    if (!clean.ok) return { ok: false, error: clean.error };
+  }
+  if (duplicateRosterPhones(members).length) return { ok: false, error: 'The same phone number is on the list more than once. Each member should appear once.' };
+  try {
+    const { prisma, getGroupCharter, upsertGroupCharter, provisionRosterMemberships } = await import('@stawi/db');
+    const stored = await getGroupCharter(prisma, input.groupId);
+    const group = stored ? null : await prisma.group.findUnique({ where: { id: input.groupId }, select: { name: true, countryCode: true } });
+    const t = await tenantId();
+    await upsertGroupCharter(prisma, {
+      groupId: input.groupId,
+      tenantId: t,
+      name: stored?.name ?? group?.name ?? 'Our group',
+      logoUrl: stored?.logoUrl ?? undefined,
+      schedule: stored?.schedule ?? { venue: '', days: [], startTime: '', endTime: '', frequency: 'Weekly' },
+      members,
+      constitution: stored?.constitution ?? '',
+      constitutionFileUrl: stored?.constitutionFileUrl ?? undefined,
+      motto: stored?.motto ?? '',
+      mission: stored?.mission ?? '',
+      vision: stored?.vision ?? '',
+      coreValues: stored?.coreValues ?? [],
+      notes: stored?.notes ?? undefined,
+      registeredNumber: stored?.registeredNumber ?? undefined,
+      countryCode: stored?.countryCode ?? group?.countryCode ?? 'KE',
+    });
+    const roster = members.filter((m: any) => m.phone && m.fullName).map((m: any) => ({ fullName: m.fullName, phone: m.phone, designation: m.designation }));
+    if (roster.length) await provisionRosterMemberships(prisma, { groupId: input.groupId, tenantId: t, roster }).catch(() => undefined);
+    publishEvent({ type: 'charter', channel: groupChannel(input.groupId) });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Not saved. Try again.' };
+  }
 }

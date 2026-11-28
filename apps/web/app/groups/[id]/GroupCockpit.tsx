@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import {
   addMember,
   removeMember,
+  cleanRoster,
+  rosterMemberProblem,
   charterCompleteness,
   emptyMeeting,
   addAgenda,
@@ -52,6 +54,7 @@ import {
   explainMemberStatementAction,
   appointStandInAction,
   endStandInAction,
+  saveRosterAction,
 } from '@/app/actions';
 import type { Cockpit } from '@/lib/cockpit';
 import { setUrlParams } from '@/lib/url-state';
@@ -93,7 +96,7 @@ function Hint({ text }: { text?: string }) {
   );
 }
 
-export function GroupCockpit({ cockpit, canEdit, minutes, saccoPlus = false, initialTab, initialMonth, modules }: { cockpit: Cockpit; canEdit: boolean; minutes?: MinutesRights; saccoPlus?: boolean; initialTab?: string; initialMonth?: string; modules?: GroupModules }) {
+export function GroupCockpit({ cockpit, canEdit, canRoster = false, minutes, saccoPlus = false, initialTab, initialMonth, modules }: { cockpit: Cockpit; canEdit: boolean; canRoster?: boolean; minutes?: MinutesRights; saccoPlus?: boolean; initialTab?: string; initialMonth?: string; modules?: GroupModules }) {
   // Only the sections the group has switched on are offered.
   const allowedTabs: readonly string[] = modules ? groupTabsFor(modules) : TABS;
   // Tab and statement month live in the URL (?tab=, ?month=) so a refresh or shared link reopens the same view.
@@ -173,7 +176,7 @@ export function GroupCockpit({ cockpit, canEdit, minutes, saccoPlus = false, ini
       )}
 
       <div style={{ marginTop: 20 }}>
-        {tab === 'charter' && <CharterTab charter={charter} setCharter={setCharter} canEdit={canEdit} groupId={cockpit.groupId} />}
+        {tab === 'charter' && <CharterTab charter={charter} setCharter={setCharter} canEdit={canEdit} canRoster={canRoster} groupId={cockpit.groupId} />}
         {tab === 'minutes' && <MinutesTab charter={charter} meetings={meetings} setMeetings={setMeetings} canEdit={minutes ? minutes.canWrite : canEdit} rights={minutes} groupId={cockpit.groupId} />}
         {tab === 'documents' && <DocumentsTab charter={charter} meetings={meetings} />}
         {tab === 'statement' && <StatementTab charter={charter} meetings={meetings} canEdit={canEdit} groupId={cockpit.groupId} initialMonth={initialMonth} />}
@@ -389,7 +392,7 @@ function SaccoActivationTab({ charter, meetings, canEdit, groupId, onActivated }
 
 // ───────────────────────────── Charter tab ──────────────────────────────
 
-function CharterTab({ charter, setCharter, canEdit, groupId }: { charter: GroupCharter; setCharter: (c: GroupCharter) => void; canEdit: boolean; groupId: string }) {
+function CharterTab({ charter, setCharter, canEdit, canRoster, groupId }: { charter: GroupCharter; setCharter: (c: GroupCharter) => void; canEdit: boolean; canRoster: boolean; groupId: string }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [err, setErr] = useState<string>();
@@ -470,7 +473,7 @@ function CharterTab({ charter, setCharter, canEdit, groupId }: { charter: GroupC
               })}
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(96px, 1fr))', gap: 12 }}>
             <div><label style={label}>From</label><input style={input} value={charter.schedule.startTime} disabled={disabled} onChange={(e) => setSched({ startTime: e.target.value })} placeholder="4:00 PM" /></div>
             <div><label style={label}>To</label><input style={input} value={charter.schedule.endTime} disabled={disabled} onChange={(e) => setSched({ endTime: e.target.value })} placeholder="6:00 PM" /></div>
             <div><label style={label}>How often</label>
@@ -485,7 +488,7 @@ function CharterTab({ charter, setCharter, canEdit, groupId }: { charter: GroupC
       {/* Roster — the "＋ Add a member" button on the home screen lands here (#members). */}
       <div className="s-card" style={card} id="members">
         <SectionTitle n={3} title="Members & officials" />
-        <RosterEditor members={charter.members} disabled={disabled} country={charter.countryCode} onChange={(members) => set({ members })} />
+        <RosterEditor members={charter.members} canEdit={canRoster} groupId={groupId} country={charter.countryCode} onSaved={(members) => setCharter({ ...charter, members })} />
         {canEdit && <JoiningCodes groupId={groupId} members={charter.members} country={charter.countryCode} />}
       </div>
 
@@ -539,28 +542,92 @@ function SectionTitle({ n, title }: { n: number; title: string }) {
   );
 }
 
-function RosterEditor({ members, disabled, country, onChange }: { members: CharterMember[]; disabled: boolean; country?: string; onChange: (m: CharterMember[]) => void }) {
+/**
+ * The member list (owner 28/11/26). Readable cards, not cramped boxes. Only the
+ * secretary or the chairperson adds, changes or removes a member; each change
+ * is saved at once, and removing someone asks first. Everyone else reads it.
+ */
+function RosterEditor({ members: raw, canEdit, groupId, country, onSaved }: { members: CharterMember[]; canEdit: boolean; groupId: string; country?: string; onSaved: (m: CharterMember[]) => void }) {
+  const members = cleanRoster(raw);
   const maxLen = phoneRule(country).localMaxDigits;
-  const update = (id: string, patch: Partial<CharterMember>) => onChange(members.map((m) => (m.id === id ? { ...m, ...patch } : m)));
+  const [form, setForm] = useState<{ id?: string; fullName: string; designation: OfficialDesignation; phone: string } | null>(null);
+  const [removing, setRemoving] = useState<CharterMember | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  async function persist(next: CharterMember[], ok: string) {
+    setBusy(true);
+    setMsg(null);
+    const res = await saveRosterAction({ groupId, members: next }).catch(() => ({ ok: false, error: 'Not saved. Check your connection and try again.' }));
+    setBusy(false);
+    if (!res.ok) { setMsg({ ok: false, text: res.error ?? 'Not saved.' }); return false; }
+    onSaved(cleanRoster(next));
+    setMsg({ ok: true, text: ok });
+    return true;
+  }
+
+  async function saveForm() {
+    if (!form || busy) return;
+    const others = members.filter((m) => m.id !== form.id);
+    const problem = rosterMemberProblem(form, others);
+    if (problem) { setMsg({ ok: false, text: problem }); return; }
+    const next = form.id
+      ? members.map((m) => (m.id === form.id ? { ...m, fullName: form.fullName.trim(), designation: form.designation, phone: form.phone.trim() } : m))
+      : addMember(members, { fullName: form.fullName, designation: form.designation, phone: form.phone });
+    if (await persist(next, form.id ? `${form.fullName.trim()} updated.` : `${form.fullName.trim()} added. Give them a joining code below so they can sign in.`)) setForm(null);
+  }
+
   return (
-    <div>
-      <div style={{ display: 'grid', gap: 8 }}>
+    <div className="ro">
+      {!canEdit && <p className="ro-note">Only the secretary or the chairperson adds, changes or removes members.</p>}
+      {members.length === 0 && <p className="ro-note">No members yet. Add the chairperson first.</p>}
+      <ol className="ro-list">
         {members.map((m) => (
-          <div key={m.id} style={{ display: 'grid', gridTemplateColumns: '26px 1.4fr 1fr 1fr 30px', gap: 8, alignItems: 'center' }}>
-            <span className="mono" style={{ color: 'var(--dim)', fontSize: 13, textAlign: 'center' }}>{m.serial}</span>
-            <input style={{ ...input, padding: '9px 11px' }} value={m.fullName} disabled={disabled} placeholder="Full name" onChange={(e) => update(m.id, { fullName: e.target.value })} />
-            <select style={{ ...input, padding: '9px 11px' }} value={m.designation} disabled={disabled} onChange={(e) => update(m.id, { designation: e.target.value as OfficialDesignation })}>
+          <li key={m.id}>
+            <span className="ro-no mono">{m.serial}</span>
+            <div className="ro-who">
+              <strong>{m.fullName}</strong>
+              <span className={`ro-role${m.designation === 'Member' ? '' : ' off'}`}>{m.designation}</span>
+              <small className="mono">{m.phone || 'No phone yet'}</small>
+            </div>
+            {canEdit && (
+              <div className="ro-act">
+                <button type="button" className="ro-btn" disabled={busy} onClick={() => { setForm({ id: m.id, fullName: m.fullName, designation: m.designation, phone: m.phone }); setMsg(null); }}>Change</button>
+                <button type="button" className="ro-btn danger" disabled={busy} onClick={() => { setRemoving(m); setMsg(null); }}>Remove</button>
+              </div>
+            )}
+            {removing?.id === m.id && (
+              <div className="ro-confirm" role="alertdialog" aria-label={`Remove ${m.fullName}`}>
+                <p>Remove <b>{m.fullName}</b> from the group? Their past payments and records stay. They can no longer open the group.</p>
+                <div className="ro-act">
+                  <button type="button" className="ro-btn danger solid" disabled={busy} onClick={() => void persist(removeMember(members, m.id), `${m.fullName} removed from the group.`).then((ok) => ok && setRemoving(null))}>Yes, remove</button>
+                  <button type="button" className="ro-btn" disabled={busy} onClick={() => setRemoving(null)}>Keep</button>
+                </div>
+              </div>
+            )}
+          </li>
+        ))}
+      </ol>
+
+      {canEdit && (form ? (
+        <form className="ro-form" onSubmit={(e) => { e.preventDefault(); void saveForm(); }}>
+          <h4>{form.id ? 'Change member' : 'Add a member'}</h4>
+          <label><span>Full name</span><input autoFocus value={form.fullName} maxLength={80} onChange={(e) => setForm({ ...form, fullName: e.target.value })} placeholder="e.g. Mary Achieng" /></label>
+          <label><span>Role in the group</span>
+            <select value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value as OfficialDesignation })}>
               {OFFICIAL_DESIGNATIONS.map((d) => <option key={d}>{d}</option>)}
             </select>
-            <input style={{ ...input, padding: '9px 11px' }} inputMode="numeric" maxLength={maxLen} value={m.phone} disabled={disabled} placeholder="Phone" onChange={(e) => update(m.id, { phone: e.target.value.replace(/[^0-9]/g, '') })} />
-            {!disabled && <button aria-label="Remove" onClick={() => onChange(removeMember(members, m.id))} style={{ border: 'none', background: 'transparent', color: 'var(--danger)', cursor: 'pointer', fontSize: 18 }}>×</button>}
+          </label>
+          <label><span>Phone number (they sign in with it)</span><input inputMode="numeric" maxLength={maxLen} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/[^0-9]/g, '') })} placeholder="07…" /></label>
+          <div className="ro-act">
+            <button type="submit" className="ro-btn solid" disabled={busy}>{busy ? 'Saving…' : form.id ? 'Save changes' : 'Add member'}</button>
+            <button type="button" className="ro-btn" disabled={busy} onClick={() => { setForm(null); setMsg(null); }}>Cancel</button>
           </div>
-        ))}
-      </div>
-      {members.length === 0 && <p style={{ color: 'var(--dim)', fontSize: 13.5, marginBottom: 10 }}>No members yet. Add the chairperson first.</p>}
-      {!disabled && (
-        <button style={{ ...btnGhost, marginTop: 12 }} onClick={() => onChange(addMember(members))}>＋ Add member</button>
-      )}
+        </form>
+      ) : (
+        <button type="button" className="ro-add" onClick={() => { setForm({ fullName: '', designation: 'Member', phone: '' }); setMsg(null); }}>＋ Add a member</button>
+      ))}
+      {msg && <p className={msg.ok ? 'ro-ok' : 'ro-err'} role="status">{msg.text}</p>}
     </div>
   );
 }
@@ -1101,7 +1168,7 @@ function NotesImport({ onApply, groupId }: { onApply: (p: ReturnType<typeof pars
 
 function MinutesDocument({ doc, charter }: { doc: ProfessionalMinutes; charter: GroupCharter }) {
   return (
-    <div className="print-doc" style={{ ...card, padding: 30 }}>
+    <div className="print-doc" style={{ ...card, padding: 'clamp(14px, 4vw, 30px)', minWidth: 0 }}>
       <DocHeader charter={charter} subtitle="Official Minutes" />
       <h2 className="display" style={{ fontSize: 18, fontWeight: 600, marginTop: 18, textAlign: 'center' }}>{doc.documentTitle}</h2>
       <p style={{ textAlign: 'center', fontSize: 12.5, color: 'var(--dim)', marginTop: 4 }}>{[doc.dateLong, doc.venue, doc.timeRange].filter(Boolean).join(' · ')}</p>
@@ -1191,7 +1258,7 @@ function StatementTab({ charter, meetings, canEdit, groupId, initialMonth }: { c
   if (months.length === 0) return <div className="s-card" style={card}><p style={{ color: 'var(--ink-2)' }}>Post the minutes of at least one dated meeting to generate a month-end statement (drafts are not counted).</p></div>;
 
   return (
-    <div style={{ display: 'grid', gap: 14 }}>
+    <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'minmax(0, 1fr)' }}>
       <div className="no-print" style={{ ...card, display: 'flex', gap: 12, alignItems: 'end', flexWrap: 'wrap' }}>
         <div><label style={label}>Statement month</label>
           <select style={input} value={period} onChange={(e) => { setPeriod(e.target.value); setNarr(null); setPosted(false); setPostErr(undefined); }}>
@@ -1234,11 +1301,11 @@ function StatementDocument({ charter, st, narrative, onEditNarrative }: { charte
     }
   }
   return (
-    <div className="print-doc" style={{ ...card, padding: 30 }}>
+    <div className="print-doc" style={{ ...card, padding: 'clamp(14px, 4vw, 30px)', minWidth: 0 }}>
       <DocHeader charter={charter} subtitle="Month-End Statement" />
       <h2 className="display" style={{ fontSize: 19, fontWeight: 600, marginTop: 16, textAlign: 'center' }}>Statement for {st.period.label}</h2>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginTop: 18 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginTop: 18 }}>
         <Stat k="Meetings" v={String(st.meetingsHeld)} />
         <Stat k="Members" v={String(st.membersOnRegister)} />
         <Stat k="Avg attendance" v={`${st.avgAttendancePct}%`} />

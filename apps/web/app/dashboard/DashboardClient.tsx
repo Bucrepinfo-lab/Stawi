@@ -135,8 +135,9 @@ export function DashboardClient({ groups, initialId, modulesById = {}, demoAvail
       {/* Officials add members from the home screen (owner 26/11/26: "there is nowhere like add new member"). */}
       {['Chairman', 'Secretary', 'Treasurer'].includes(active.myRole) && (
         <div className="add-member">
-          <a href={`/groups/${encodeURIComponent(active.id)}?tab=charter#members`} className="add-member-btn">＋ Add a member</a>
-          <span>Write their name and phone, save, then give them their joining code in person or on WhatsApp.</span>
+          {/* The member list is the secretary's or chairperson's (owner 28/11/26). */}
+          {['Chairman', 'Secretary'].includes(active.myRole) && <a href={`/groups/${encodeURIComponent(active.id)}?tab=charter#members`} className="add-member-btn">＋ Add a member</a>}
+          {['Chairman', 'Secretary'].includes(active.myRole) && <span>Write their name and phone, save, then give them their joining code in person or on WhatsApp.</span>}
           <a href={`/proposal?group=${encodeURIComponent(active.id)}`} className="add-member-btn" style={{ background: 'var(--forest-deep)', color: 'var(--bone)' }}>Write the funding proposal for me</a>
         </div>
       )}
