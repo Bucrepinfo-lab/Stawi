@@ -2,7 +2,8 @@ import { BusinessMatch } from './BusinessMatch';
 import { ValueBanners } from '@/components/ValueBanners';
 import { DocumentHouse } from '@/components/DocumentHouse';
 import { getMyGroups } from '@/lib/data';
-import { pickAllowedId } from '@stawi/core';
+import { pickAllowedId } from '@stawi/core';
+
 import { BackLink } from '@/components/BackLink';
 
 export const dynamic = 'force-dynamic';
@@ -34,8 +35,8 @@ export default async function MatchPage({ searchParams }: { searchParams: Promis
         Match your capital to a venture
       </h1>
       <p style={{ color: 'var(--ink-2)', marginTop: 6, maxWidth: 600 }}>
-        Enter the capital your group raised and pick an industry. Stawi generates
-        ventures that fit. Re-roll for fresh ideas, and save at least three to compare
+        Enter the money your group has and pick an industry, or tap <strong>Find our best fits</strong> to
+        see the strongest ideas from every industry. Save three, then let Stawi research and rank them
         before the group decides.
       </p>
       <BusinessMatch groupId={groupId ?? null} groupCapitalCents={groupCapitalCents} groupName={groupName} />

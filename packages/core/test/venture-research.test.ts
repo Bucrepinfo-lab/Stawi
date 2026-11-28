@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compareIdeas, generateVentures, ideaToParam, ideasFromParams, profileFor, IDEA_CRITERIA, type Industry, type Venture } from '../src';
+import { bestFits, compareIdeas, generateVentures, ideaToParam, ideasFromParams, profileFor, IDEA_CRITERIA, type Industry, type Venture } from '../src';
 
 const v = (title: string, startupCents: number, marginPct: number, risk: Venture['risk'], industry: Industry): Venture => ({ title, description: '', startupCents, marginPct, risk, industry });
 
@@ -76,5 +76,19 @@ describe('venture research', () => {
 
   it('skips ideas with no profile instead of breaking', () => {
     expect(compareIdeas([v('Unknown thing', 10_000_00, 20, 'Low', 'retail')]).studies).toEqual([]);
+  });
+
+  it('best fits: four ideas across industries, best first, all affordable', () => {
+    const fits = bestFits(120_000_00, { seed: 7 });
+    expect(fits).toHaveLength(4);
+    for (let i = 1; i < fits.length; i++) expect(fits[i - 1]!.total).toBeGreaterThanOrEqual(fits[i]!.total);
+    const per = new Map<string, number>();
+    for (const f of fits) {
+      per.set(f.venture.industry, (per.get(f.venture.industry) ?? 0) + 1);
+      expect(f.venture.startupCents).toBeLessThanOrEqual(120_000_00);
+      expect(f.strengths).toHaveLength(2);
+    }
+    expect(Math.max(...per.values())).toBeLessThanOrEqual(2);
+    expect(bestFits(0)).toEqual([]);
   });
 });
